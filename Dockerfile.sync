@@ -1,0 +1,18 @@
+# Dockerfile.sync — Sync Worker Container
+# Multi-stage build: compiles TypeScript sync worker and runs as standalone Node.js process
+
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npx tsc --project tsconfig.sync.json
+
+FROM node:20-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=builder /app/dist/sync ./sync
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/drizzle ./drizzle
+
+CMD ["node", "sync/sync-worker.js"]
