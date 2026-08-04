@@ -79,12 +79,12 @@ export function categorizeR2Items(issues: JiraIssue[]): R2ItemCount {
 export function calculateR2Progress(
   epics: JiraIssue[],
   features: JiraIssue[],
-  deadline: string = "2026-07-31",
-  releaseName: string = "R2"
+  deadline: string = "2026-12-31",
+  releaseName: string = "Release"
 ): R2ProgressResult {
   const epicsCount = categorizeR2Items(epics);
   const featuresCount = categorizeR2Items(features);
-  const riskInsight = generateR2RiskInsight(featuresCount, deadline);
+  const riskInsight = generateR2RiskInsight(featuresCount, deadline, releaseName);
 
   return {
     epics: epicsCount,
@@ -101,7 +101,8 @@ export function calculateR2Progress(
  */
 function generateR2RiskInsight(
   features: R2ItemCount,
-  deadline: string
+  deadline: string,
+  releaseName: string = "Release"
 ): string | undefined {
   if (features.total === 0) return undefined;
 
@@ -116,12 +117,12 @@ function generateR2RiskInsight(
   // Se menos de 50% concluído e menos de 30 dias restantes
   if (donePercentage < 50 && daysRemaining < 30) {
     const remaining = features.total - features.done;
-    return `R2 deadline: ${formatDeadline(deadline)} — ${donePercentage}% Features concluídas. ${remaining} restantes com ${daysRemaining} dias. Ritmo precisa acelerar.`;
+    return `${releaseName} deadline: ${formatDeadline(deadline)} — ${donePercentage}% Features concluídas. ${remaining} restantes com ${daysRemaining} dias. Ritmo precisa acelerar.`;
   }
 
   // Se muito pouco concluído em geral
   if (donePercentage < 30) {
-    return `R2 deadline: ${formatDeadline(deadline)} — ${donePercentage}% Features concluídas. Ritmo precisa acelerar.`;
+    return `${releaseName} deadline: ${formatDeadline(deadline)} — ${donePercentage}% Features concluídas. Ritmo precisa acelerar.`;
   }
 
   return undefined;

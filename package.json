@@ -24,7 +24,8 @@
     "puppeteer": "^23.0.0",
     "react": "^19.0.0",
     "react-apexcharts": "^2.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "undici": "^8.9.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.0.0",

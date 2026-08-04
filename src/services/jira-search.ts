@@ -153,11 +153,12 @@ export async function fetchCompletedIssuesWithChangelogs(
   // Para kanban: usar DURING com as datas da janela temporal
   let jql: string;
   if (sprintId) {
-    // Sprint: todas as issues concluídas que pertencem à sprint
+    // Sprint: issues do projeto concluídas DURANTE o período da sprint
+    // Não filtra por sprint association — garante que itens transbordados
+    // contam na sprint onde foram concluídos (não na sprint de origem)
     jql = `
       project = "${project}"
-      AND sprint = ${sprintId}
-      AND status = Concluído
+      AND status CHANGED TO "Concluído" DURING ("${start}", "${end}")
       AND issuetype in (História, Story, Bug, Design, "Technical Debt", Kaizen, Task, Spike)
       AND status != Cancelado
     `.trim().replace(/\s+/g, " ");

@@ -23,7 +23,7 @@ import InsightsGrid from "@/components/dashboard/InsightsGrid";
 import BugsQuality from "@/components/dashboard/BugsQuality";
 import PeriodSelector from "@/components/dashboard/PeriodSelector";
 import ExportButton from "@/components/dashboard/ExportButton";
-import CapacityButton from "@/components/dashboard/CapacityButton";
+import MonteCarloButton from "@/components/dashboard/MonteCarloButton";
 import { formatFullDate } from "@/lib/utils";
 
 // Desabilitar cache do Next.js (dados dinâmicos com filtros)
@@ -193,7 +193,7 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
         <div className="h-1 rounded bg-gradient-to-r from-indigo-500 via-violet-500 to-violet-400 mb-4" />
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-xl font-bold text-white" style={{ fontFamily: "'Poppins', sans-serif" }}>
+            <h1 className="text-xl font-bold text-white">
               {squad.name}
             </h1>
             <span className="inline-block mt-1 rounded-full bg-indigo-500/15 px-3 py-1 text-[11px] font-bold text-indigo-300 uppercase">
@@ -202,7 +202,7 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
             <p className="mt-1.5 text-xs text-white/70">{periodDates}</p>
           </div>
           <div className="flex gap-2">
-            <CapacityButton squad={slug} availableSprints={availableSprints} />
+            <MonteCarloButton squad={slug} defaultTeamSize={displayTeamSize} availableSprints={availableSprints} />
             <ExportButton squad={slug} />
           </div>
         </div>
@@ -233,7 +233,7 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
 
         {/* KPI Cards */}
         <div className="mt-4">
-          <KpiCards kpis={data.kpis} />
+          <KpiCards kpis={data.kpis} squad={slug} availableSprints={availableSprints} />
         </div>
 
         {/* Section 1: Performance Operacional */}

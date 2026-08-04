@@ -153,7 +153,7 @@ export async function fetchKanbanDashboardFromDb(
   // 4. R2 Progress from DB
   const fixVersion = squad.r2FixVersion;
   const releaseDeadline = "2026-07-31"; // Default deadline, can be made configurable
-  const releaseName = fixVersion.split(" - ")[0] || "R2";
+  const releaseName = fixVersion.split(" - ")[0] || "Release";
   const r2Progress = await queryR2Progress(
     fixVersion,
     squad.teamFieldValue,
@@ -423,7 +423,7 @@ function generateKanbanInsights(
   // R2 risco
   if (r2Progress.features.total > 0 && r2Progress.features.done / r2Progress.features.total < 0.5) {
     insights.push({
-      title: "R2 exige aceleração",
+      title: `${r2Progress.releaseName} exige aceleração`,
       text: `Apenas ${r2Progress.features.done} de ${r2Progress.features.total} Features concluídas. Ritmo precisa aumentar.`,
       severity: "blue",
     });

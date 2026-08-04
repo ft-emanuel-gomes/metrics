@@ -17,6 +17,31 @@ import jwt from "jsonwebtoken";
 import { getJiraClient } from "./jira-client";
 import { SQUADS_CONFIG } from "@/config/squads";
 
+// --- Credential Validation ---
+
+/**
+ * Valida credenciais do usuário diretamente na API do Jira.
+ * Usa Basic Auth (email + API token) para chamar /rest/api/3/myself.
+ * Se retornar 200, as credenciais são válidas.
+ */
+export async function validateCredentials(email: string, apiToken: string): Promise<boolean> {
+  const baseUrl = process.env.JIRA_BASE_URL || "https://montebravo.atlassian.net";
+  const auth = Buffer.from(`${email}:${apiToken}`).toString("base64");
+
+  try {
+    const response = await fetch(`${baseUrl}/rest/api/3/myself`, {
+      headers: {
+        Authorization: `Basic ${auth}`,
+        Accept: "application/json",
+      },
+    });
+
+    return response.status === 200;
+  } catch {
+    return false;
+  }
+}
+
 // --- Types ---
 
 export interface AuthUser {

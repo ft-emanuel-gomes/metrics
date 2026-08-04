@@ -177,7 +177,7 @@ export async function fetchSprintDashboardFromDb(
     activeFixVersion,
     squad.teamFieldValue,
     releaseDeadline,
-    activeFixVersion.split(" - ")[0] || "R2"
+    activeFixVersion.split(" - ")[0] || "Release"
   );
 
   // 4. Percentis combinados (amostra de todas as sprints)
@@ -540,7 +540,7 @@ function generateInsights(
   const featuresTotal = r2Progress.features.total;
   if (featuresTotal > 0 && featuresDone / featuresTotal < 0.5) {
     insights.push({
-      title: "R2 exige aceleração significativa",
+      title: `${r2Progress.releaseName} exige aceleração significativa`,
       text: `Apenas ${featuresDone} de ${featuresTotal} Features concluídas (${Math.round((featuresDone / featuresTotal) * 100)}%). Ritmo atual requer aceleração para atingir a meta.`,
       severity: "blue",
     });

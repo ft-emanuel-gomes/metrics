@@ -176,7 +176,7 @@ export async function fetchSprintDashboard(
     fetchR2Epics(activeFixVersion, squad.teamFieldValue),
     fetchR2Features(activeFixVersion, squad.teamFieldValue),
   ]);
-  const r2Progress = calculateR2Progress(r2Epics, r2Features, releaseDeadline, activeRelease?.name.split(" - ")[0] || "R2");
+  const r2Progress = calculateR2Progress(r2Epics, r2Features, releaseDeadline, activeRelease?.name.split(" - ")[0] || "Release");
 
   // 4. Percentis combinados (amostra de todas as sprints)
   const percentiles = {
@@ -638,7 +638,7 @@ function buildR1vsR2Row(
 
 function generateInsights(
   periodMetrics: PeriodMetrics[],
-  r2Progress: { features: { total: number; done: number } }
+  r2Progress: { features: { total: number; done: number }; releaseName: string }
 ): InsightItem[] {
   const insights: InsightItem[] = [];
   if (periodMetrics.length === 0) return insights;
@@ -676,7 +676,7 @@ function generateInsights(
   const featuresTotal = r2Progress.features.total;
   if (featuresTotal > 0 && featuresDone / featuresTotal < 0.5) {
     insights.push({
-      title: "R2 exige aceleração significativa",
+      title: `${r2Progress.releaseName} exige aceleração significativa`,
       text: `Apenas ${featuresDone} de ${featuresTotal} Features concluídas (${Math.round((featuresDone / featuresTotal) * 100)}%). Ritmo atual requer aceleração para atingir a meta.`,
       severity: "blue",
     });

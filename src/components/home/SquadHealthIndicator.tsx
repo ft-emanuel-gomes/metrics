@@ -38,7 +38,7 @@ const BORDER_COLORS: Record<HealthStatus, string> = {
  *   Amarelo: até 2 métricas abaixo da meta
  *   Vermelho: 3+ métricas abaixo da meta
  */
-function evaluateMetrics(kpis: Record<string, { numericValue?: number; label?: string }>): {
+function evaluateMetrics(kpis: Record<string, { numericValue?: number; label?: string }>, bugCount: number = 0): {
   health: HealthStatus;
   metrics: MetricHealth[];
 } {
@@ -73,6 +73,10 @@ function evaluateMetrics(kpis: Record<string, { numericValue?: number; label?: s
   const wipOk = wip <= 7;
   metrics.push({ label: "WIP Aging (>10d)", value: `${wip}%`, status: wipOk ? "green" : "red" });
 
+  // Bugs (meta: ≤ 1 item)
+  const bugsOk = bugCount <= 1;
+  metrics.push({ label: "Bugs", value: `${bugCount} itens`, status: bugsOk ? "green" : "red" });
+
   const belowMeta = metrics.filter((m) => m.status === "red").length;
 
   let health: HealthStatus;
@@ -101,7 +105,11 @@ export default function SquadHealthIndicator({ squad }: SquadHealthIndicatorProp
       })
       .then((data) => {
         if (data.kpis) {
-          const result = evaluateMetrics(data.kpis);
+          // Contar bugs do último período (bugsQuality)
+          const lastPeriodBugs = data.bugsQuality?.length > 0
+            ? data.bugsQuality[data.bugsQuality.length - 1]?.bugs ?? 0
+            : 0;
+          const result = evaluateMetrics(data.kpis, lastPeriodBugs);
           setHealth(result.health);
           setMetrics(result.metrics);
         }

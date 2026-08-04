@@ -1,8 +1,11 @@
 import type { KpiSummary, KpiItem } from "@/adapters/types";
 import MetricTooltip from "@/components/ui/MetricTooltip";
+import CapacityButton from "./CapacityButton";
 
 interface KpiCardsProps {
   kpis: KpiSummary;
+  squad?: string;
+  availableSprints?: { id: number; name: string }[];
 }
 
 const STATUS_COLORS: Record<KpiItem["status"], string> = {
@@ -22,7 +25,7 @@ const METRIC_TOOLTIPS: Record<string, string> = {
   "Ocupação": "Percentual da capacidade do time que foi alocada via Original Estimate das issues. Capacidade = pessoas × 6h/dia × dias úteis da sprint.",
 };
 
-function KpiCard({ item }: { item: KpiItem }) {
+function KpiCard({ item, extra }: { item: KpiItem; extra?: React.ReactNode }) {
   const barColor = STATUS_COLORS[item.status];
   const tooltip = METRIC_TOOLTIPS[item.label];
 
@@ -33,10 +36,13 @@ function KpiCard({ item }: { item: KpiItem }) {
         className={`absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r ${barColor}`}
       />
 
-      <span className="block text-[9px] font-semibold uppercase tracking-wide text-gray-300">
-        {item.label}
-        {tooltip && <MetricTooltip text={tooltip} />}
-      </span>
+      <div className="flex items-center justify-between">
+        <span className="block text-[9px] font-semibold uppercase tracking-wide text-gray-300">
+          {item.label}
+          {tooltip && <MetricTooltip text={tooltip} />}
+        </span>
+        {extra}
+      </div>
       <p className="mt-2 text-3xl font-black text-white leading-none">
         {item.value}
       </p>
@@ -66,7 +72,7 @@ function KpiCard({ item }: { item: KpiItem }) {
   );
 }
 
-export default function KpiCards({ kpis }: KpiCardsProps) {
+export default function KpiCards({ kpis, squad, availableSprints }: KpiCardsProps) {
   const items: KpiItem[] = [
     kpis.cycleTime,
     kpis.throughput,
@@ -80,7 +86,13 @@ export default function KpiCards({ kpis }: KpiCardsProps) {
   return (
     <div className={`grid grid-cols-2 gap-3 sm:grid-cols-3 ${items.length > 5 ? "lg:grid-cols-6" : "lg:grid-cols-5"}`}>
       {items.map((item, idx) => (
-        <KpiCard key={`${item.label}-${idx}`} item={item} />
+        <KpiCard
+          key={`${item.label}-${idx}`}
+          item={item}
+          extra={item.label === "Ocupação" && squad && availableSprints ? (
+            <CapacityButton squad={squad} availableSprints={availableSprints} />
+          ) : undefined}
+        />
       ))}
     </div>
   );

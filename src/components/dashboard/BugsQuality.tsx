@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useState } from "react";
+import MetricTooltip from "@/components/ui/MetricTooltip";
 
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
@@ -83,6 +84,7 @@ export default function BugsQuality({ data }: BugsQualityProps) {
     <div className="rounded-xl border border-white/5 bg-white/5 p-4 relative">
       <h3 className="text-[11px] font-bold uppercase tracking-wide text-gray-400 mb-3">
         Qualidade — Bugs e Sub-bugs Concluídos
+        <MetricTooltip text="Bug: Correção de falha identificada em algo já entregue em produção. Sub-Bug: Correção de falha de algum comportamento inesperado em QA." />
       </h3>
       <Chart options={options} series={series} type="bar" height={180} />
       <p className="mt-2 text-center text-[9px] text-gray-500">

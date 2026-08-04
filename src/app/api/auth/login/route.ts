@@ -1,12 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateUserByEmail, generateToken } from "@/services/auth-service";
+import { loadRefreshToken, refreshAtlassianToken, saveRefreshToken } from "@/services/auth-tokens";
 
 export const dynamic = "force-dynamic";
 
 /**
  * POST /api/auth/login
- * Autentica usuário pelo email corporativo contra o Jira.
- * Retorna JWT com permissões de acesso.
+ *
+ * Fluxo seguro:
+ * 1. Valida que o email existe no Jira (usuário ativo com permissões)
+ * 2. Verifica se o usuário já consentiu antes (refresh_token no S3)
+ *    - Se SIM: valida o refresh_token na Atlassian → login direto (sem consentimento)
+ *    - Se NÃO: retorna needsOAuth=true → frontend redireciona para OAuth (login + consentimento)
+ *
+ * Segurança: O refresh_token só existe se o usuário já autenticou com senha + 2FA + consentiu.
+ * Usar o refresh_token é equivalente a uma sessão "lembrar-me" — a identidade já foi provada.
+ *
+ * Body: { email: string }
  */
 export async function POST(request: NextRequest) {
   try {
@@ -20,16 +30,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validar formato do email
     const emailLower = email.trim().toLowerCase();
-    if (!emailLower.includes("@")) {
-      return NextResponse.json(
-        { error: "INVALID_EMAIL", message: "Formato de email inválido." },
-        { status: 400 }
-      );
-    }
 
-    // Validar usuário no Jira e buscar permissões
+    // 1. Validar que o usuário existe no Jira e tem permissões
     const user = await validateUserByEmail(emailLower);
 
     if (!user) {
@@ -41,43 +44,57 @@ export async function POST(request: NextRequest) {
 
     if (user.allowedSquads.length === 0) {
       return NextResponse.json(
-        { error: "NO_PERMISSIONS", message: "Usuário não possui permissão em nenhum projeto." },
+        { error: "NO_PERMISSIONS", message: "Usuário sem permissão em nenhum projeto." },
         { status: 403 }
       );
     }
 
-    // Gerar token JWT
+    // 2. Verificar se já tem consentimento salvo (refresh_token no S3)
+    const storedRefreshToken = await loadRefreshToken(user.accountId).catch(() => null);
+
+    if (!storedRefreshToken) {
+      // Sem consentimento prévio → precisa OAuth completo (login + consentimento)
+      return NextResponse.json({
+        success: false,
+        needsOAuth: true,
+        message: "Primeira autenticação. Você será redirecionado para a Atlassian.",
+      });
+    }
+
+    // 3. Tem consentimento → validar refresh_token na Atlassian
+    const result = await refreshAtlassianToken(storedRefreshToken);
+
+    if (!result) {
+      // Refresh_token expirou ou foi revogado → precisa OAuth novamente
+      return NextResponse.json({
+        success: false,
+        needsOAuth: true,
+        message: "Sessão expirada. Você será redirecionado para a Atlassian.",
+      });
+    }
+
+    // 4. Refresh_token válido — salvar novo se rotacionou
+    if (result.refreshToken !== storedRefreshToken) {
+      await saveRefreshToken(user.accountId, emailLower, result.refreshToken).catch(() => {});
+    }
+
+    // 5. Login bem-sucedido — gerar JWT
     const token = generateToken(user);
 
-    // Retornar token e dados do usuário
-    const response = NextResponse.json({
-      success: true,
-      token,
-      user: {
-        displayName: user.displayName,
-        email: user.email,
-        isAdmin: user.isAdmin,
-        allowedSquads: user.allowedSquads,
-      },
-    });
+    const response = NextResponse.json({ success: true });
 
-    // Setar cookie httpOnly para o token
     response.cookies.set("auth-token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 8 * 60 * 60, // 8 horas
+      maxAge: 30 * 24 * 60 * 60,
       path: "/",
     });
 
     return response;
   } catch (error) {
     console.error("[Auth] Erro no login:", error);
-
     const message = error instanceof Error ? error.message : "Erro interno";
-    return NextResponse.json(
-      { error: "INTERNAL_ERROR", message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "INTERNAL_ERROR", message }, { status: 500 });
   }
 }

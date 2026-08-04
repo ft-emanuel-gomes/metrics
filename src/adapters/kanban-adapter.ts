@@ -207,7 +207,7 @@ export async function fetchKanbanDashboard(
     fetchR2Epics(activeFixVersion, squad.teamFieldValue),
     fetchR2Features(activeFixVersion, squad.teamFieldValue),
   ]);
-  const r2Progress = calculateR2Progress(r2Epics, r2Features, releaseDeadline, activeRelease?.name.split(" - ")[0] || "R2");
+  const r2Progress = calculateR2Progress(r2Epics, r2Features, releaseDeadline, activeRelease?.name.split(" - ")[0] || "Release");
 
   // 5. Percentis combinados
   const percentiles = {
@@ -515,10 +515,10 @@ function generateKanbanInsights(
     });
   }
 
-  // R2 risco
+  // Release risco
   if (r2Progress.features.total > 0 && r2Progress.features.done / r2Progress.features.total < 0.5) {
     insights.push({
-      title: "R2 exige aceleração",
+      title: `${r2Progress.releaseName} exige aceleração`,
       text: `Apenas ${r2Progress.features.done} de ${r2Progress.features.total} Features concluídas. Ritmo precisa aumentar.`,
       severity: "blue",
     });

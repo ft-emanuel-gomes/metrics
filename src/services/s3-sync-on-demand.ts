@@ -181,7 +181,7 @@ export async function ensureWipAndR2(
     const activeRelease = findActiveRelease(projectVersions);
     const activeFixVersion = activeRelease?.name || squad.r2FixVersion;
     const releaseDeadline = activeRelease?.releaseDate || "2026-07-31";
-    const releaseName = activeRelease?.name.split(" - ")[0] || "R2";
+    const releaseName = activeRelease?.name.split(" - ")[0] || "Release";
 
     const [r2Epics, r2Features] = await Promise.all([
       fetchR2Epics(activeFixVersion, squad.teamFieldValue),

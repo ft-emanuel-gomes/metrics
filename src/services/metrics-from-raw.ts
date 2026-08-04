@@ -65,6 +65,9 @@ export function buildDashboardFromRaw(
   r2Raw: RawR2Data | null,
   issueTypeFilter?: string[]
 ): DashboardData {
+  // Ordenar períodos cronologicamente (garante KPIs current/previous corretos)
+  periodsRaw.sort((a, b) => a.period.startDate.localeCompare(b.period.startDate));
+
   const periodMetrics: PeriodMetrics[] = [];
   const allCycleTimes: number[] = [];
   const bugsQuality: BugQualityData[] = [];
@@ -143,7 +146,7 @@ export function buildDashboardFromRaw(
   // R2 Progress
   const r2Progress = r2Raw
     ? calculateR2Progress(r2Raw.epics, r2Raw.features, r2Raw.releaseDeadline, r2Raw.releaseName)
-    : { epics: { total: 0, done: 0, inProgress: 0, pending: 0 }, features: { total: 0, done: 0, inProgress: 0, pending: 0 }, releaseName: "R2", deadline: "2026-07-31" };
+    : { epics: { total: 0, done: 0, inProgress: 0, pending: 0 }, features: { total: 0, done: 0, inProgress: 0, pending: 0 }, releaseName: "Release", deadline: "2026-12-31" };
 
   // Percentis
   const percentiles = {
@@ -179,8 +182,9 @@ export function buildDashboardFromRaw(
   // Insights
   const insights = generateInsights(periodMetrics, r2Progress, wipAging);
 
-  // Periods
-  const periods = periodsRaw.map((r) => r.period as Period);
+  // Periods — ordenar cronologicamente por startDate
+  const periods = periodsRaw.map((r) => r.period as Period)
+    .sort((a, b) => a.startDate.localeCompare(b.startDate));
 
   return {
     squad,
@@ -337,7 +341,7 @@ function generateInsights(
   }
 
   if (r2Progress.features.total > 0 && r2Progress.features.done / r2Progress.features.total < 0.5) {
-    insights.push({ title: "R2 exige aceleração", text: `Apenas ${r2Progress.features.done} de ${r2Progress.features.total} Features concluídas.`, severity: "blue" });
+    insights.push({ title: `${r2Progress.releaseName} exige aceleração`, text: `Apenas ${r2Progress.features.done} de ${r2Progress.features.total} Features concluídas.`, severity: "blue" });
   }
 
   const throughputs = periodMetrics.map((p) => p.throughput.total);

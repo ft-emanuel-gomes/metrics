@@ -1,14 +1,50 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 
+const ERROR_MESSAGES: Record<string, string> = {
+  oauth_denied: "Autenticação cancelada.",
+  no_code: "Código de autorização não recebido.",
+  config: "OAuth não configurado. Contate o administrador.",
+  token_exchange: "Falha na autenticação com a Atlassian.",
+  user_fetch: "Não foi possível obter dados do usuário.",
+  no_email: "Email não encontrado na conta Atlassian.",
+  no_permissions: "Usuário sem permissão em nenhum projeto.",
+  no_squads: "Usuário sem acesso a nenhuma squad.",
+  internal: "Erro interno. Tente novamente.",
+};
+
 export default function LoginPage() {
+  const searchParams = useSearchParams();
   const router = useRouter();
+  const error = searchParams.get("error");
+  const expired = searchParams.get("expired");
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
-  const [errorMessage, setErrorMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState(
+    error ? ERROR_MESSAGES[error] || "Erro desconhecido." : ""
+  );
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Se sessão expirou, tentar refresh silencioso (mesmo usuário)
+  useEffect(() => {
+    if (expired === "true" && !isRefreshing) {
+      setIsRefreshing(true);
+      fetch("/api/auth/refresh", { method: "POST" })
+        .then((res) => {
+          if (res.ok) {
+            router.push("/");
+            router.refresh();
+          } else {
+            setIsRefreshing(false);
+          }
+        })
+        .catch(() => setIsRefreshing(false));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expired]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -32,9 +68,12 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (res.ok && data.success) {
-        // Login bem-sucedido — redirecionar para home
+        // Consentimento já existe no S3 → login direto
         router.push("/");
         router.refresh();
+      } else if (data.needsOAuth) {
+        // Sem consentimento → redirecionar para OAuth (login + consentimento)
+        window.location.href = "/api/auth/authorize";
       } else {
         setStatus("error");
         setErrorMessage(data.message || "Erro ao autenticar.");
@@ -45,12 +84,23 @@ export default function LoginPage() {
     }
   }
 
+  if (isRefreshing) {
+    return (
+      <main className="min-h-screen flex items-center justify-center">
+        <div className="flex items-center gap-3 text-sm text-gray-400">
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-indigo-400 border-t-transparent" />
+          Renovando sessão...
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         {/* Card de login */}
         <div className="rounded-xl border border-white/10 bg-white/5 p-6 text-center">
-          {/* Logo dentro do card — centralizado */}
+          {/* Logo */}
           <Image
             src="/images/logo-montebravo-center.svg"
             alt="Monte Bravo"
@@ -62,10 +112,18 @@ export default function LoginPage() {
             Métricas Ágeis
           </p>
 
+          {/* Erro */}
+          {errorMessage && (
+            <div className="mb-4 rounded-lg bg-red-500/10 border border-red-500/20 px-3 py-2 text-[11px] text-red-400">
+              {errorMessage}
+            </div>
+          )}
+
+          {/* Formulário */}
           <form onSubmit={handleSubmit} className="space-y-4 text-left">
             <div>
               <label htmlFor="email" className="block text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5">
-                Email
+                Email corporativo
               </label>
               <input
                 id="email"
@@ -79,12 +137,6 @@ export default function LoginPage() {
                 autoFocus
               />
             </div>
-
-            {errorMessage && (
-              <div className="rounded-lg bg-red-500/10 border border-red-500/20 px-3 py-2 text-[11px] text-red-400">
-                {errorMessage}
-              </div>
-            )}
 
             <button
               type="submit"
