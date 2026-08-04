@@ -502,7 +502,7 @@ function buildBurndown(
 
 function generateInsights(
   periodMetrics: PeriodMetrics[],
-  r2Progress: { features: { total: number; done: number } }
+  r2Progress: { features: { total: number; done: number }; releaseName: string }
 ): InsightItem[] {
   const insights: InsightItem[] = [];
   if (periodMetrics.length === 0) return insights;

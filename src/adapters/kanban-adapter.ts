@@ -490,7 +490,7 @@ function buildRow(name: string, v1: number, v2: number, unit: string, pref: "hig
 function generateKanbanInsights(
   periodMetrics: PeriodMetrics[],
   wipAging: { totalWip: number; buckets: { label: string; count: number; percentage: number; minDays: number }[] },
-  r2Progress: { features: { total: number; done: number } }
+  r2Progress: { features: { total: number; done: number }; releaseName: string }
 ): InsightItem[] {
   const insights: InsightItem[] = [];
   const current = periodMetrics[periodMetrics.length - 1];

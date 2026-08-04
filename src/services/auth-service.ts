@@ -126,7 +126,7 @@ export function generateToken(user: AuthUser): string {
     allowedSquads: user.allowedSquads,
   };
 
-  return jwt.sign(payload, secret, { expiresIn });
+  return jwt.sign(payload, secret as jwt.Secret, { expiresIn });
 }
 
 /**
@@ -136,7 +136,7 @@ export function verifyToken(token: string): JwtPayload | null {
   const secret = process.env.JWT_SECRET || "dev-secret";
 
   try {
-    return jwt.verify(token, secret) as JwtPayload;
+    return jwt.verify(token, secret as jwt.Secret) as JwtPayload;
   } catch {
     return null;
   }
