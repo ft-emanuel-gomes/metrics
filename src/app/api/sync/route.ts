@@ -33,6 +33,10 @@ export const maxDuration = 300;
  * Permite recalcular métricas com qualquer filtro sem bater no Jira novamente.
  */
 export async function POST() {
+  // Limpar cache em memória para garantir dados frescos do Jira
+  const { getCacheManager } = await import("@/cache/cache-manager");
+  getCacheManager().flush();
+
   const startTime = Date.now();
   const squads = getAllSquads();
   const results: { slug: string; status: "ok" | "error"; periods: number; error?: string }[] = [];
