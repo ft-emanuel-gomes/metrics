@@ -43,14 +43,17 @@ export async function fetchAndSaveSprintPeriod(
     throw new Error(`Sprint ${sprintId} não encontrada no board ${squad.boardId}`);
   }
 
+  // Usar completeDate como fim real do período
+  const effectiveEndDate = sprint.completeDate || sprint.endDate;
+
   // Issues concluídas com changelogs
   let completedIssues = await fetchCompletedIssuesWithChangelogs(
-    squad.project, sprint.id, sprint.startDate, sprint.endDate
+    squad.project, sprint.id, sprint.startDate, effectiveEndDate
   );
 
   // Design extras (por período)
   const designItems = await fetchCompletedIssuesWithChangelogs(
-    squad.project, null, sprint.startDate, sprint.endDate
+    squad.project, null, sprint.startDate, effectiveEndDate
   );
   const existingKeys = new Set(completedIssues.map((i) => i.key));
   const designExtras = designItems.filter(
@@ -60,7 +63,7 @@ export async function fetchAndSaveSprintPeriod(
 
   // Spillover
   const spilledIssues = await fetchSpilledIssues(
-    squad.project, sprint.id, sprint.startDate, sprint.endDate
+    squad.project, sprint.id, sprint.startDate, effectiveEndDate
   );
 
   // Estimates
@@ -68,7 +71,7 @@ export async function fetchAndSaveSprintPeriod(
 
   // Bugs
   const { bugs, subBugs } = await fetchCompletedBugs(
-    squad.project, sprint.id, sprint.startDate, sprint.endDate
+    squad.project, sprint.id, sprint.startDate, effectiveEndDate
   );
 
   const num = sprint.name.match(/Sprint\s*(\d+)/i)?.[1] || sprint.name.match(/(\d+)/)?.[1] || String(sprint.id);
@@ -80,7 +83,7 @@ export async function fetchAndSaveSprintPeriod(
       label: `Sprint ${num}`,
       shortName: `S${num}`,
       startDate: sprint.startDate,
-      endDate: sprint.endDate,
+      endDate: effectiveEndDate,
     },
     completedIssues,
     standardEstimates,

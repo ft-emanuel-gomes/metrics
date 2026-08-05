@@ -70,13 +70,16 @@ export async function fetchSprintDashboard(
 
   for (const sprint of sprints) {
     const period = sprintToPeriod(sprint);
+    // Usar completeDate (data real de conclusão) em vez de endDate (planejado)
+    // Garante que itens concluídos após o endDate planejado sejam capturados
+    const effectiveEndDate = sprint.completeDate || sprint.endDate;
 
     // OTIMIZADO: Buscar issues concluídas COM changelogs inline (1-2 requests em vez de 15+)
     let completedWithCL = await fetchCompletedIssuesWithChangelogs(
       squad.project,
       sprint.id,
       sprint.startDate,
-      sprint.endDate
+      effectiveEndDate
     );
 
     // Buscar itens de Design concluídos no período (sem filtro de sprint)
@@ -84,7 +87,7 @@ export async function fetchSprintDashboard(
       squad.project,
       null, // Sem sprint — busca por período
       sprint.startDate,
-      sprint.endDate
+      effectiveEndDate
     );
     // Filtrar apenas Design e evitar duplicatas (issues que já estão na sprint)
     const existingKeys = new Set(completedWithCL.map((i) => i.key));
@@ -124,7 +127,7 @@ export async function fetchSprintDashboard(
       squad.project,
       sprint.id,
       sprint.startDate,
-      sprint.endDate
+      effectiveEndDate
     );
     const spillover = calculateSpillover(spilledIssues, completedWithCL);
 
@@ -141,12 +144,12 @@ export async function fetchSprintDashboard(
       standardEstimates,
       sprintTeamSize,
       sprint.startDate,
-      sprint.endDate
+      effectiveEndDate
     );
 
     // Bugs / Sub-bugs (qualidade)
     const { bugs: sprintBugs, subBugs: sprintSubBugs } = await fetchCompletedBugs(
-      squad.project, sprint.id, sprint.startDate, sprint.endDate
+      squad.project, sprint.id, sprint.startDate, effectiveEndDate
     );
     bugsQuality.push({
       period: sprintToPeriod(sprint).shortName,
@@ -350,7 +353,7 @@ function sprintToPeriod(sprint: SprintData): Period {
     label: `Sprint ${num}`,
     shortName: `S${num}`,
     startDate: sprint.startDate,
-    endDate: sprint.endDate,
+    endDate: sprint.completeDate || sprint.endDate,
   };
 }
 

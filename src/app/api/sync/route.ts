@@ -108,14 +108,17 @@ async function syncSprintSquad(squad: SquadConfig): Promise<number> {
 }
 
 async function syncSprintPeriod(squad: SquadConfig, sprint: SprintData): Promise<void> {
+  // Usar completeDate como fim real do período
+  const effectiveEndDate = sprint.completeDate || sprint.endDate;
+
   // Issues concluídas com changelogs
   let completedIssues = await fetchCompletedIssuesWithChangelogs(
-    squad.project, sprint.id, sprint.startDate, sprint.endDate
+    squad.project, sprint.id, sprint.startDate, effectiveEndDate
   );
 
   // Design extras (por período, sem filtro de sprint)
   const designItems = await fetchCompletedIssuesWithChangelogs(
-    squad.project, null, sprint.startDate, sprint.endDate
+    squad.project, null, sprint.startDate, effectiveEndDate
   );
   const existingKeys = new Set(completedIssues.map((i) => i.key));
   const designExtras = designItems.filter(
@@ -125,7 +128,7 @@ async function syncSprintPeriod(squad: SquadConfig, sprint: SprintData): Promise
 
   // Issues transbordadas
   const spilledIssues = await fetchSpilledIssues(
-    squad.project, sprint.id, sprint.startDate, sprint.endDate
+    squad.project, sprint.id, sprint.startDate, effectiveEndDate
   );
 
   // Estimates para ocupação
@@ -133,7 +136,7 @@ async function syncSprintPeriod(squad: SquadConfig, sprint: SprintData): Promise
 
   // Bugs e Sub-bugs
   const { bugs, subBugs } = await fetchCompletedBugs(
-    squad.project, sprint.id, sprint.startDate, sprint.endDate
+    squad.project, sprint.id, sprint.startDate, effectiveEndDate
   );
 
   const num = sprint.name.match(/Sprint\s*(\d+)/i)?.[1] || sprint.name.match(/(\d+)/)?.[1] || String(sprint.id);
@@ -145,7 +148,7 @@ async function syncSprintPeriod(squad: SquadConfig, sprint: SprintData): Promise
       label: `Sprint ${num}`,
       shortName: `S${num}`,
       startDate: sprint.startDate,
-      endDate: sprint.endDate,
+      endDate: effectiveEndDate,
     },
     completedIssues,
     standardEstimates,
