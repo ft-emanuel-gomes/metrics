@@ -105,8 +105,13 @@ export function buildDashboardFromRaw(
 
     // Ocupação
     let estimates = raw.standardEstimates;
+    let subtasksForOccupation = raw.subtasksWithParent || [];
     if (issueTypeFilter && issueTypeFilter.length > 0) {
       estimates = estimates.filter((s) => s.issueType && matchesFilter(s.issueType, issueTypeFilter));
+      subtasksForOccupation = subtasksForOccupation.filter((s) => {
+        if (!s.parentKey) return true;
+        return estimates.some((std) => std.key === s.parentKey);
+      });
     }
     const sprintId = raw.period.id;
     const teamSize = sprintId
@@ -114,6 +119,7 @@ export function buildDashboardFromRaw(
       : squad.teamSize;
     const occupation = calculateOccupation(
       estimates,
+      subtasksForOccupation,
       teamSize,
       raw.period.startDate,
       raw.period.endDate

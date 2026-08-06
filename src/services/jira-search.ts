@@ -310,6 +310,7 @@ export interface SubtaskWithEstimate {
   key: string;
   originalEstimateSeconds: number;
   issueType?: string;
+  parentKey?: string;
 }
 
 /**
@@ -364,6 +365,79 @@ export async function fetchSubtasksWithEstimates(
     for (const issue of response.issues) {
       const seconds = Number(issue.fields.timetracking?.originalEstimateSeconds) || 0;
       allSubtasks.push({ key: issue.key, originalEstimateSeconds: seconds });
+    }
+
+    nextPageToken = response.nextPageToken;
+    hasMore = !response.isLast && !!nextPageToken;
+  } while (hasMore);
+
+  cache.set(cacheKey, allSubtasks, CACHE_TTLS.issues);
+  return allSubtasks;
+}
+
+/**
+ * Busca subtasks com Original Estimate E parent key para regra de ocupação.
+ * Permite agrupar subtasks por Standard Issue pai.
+ */
+export async function fetchSubtasksWithParent(
+  project: string,
+  sprintId: number | null,
+  startDate?: string,
+  endDate?: string
+): Promise<SubtaskWithEstimate[]> {
+  const sprintClause = sprintId ? `AND sprint = ${sprintId}` : "";
+  const dateClause =
+    !sprintId && startDate && endDate
+      ? `AND created >= "${startDate}" AND created <= "${endDate}"`
+      : "";
+
+  const jql = `
+    project = "${project}"
+    AND issuetype in (Sub-task, Subtarefa, "Sub-bug")
+    ${sprintClause}
+    ${dateClause}
+    AND status not in (Cancelado, "Lista de Pendências")
+  `.trim().replace(/\s+/g, " ");
+
+  const cache = getCacheManager();
+  const cacheKey = `subtask-parent:${hashString(jql)}`;
+  const cached = cache.get<SubtaskWithEstimate[]>(cacheKey);
+  if (cached) return cached;
+
+  const client = getJiraClient();
+  const allSubtasks: SubtaskWithEstimate[] = [];
+  let nextPageToken: string | undefined = undefined;
+  let hasMore = true;
+
+  do {
+    const body: Record<string, unknown> = {
+      jql,
+      fields: ["timetracking", "parent", "issuetype"],
+      maxResults: 100,
+    };
+    if (nextPageToken) body.nextPageToken = nextPageToken;
+
+    const response = await client.post<{
+      issues: {
+        key: string;
+        fields: {
+          timetracking?: { originalEstimateSeconds?: number };
+          parent?: { key?: string };
+          issuetype?: { name?: string };
+        };
+      }[];
+      nextPageToken?: string;
+      isLast?: boolean;
+    }>("/rest/api/3/search/jql", body);
+
+    for (const issue of response.issues) {
+      const seconds = Number(issue.fields.timetracking?.originalEstimateSeconds) || 0;
+      allSubtasks.push({
+        key: issue.key,
+        originalEstimateSeconds: seconds,
+        parentKey: issue.fields.parent?.key,
+        issueType: issue.fields.issuetype?.name,
+      });
     }
 
     nextPageToken = response.nextPageToken;

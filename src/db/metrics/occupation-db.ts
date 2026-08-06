@@ -78,8 +78,8 @@ export async function queryOccupation(
     originalEstimateSeconds: row.originalEstimateSeconds ?? 0,
   }));
 
-  // 3. Delegar ao cálculo existente
-  return calculateOccupation(subtaskEstimates, teamSize, startDate, endDate);
+  // 3. Delegar ao cálculo existente (sem subtasks com parent no path de DB)
+  return calculateOccupation(subtaskEstimates, [], teamSize, startDate, endDate);
 }
 
 
@@ -137,6 +137,6 @@ export async function queryOccupationByDateRange(
     originalEstimateSeconds: row.originalEstimateSeconds ?? 0,
   }));
 
-  // 3. Delegar ao cálculo existente
-  return calculateOccupation(subtaskEstimates, teamSize, startDate, endDate);
+  // 3. Delegar ao cálculo existente (sem subtasks com parent no path de DB)
+  return calculateOccupation(subtaskEstimates, [], teamSize, startDate, endDate);
 }

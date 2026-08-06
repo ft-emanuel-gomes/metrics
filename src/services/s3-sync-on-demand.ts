@@ -8,6 +8,7 @@ import {
   fetchCompletedIssuesWithChangelogs,
   fetchSpilledIssues,
   fetchStandardIssuesWithEstimates,
+  fetchSubtasksWithParent,
   fetchCompletedBugs,
   fetchWipIssues,
   fetchR2Epics,
@@ -68,6 +69,7 @@ export async function fetchAndSaveSprintPeriod(
 
   // Estimates
   const standardEstimates = await fetchStandardIssuesWithEstimates(squad.project, sprint.id);
+  const subtasksWithParent = await fetchSubtasksWithParent(squad.project, sprint.id);
 
   // Bugs
   const { bugs, subBugs } = await fetchCompletedBugs(
@@ -87,6 +89,7 @@ export async function fetchAndSaveSprintPeriod(
     },
     completedIssues,
     standardEstimates,
+    subtasksWithParent,
     spilledIssues,
     bugs,
     subBugs,
@@ -128,6 +131,10 @@ export async function fetchAndSaveMonthPeriod(
     squad.project, null, startDate, endDate
   );
 
+  const subtasksWithParent = await fetchSubtasksWithParent(
+    squad.project, null, startDate, endDate
+  );
+
   const { bugs, subBugs } = await fetchCompletedBugs(
     squad.project, null, startDate, endDate
   );
@@ -142,6 +149,7 @@ export async function fetchAndSaveMonthPeriod(
     },
     completedIssues,
     standardEstimates,
+    subtasksWithParent,
     bugs,
     subBugs,
   };

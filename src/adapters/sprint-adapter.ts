@@ -5,6 +5,7 @@ import {
   fetchCompletedIssuesWithChangelogs,
   fetchSpilledIssues,
   fetchStandardIssuesWithEstimates,
+  fetchSubtasksWithParent,
   fetchCompletedBugs,
   fetchR2Epics,
   fetchR2Features,
@@ -131,17 +132,24 @@ export async function fetchSprintDashboard(
     );
     const spillover = calculateSpillover(spilledIssues, completedWithCL);
 
-    // Ocupação (Original Estimate das Standard Issues — usa capacidade salva por sprint)
+    // Ocupação (regra: max entre soma subtasks filhas vs estimate da Standard Issue)
     let standardEstimates = await fetchStandardIssuesWithEstimates(squad.project, sprint.id);
+    let subtasksForOccupation = await fetchSubtasksWithParent(squad.project, sprint.id);
     // Aplicar filtro por issue type na ocupação (se ativo)
     if (issueTypeFilter && issueTypeFilter.length > 0) {
       standardEstimates = standardEstimates.filter((s) =>
         s.issueType && (issueTypeFilter.includes(s.issueType) || issueTypeFilter.includes(normalizeType(s.issueType)))
       );
+      subtasksForOccupation = subtasksForOccupation.filter((s) => {
+        // Manter subtasks cujo parent está na lista filtrada de standard issues
+        if (!s.parentKey) return true;
+        return standardEstimates.some((std) => std.key === s.parentKey);
+      });
     }
     const sprintTeamSize = getSprintCapacity(squad.slug, sprint.id, squad.teamSize);
     const occupation = calculateOccupation(
       standardEstimates,
+      subtasksForOccupation,
       sprintTeamSize,
       sprint.startDate,
       effectiveEndDate

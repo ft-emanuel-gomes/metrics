@@ -2,6 +2,7 @@ import type { SquadConfig } from "@/config/squads";
 import {
   fetchCompletedIssuesWithChangelogs,
   fetchStandardIssuesWithEstimates,
+  fetchSubtasksWithParent,
   fetchWipIssues,
   fetchR2Epics,
   fetchR2Features,
@@ -158,8 +159,11 @@ export async function fetchKanbanDashboard(
     // Eficiência de Fluxo
     const flowEfficiency = calculatePeriodFlowEfficiency(issuesWithChangelogs);
 
-    // Ocupação (Original Estimate das Standard Issues)
+    // Ocupação (regra: max entre soma subtasks filhas vs estimate da Standard Issue)
     let standardEstimates = await fetchStandardIssuesWithEstimates(
+      squad.project, null, period.startDate, period.endDate
+    );
+    let subtasksForOccupation = await fetchSubtasksWithParent(
       squad.project, null, period.startDate, period.endDate
     );
     // Aplicar filtro por issue type na ocupação (se ativo)
@@ -167,9 +171,14 @@ export async function fetchKanbanDashboard(
       standardEstimates = standardEstimates.filter((s) =>
         s.issueType && (issueTypeFilter.includes(s.issueType) || issueTypeFilter.includes(s.issueType === "Story" ? "História" : s.issueType))
       );
+      subtasksForOccupation = subtasksForOccupation.filter((s) => {
+        if (!s.parentKey) return true;
+        return standardEstimates.some((std) => std.key === s.parentKey);
+      });
     }
     const occupation = calculateOccupation(
       standardEstimates,
+      subtasksForOccupation,
       squad.teamSize,
       period.startDate,
       period.endDate

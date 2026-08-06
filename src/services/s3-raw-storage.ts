@@ -30,6 +30,8 @@ export interface RawPeriodData {
   completedIssues: JiraIssueWithChangelog[];
   /** Standard Issues com estimates (para Ocupação) */
   standardEstimates: SubtaskWithEstimate[];
+  /** Subtasks com parent key (para Ocupação — regra max entre subs e standard) */
+  subtasksWithParent?: SubtaskWithEstimate[];
   /** Issues transbordadas — só sprint (para Transbordo) */
   spilledIssues?: JiraIssue[];
   /** Bugs e Sub-bugs concluídos (para Qualidade) */
