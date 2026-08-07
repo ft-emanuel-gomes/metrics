@@ -1,43 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
-
-/**
- * Armazena a capacidade (pessoas por sprint) para cada squad.
- * Formato: { "custodia": { "964": 6, "923": 5 }, ... }
- * Persistido em arquivo JSON (banco simples para v1).
- */
-
-const DATA_FILE = path.join(process.cwd(), "data", "capacity.json");
-
-interface CapacityData {
-  [squad: string]: {
-    [sprintId: string]: number; // pessoas
-  };
-}
-
-function ensureDataDir() {
-  const dir = path.dirname(DATA_FILE);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-}
-
-function readCapacity(): CapacityData {
-  ensureDataDir();
-  if (!fs.existsSync(DATA_FILE)) return {};
-  const raw = fs.readFileSync(DATA_FILE, "utf-8");
-  return JSON.parse(raw);
-}
-
-function writeCapacity(data: CapacityData) {
-  ensureDataDir();
-  fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), "utf-8");
-}
+import { loadCapacityConfig, saveCapacityConfig } from "@/services/capacity-store";
 
 /**
  * GET /api/capacity?squad=custodia
- * Retorna capacidades salvas para a squad.
+ * Retorna capacidades salvas para a squad (do S3).
  */
 export async function GET(request: NextRequest) {
   const squad = request.nextUrl.searchParams.get("squad");
@@ -45,18 +11,18 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Parâmetro 'squad' obrigatório" }, { status: 400 });
   }
 
-  const data = readCapacity();
-  return NextResponse.json(data[squad] || {});
+  const data = await loadCapacityConfig(squad);
+  return NextResponse.json(data);
 }
 
 /**
  * POST /api/capacity
- * Body: { squad: "custodia", sprintId: "964", teamSize: 6 }
- * Salva a capacidade e retorna confirmação.
+ * Body: { squad: "custodia", sprintId: "964", teamSize: 6, businessDays: 10 }
+ * Salva a capacidade no S3 e retorna confirmação.
  */
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { squad, sprintId, teamSize } = body;
+  const { squad, sprintId, teamSize, businessDays } = body;
 
   if (!squad || !sprintId || !teamSize) {
     return NextResponse.json(
@@ -72,13 +38,17 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const data = readCapacity();
-  if (!data[squad]) data[squad] = {};
-  data[squad][String(sprintId)] = teamSize;
-  writeCapacity(data);
+  if (businessDays && (typeof businessDays !== "number" || businessDays < 1 || businessDays > 30)) {
+    return NextResponse.json(
+      { error: "businessDays deve ser um número entre 1 e 30" },
+      { status: 400 }
+    );
+  }
+
+  await saveCapacityConfig(squad, String(sprintId), { teamSize, businessDays: businessDays || undefined });
 
   return NextResponse.json({
     success: true,
-    message: `Capacidade salva: ${teamSize} pessoas para sprint ${sprintId} da squad ${squad}`,
+    message: `Capacidade salva: ${teamSize} pessoas, ${businessDays || "auto"} dias úteis para sprint ${sprintId} da squad ${squad}`,
   });
 }

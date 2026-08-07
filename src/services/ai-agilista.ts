@@ -51,7 +51,11 @@ export async function buildJiraContext(slug: string): Promise<string> {
       return `✅ **${squad.name}** — Nenhum item em andamento. Board limpo!`;
     }
 
-    return generateDailyAnalysis(squad.name, wipIssues);
+    // Buscar estimates das issues em WIP para ocupação em horas
+    const { fetchWipIssuesWithEstimates } = await import("@/services/jira-search");
+    const wipEstimates = await fetchWipIssuesWithEstimates(squad.project);
+
+    return generateDailyAnalysis(squad.name, wipIssues, wipEstimates);
   } catch (error) {
     return `❌ Erro ao buscar dados do Jira para ${squad.name}.`;
   }
@@ -60,7 +64,11 @@ export async function buildJiraContext(slug: string): Promise<string> {
 /**
  * Gera a análise estruturada da daily com base nas regras do Agile IA.
  */
-function generateDailyAnalysis(squadName: string, issues: JiraIssue[]): string {
+function generateDailyAnalysis(
+  squadName: string,
+  issues: JiraIssue[],
+  wipEstimates?: { key: string; originalEstimateSeconds: number; issueType?: string }[]
+): string {
   const today = new Date();
   const lines: string[] = [];
 
@@ -151,6 +159,59 @@ function generateDailyAnalysis(squadName: string, issues: JiraIssue[]): string {
 
   if (handoffIssues.length === 0 && activeIssues.length > 0 && issues.length <= 10) {
     lines.push("   🟢 Fluxo saudável — sem gargalos identificados.");
+  }
+
+  // 6. Ocupação em horas/dias — itens comprometidos no fluxo (To Do a Waiting for Delivery)
+  if (wipEstimates && wipEstimates.length > 0) {
+    const estimateByKey = new Map<string, number>();
+    for (const est of wipEstimates) {
+      if (est.originalEstimateSeconds > 0) {
+        estimateByKey.set(est.key, est.originalEstimateSeconds);
+      }
+    }
+
+    const issueKeys = new Set(issues.map((i) => i.key));
+    let totalSeconds = 0;
+    let itemsWithEstimate = 0;
+    let itemsWithoutEstimate = 0;
+
+    for (const issue of issues) {
+      const seconds = estimateByKey.get(issue.key) || 0;
+      if (seconds > 0) {
+        totalSeconds += seconds;
+        itemsWithEstimate++;
+      } else {
+        itemsWithoutEstimate++;
+      }
+    }
+
+    const totalHours = Math.round(totalSeconds / 3600);
+    const totalDays = Math.round((totalHours / 6) * 10) / 10; // 6h/dia útil
+
+    lines.push("");
+    lines.push(`⏱️ **Ocupação Comprometida (To Do → Delivery):**`);
+    lines.push(`   • Total estimado: **${totalHours}h** (~${totalDays} dias úteis)`);
+    lines.push(`   • Itens com estimativa: ${itemsWithEstimate} | Sem estimativa: ${itemsWithoutEstimate}`);
+
+    if (itemsWithoutEstimate > 0) {
+      lines.push(`   ⚠️ ${itemsWithoutEstimate} itens sem Original Estimate — considerar preencher para melhor visibilidade.`);
+    }
+
+    // Breakdown por status
+    const hoursByStatus = new Map<string, number>();
+    for (const issue of issues) {
+      const seconds = estimateByKey.get(issue.key) || 0;
+      if (seconds > 0) {
+        hoursByStatus.set(issue.status, (hoursByStatus.get(issue.status) || 0) + seconds);
+      }
+    }
+    if (hoursByStatus.size > 0) {
+      lines.push("   📊 Horas por status:");
+      for (const [status, seconds] of [...hoursByStatus.entries()].sort((a, b) => b[1] - a[1])) {
+        const h = Math.round(seconds / 3600);
+        lines.push(`      • ${status}: ${h}h`);
+      }
+    }
   }
 
   return lines.join("\n");

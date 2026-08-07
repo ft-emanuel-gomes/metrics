@@ -585,6 +585,51 @@ export async function fetchWipIssues(project: string): Promise<JiraIssue[]> {
 }
 
 /**
+ * Busca issues em andamento (WIP) com Original Estimate — para Agile IA.
+ * Retorna key + originalEstimateSeconds das Standard Issues no fluxo.
+ */
+export async function fetchWipIssuesWithEstimates(
+  project: string
+): Promise<SubtaskWithEstimate[]> {
+  const jql = `
+    project = "${project}"
+    AND status in ("To Do", "In Progress", "Design Review", "Code Review", "Test", "Waiting for Test", "Waiting for Delivery")
+    AND issuetype in (História, Story, Bug, Design, "Technical Debt", Kaizen, Task, Spike)
+    AND status != Cancelado
+  `.trim().replace(/\s+/g, " ");
+
+  const client = getJiraClient();
+  const allIssues: SubtaskWithEstimate[] = [];
+  let nextPageToken: string | undefined = undefined;
+  let hasMore = true;
+
+  do {
+    const body: Record<string, unknown> = {
+      jql,
+      fields: ["timetracking", "issuetype"],
+      maxResults: 100,
+    };
+    if (nextPageToken) body.nextPageToken = nextPageToken;
+
+    const response = await client.post<{
+      issues: { key: string; fields: { timetracking?: { originalEstimateSeconds?: number }; issuetype?: { name?: string } } }[];
+      nextPageToken?: string;
+      isLast?: boolean;
+    }>("/rest/api/3/search/jql", body);
+
+    for (const issue of response.issues) {
+      const seconds = Number(issue.fields.timetracking?.originalEstimateSeconds) || 0;
+      allIssues.push({ key: issue.key, originalEstimateSeconds: seconds, issueType: issue.fields.issuetype?.name });
+    }
+
+    nextPageToken = response.nextPageToken;
+    hasMore = !response.isLast && !!nextPageToken;
+  } while (hasMore);
+
+  return allIssues;
+}
+
+/**
  * Busca Épicos R2 filtrados por squad.
  */
 export async function fetchR2Epics(

@@ -95,14 +95,15 @@ export function calculateOccupation(
   teamSize: number,
   startDate: string,
   endDate: string,
-  hoursPerDay: number = 6
+  hoursPerDay: number = 6,
+  customBusinessDays?: number
 ): OccupationPeriodResult {
   const totalSeconds = resolveOccupationEstimates(standardEstimates, subtasksWithParent);
   const allocatedHours = Math.round(totalSeconds / 3600);
 
   const start = new Date(startDate);
   const end = new Date(endDate);
-  const businessDays = businessDaysBetween(start, end);
+  const businessDays = customBusinessDays || businessDaysBetween(start, end);
   const capacityHours = teamSize * hoursPerDay * businessDays;
 
   const percentage =

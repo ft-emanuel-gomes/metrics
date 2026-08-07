@@ -12,7 +12,7 @@ import {
   fetchWipIssues,
 } from "@/services/jira-search";
 import { fetchChangelogsBatch } from "@/services/jira-changelog";
-import { getSprintCapacity } from "@/services/capacity-store";
+import { getSprintCapacity, getSprintBusinessDays } from "@/services/capacity-store";
 import { fetchProjectVersions, findActiveRelease } from "@/services/jira-versions";
 import { calculateCycleTimeP85, generateCycleTimeNote } from "@/metrics/cycle-time";
 import { calculateThroughput } from "@/metrics/throughput";
@@ -147,12 +147,15 @@ export async function fetchSprintDashboard(
       });
     }
     const sprintTeamSize = getSprintCapacity(squad.slug, sprint.id, squad.teamSize);
+    const sprintBusinessDays = getSprintBusinessDays(squad.slug, sprint.id);
     const occupation = calculateOccupation(
       standardEstimates,
       subtasksForOccupation,
       sprintTeamSize,
       sprint.startDate,
-      effectiveEndDate
+      effectiveEndDate,
+      6,
+      sprintBusinessDays
     );
 
     // Bugs / Sub-bugs (qualidade)

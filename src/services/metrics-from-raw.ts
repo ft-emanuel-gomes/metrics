@@ -18,7 +18,7 @@ import { calculateR2Progress } from "@/metrics/r2-progress";
 import { calculateForecast } from "@/metrics/forecast";
 import { calculateWipAging } from "@/metrics/wip-aging";
 import { calculateP50, calculateP85, calculateP95 } from "@/metrics/percentile";
-import { getSprintCapacity } from "./capacity-store";
+import { getSprintCapacity, getSprintBusinessDays } from "./capacity-store";
 import type {
   DashboardData,
   Period,
@@ -117,12 +117,17 @@ export function buildDashboardFromRaw(
     const teamSize = sprintId
       ? getSprintCapacity(squad.slug, sprintId, squad.teamSize)
       : squad.teamSize;
+    const customBusinessDays = sprintId
+      ? getSprintBusinessDays(squad.slug, sprintId)
+      : undefined;
     const occupation = calculateOccupation(
       estimates,
       subtasksForOccupation,
       teamSize,
       raw.period.startDate,
-      raw.period.endDate
+      raw.period.endDate,
+      6,
+      customBusinessDays
     );
 
     // Bugs (não filtra por issueType — sempre mostra qualidade)
