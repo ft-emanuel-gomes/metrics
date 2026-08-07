@@ -39,7 +39,7 @@ export async function callAgilista(
  */
 export async function buildJiraContext(slug: string): Promise<string> {
   const { getSquadBySlug } = await import("@/config/squads");
-  const { fetchWipIssues } = await import("@/services/jira-search");
+  const { fetchWipIssues, fetchWipIssuesWithEstimates } = await import("@/services/jira-search");
 
   const squad = getSquadBySlug(slug);
   if (!squad) return "❌ Squad não encontrada.";
@@ -51,11 +51,35 @@ export async function buildJiraContext(slug: string): Promise<string> {
       return `✅ **${squad.name}** — Nenhum item em andamento. Board limpo!`;
     }
 
-    // Buscar estimates das issues em WIP para ocupação em horas
-    const { fetchWipIssuesWithEstimates } = await import("@/services/jira-search");
-    const wipEstimates = await fetchWipIssuesWithEstimates(squad.project);
+    // Separar issues por segmento: Engenharia vs Design
+    const engineeringIssues = wipIssues.filter((i) => i.issueType !== "Design");
+    const designIssues = wipIssues.filter((i) => i.issueType === "Design");
 
-    return generateDailyAnalysis(squad.name, wipIssues, wipEstimates);
+    // Buscar estimates para ocupação
+    const wipEstimates = await fetchWipIssuesWithEstimates(squad.project);
+    const engineeringEstimates = wipEstimates.filter((e) => e.issueType !== "Design");
+    const designEstimates = wipEstimates.filter((e) => e.issueType === "Design");
+
+    const sections: string[] = [];
+
+    // Seção Engenharia
+    if (engineeringIssues.length > 0) {
+      sections.push(generateDailyAnalysis(`${squad.name} — Engenharia`, engineeringIssues, engineeringEstimates));
+    }
+
+    // Separador
+    if (engineeringIssues.length > 0 && designIssues.length > 0) {
+      sections.push("\n---\n");
+    }
+
+    // Seção Design
+    if (designIssues.length > 0) {
+      sections.push(generateDailyAnalysis(`${squad.name} — Design`, designIssues, designEstimates));
+    } else {
+      sections.push(`\n🎨 **${squad.name} — Design**: Nenhum item de Design em andamento.`);
+    }
+
+    return sections.join("\n");
   } catch (error) {
     return `❌ Erro ao buscar dados do Jira para ${squad.name}.`;
   }

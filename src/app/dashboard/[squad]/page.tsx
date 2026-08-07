@@ -24,6 +24,7 @@ import BugsQuality from "@/components/dashboard/BugsQuality";
 import PeriodSelector from "@/components/dashboard/PeriodSelector";
 import ExportButton from "@/components/dashboard/ExportButton";
 import MonteCarloButton from "@/components/dashboard/MonteCarloButton";
+import DesignToggle from "@/components/dashboard/DesignToggle";
 import { formatFullDate } from "@/lib/utils";
 
 // Desabilitar cache do Next.js (dados dinâmicos com filtros)
@@ -63,6 +64,9 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
   const issueTypeFilter = resolvedSearch.issueType
     ? resolvedSearch.issueType.split(",").filter(Boolean)
     : DEFAULT_ISSUE_TYPES;
+
+  // Detectar modo Design (toggle ativo)
+  const isDesignMode = issueTypeFilter.length === 1 && issueTypeFilter[0] === "Design";
 
   // Buscar dados: S3 raw (com filtros server-side), fallback Jira on-demand
   const adapter = createDashboardAdapter(squad);
@@ -197,11 +201,12 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
               {squad.name}
             </h1>
             <span className="inline-block mt-1 rounded-full bg-indigo-500/15 px-3 py-1 text-[11px] font-bold text-indigo-300 uppercase">
-              {periodLabel}
+              {isDesignMode ? `DESIGN · ${periodLabel}` : periodLabel}
             </span>
             <p className="mt-1.5 text-xs text-white/70">{periodDates}</p>
           </div>
           <div className="flex gap-2">
+            <DesignToggle />
             <MonteCarloButton squad={slug} defaultTeamSize={displayTeamSize} availableSprints={availableSprints} />
             <ExportButton squad={slug} />
           </div>
@@ -242,7 +247,7 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
             periodMetrics={data.periodMetrics}
             stakeholderNote={data.stakeholderNote}
           />
-          <R2Progress r2Progress={data.r2Progress} />
+          {!isDesignMode && <R2Progress r2Progress={data.r2Progress} />}
         </div>
 
         <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -251,7 +256,7 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
         </div>
 
         <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-          {squad.methodology === "sprint" && (
+          {!isDesignMode && squad.methodology === "sprint" && (
             <SpilloverDots periodMetrics={data.periodMetrics} />
           )}
           <OccupationBars periodMetrics={data.periodMetrics} teamSize={displayTeamSize} />
@@ -260,14 +265,16 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
         {/* WIP Aging + Qualidade (lado a lado) */}
         <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
           {data.wipAging && <WipAgingChart wipAging={data.wipAging} />}
-          {data.bugsQuality.length > 0 && <BugsQuality data={data.bugsQuality} />}
+          {!isDesignMode && data.bugsQuality.length > 0 && <BugsQuality data={data.bugsQuality} />}
         </div>
 
-        {/* Section 2: Previsibilidade e Diagnóstico */}
-        <div className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <PercentilesBars {...data.percentiles} />
-          <ForecastCards forecast={data.forecast} />
-        </div>
+        {/* Section 2: Previsibilidade e Diagnóstico (somente Engenharia) */}
+        {!isDesignMode && (
+          <div className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <PercentilesBars {...data.percentiles} />
+            <ForecastCards forecast={data.forecast} />
+          </div>
+        )}
 
         {/* Evolution Table */}
         <div className="mt-4">
