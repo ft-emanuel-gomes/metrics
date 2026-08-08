@@ -6,6 +6,7 @@ import SyncButton from "@/components/home/SyncButton";
 import LogoutButton from "@/components/home/LogoutButton";
 import MetasOverlay from "@/components/home/MetasOverlay";
 import AiAgilistaButton from "@/components/home/AiAgilistaButton";
+import RetroButton from "@/components/home/RetroButton";
 import { getAuthSession } from "@/services/auth-session";
 
 export default async function HomePage() {
@@ -37,6 +38,7 @@ export default async function HomePage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            {session.isAdmin && <RetroButton />}
             {session.isAdmin && <AiAgilistaButton />}
             <SyncButton />
           </div>
