@@ -6,6 +6,7 @@ interface KpiCardsProps {
   kpis: KpiSummary;
   squad?: string;
   availableSprints?: { id: number; name: string }[];
+  isDesignMode?: boolean;
 }
 
 const STATUS_COLORS: Record<KpiItem["status"], string> = {
@@ -72,19 +73,23 @@ function KpiCard({ item, extra }: { item: KpiItem; extra?: React.ReactNode }) {
   );
 }
 
-export default function KpiCards({ kpis, squad, availableSprints }: KpiCardsProps) {
+export default function KpiCards({ kpis, squad, availableSprints, isDesignMode }: KpiCardsProps) {
+  // Em modo Design: excluir Transbordo (não se aplica)
   const items: KpiItem[] = [
     kpis.cycleTime,
     kpis.throughput,
     kpis.flowEfficiency,
-    kpis.spilloverOrWip,
+    // Transbordo/WIP Aging card primário — excluir se Design mode
+    ...(!isDesignMode ? [kpis.spilloverOrWip] : []),
     kpis.occupation,
-    // Adicionar WIP Aging como 6º card somente se for diferente do spilloverOrWip (Sprint squads)
+    // Adicionar WIP Aging como card extra somente se for diferente do spilloverOrWip (Sprint squads)
     ...(kpis.wipAging && kpis.wipAging.label !== kpis.spilloverOrWip.label ? [kpis.wipAging] : []),
   ];
 
+  const colCount = items.length >= 6 ? "lg:grid-cols-6" : items.length === 5 ? "lg:grid-cols-5" : "lg:grid-cols-4";
+
   return (
-    <div className={`grid grid-cols-2 gap-3 sm:grid-cols-3 ${items.length > 5 ? "lg:grid-cols-6" : "lg:grid-cols-5"}`}>
+    <div className={`grid grid-cols-2 gap-3 sm:grid-cols-3 ${colCount}`}>
       {items.map((item, idx) => (
         <KpiCard
           key={`${item.label}-${idx}`}

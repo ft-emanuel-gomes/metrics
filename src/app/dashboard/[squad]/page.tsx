@@ -238,7 +238,7 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
 
         {/* KPI Cards */}
         <div className="mt-4">
-          <KpiCards kpis={data.kpis} squad={slug} availableSprints={availableSprints} />
+          <KpiCards kpis={data.kpis} squad={slug} availableSprints={availableSprints} isDesignMode={isDesignMode} />
         </div>
 
         {/* Section 1: Performance Operacional */}
@@ -247,7 +247,11 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
             periodMetrics={data.periodMetrics}
             stakeholderNote={data.stakeholderNote}
           />
-          {!isDesignMode && <R2Progress r2Progress={data.r2Progress} />}
+          {!isDesignMode ? (
+            <R2Progress r2Progress={data.r2Progress} />
+          ) : (
+            data.wipAging && <WipAgingChart wipAging={data.wipAging} />
+          )}
         </div>
 
         <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -260,13 +264,18 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
             <SpilloverDots periodMetrics={data.periodMetrics} />
           )}
           <OccupationBars periodMetrics={data.periodMetrics} teamSize={displayTeamSize} />
+          {isDesignMode && (
+            <EvolutionTable evolution={data.evolution} periods={data.periods} />
+          )}
         </div>
 
-        {/* WIP Aging + Qualidade (lado a lado) */}
-        <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-          {data.wipAging && <WipAgingChart wipAging={data.wipAging} />}
-          {!isDesignMode && data.bugsQuality.length > 0 && <BugsQuality data={data.bugsQuality} />}
-        </div>
+        {/* WIP Aging + Qualidade (lado a lado) — somente Engenharia */}
+        {!isDesignMode && (
+          <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+            {data.wipAging && <WipAgingChart wipAging={data.wipAging} />}
+            {data.bugsQuality.length > 0 && <BugsQuality data={data.bugsQuality} />}
+          </div>
+        )}
 
         {/* Section 2: Previsibilidade e Diagnóstico (somente Engenharia) */}
         {!isDesignMode && (
@@ -276,10 +285,12 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
           </div>
         )}
 
-        {/* Evolution Table */}
-        <div className="mt-4">
-          <EvolutionTable evolution={data.evolution} periods={data.periods} />
-        </div>
+        {/* Evolution Table (somente Engenharia — em Design já aparece acima) */}
+        {!isDesignMode && (
+          <div className="mt-4">
+            <EvolutionTable evolution={data.evolution} periods={data.periods} />
+          </div>
+        )}
 
         {/* Insights */}
         <div className="mt-4">
