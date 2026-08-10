@@ -14,6 +14,7 @@ import type {
   DeleteCardPayload,
   MoveCardPayload,
   MergeCardsPayload,
+  UnmergePayload,
   ReactPayload,
   VotePayload,
   ReactionType,
@@ -29,6 +30,7 @@ type CardAction =
   | { action: "delete"; payload: DeleteCardPayload }
   | { action: "move"; payload: MoveCardPayload }
   | { action: "merge"; payload: MergeCardsPayload }
+  | { action: "unmerge"; payload: UnmergePayload }
   | { action: "react"; payload: ReactPayload }
   | { action: "vote"; payload: VotePayload };
 
@@ -246,6 +248,50 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       card.votes.push(userId);
       await saveBoard(board);
       return NextResponse.json(card);
+    }
+
+    case "unmerge": {
+      if (role !== "admin") {
+        return NextResponse.json({ error: "Apenas Administrators podem desfazer merge" }, { status: 403 });
+      }
+
+      const { cardId, columnId } = body.payload;
+      const column = board.columns.find((c) => c.id === columnId);
+      if (!column) return NextResponse.json({ error: "Coluna não encontrada" }, { status: 404 });
+
+      const card = column.cards.find((c) => c.id === cardId);
+      if (!card) return NextResponse.json({ error: "Card não encontrado" }, { status: 404 });
+
+      if (!card.mergedFrom || card.mergedFrom.length === 0) {
+        return NextResponse.json({ error: "Este card não é resultado de merge" }, { status: 400 });
+      }
+
+      // Separar textos pelo delimitador de merge
+      const parts = card.text.split("\n---\n");
+      if (parts.length < 2) {
+        return NextResponse.json({ error: "Não foi possível separar os textos" }, { status: 400 });
+      }
+
+      // Manter o primeiro texto no card original, criar novos cards para os demais
+      card.text = parts[0];
+      card.mergedFrom = undefined;
+
+      // Criar cards separados para os textos restantes
+      for (let i = 1; i < parts.length; i++) {
+        const newCard: RetroCard = {
+          id: `card-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          text: parts[i],
+          authorId: card.authorId,
+          authorName: card.authorName,
+          createdAt: new Date().toISOString(),
+          reactions: [],
+          votes: [],
+        };
+        column.cards.push(newCard);
+      }
+
+      await saveBoard(board);
+      return NextResponse.json({ success: true, cardsCount: parts.length });
     }
 
     default:

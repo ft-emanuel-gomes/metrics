@@ -16,6 +16,7 @@ interface RetroCardProps {
   onDelete?: (columnId: string, cardId: string) => Promise<void>;
   onReact?: (columnId: string, cardId: string, reactionType: string) => Promise<void>;
   onVote?: (columnId: string, cardId: string) => Promise<void>;
+  onUnmerge?: (columnId: string, cardId: string) => Promise<void>;
 }
 
 const REACTIONS: { type: ReactionType; emoji: string }[] = [
@@ -35,6 +36,7 @@ export default function RetroCardComponent({
   onDelete,
   onReact,
   onVote,
+  onUnmerge,
 }: RetroCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(card.text);
@@ -142,6 +144,17 @@ export default function RetroCardComponent({
               >
                 <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            )}
+            {card.mergedFrom && card.mergedFrom.length > 0 && permissions.canMergeCards && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onUnmerge?.(columnId, card.id); }}
+                className="p-1 rounded hover:bg-amber-500/10 text-gray-500 hover:text-amber-400"
+                title="Desfazer merge"
+              >
+                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
                 </svg>
               </button>
             )}

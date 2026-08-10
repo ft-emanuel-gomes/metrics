@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -36,6 +36,7 @@ export default function RetroBoard({
   const [board, setBoard] = useState<RetroBoardType>(initialBoard);
   const [activeCard, setActiveCard] = useState<RetroCard | null>(null);
   const [activeColumnId, setActiveColumnId] = useState<string | null>(null);
+  const [mergeMode, setMergeMode] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
@@ -132,6 +133,13 @@ export default function RetroBoard({
       });
     }
   }, [squadSlug]);
+
+  const handleUnmerge = useCallback(async (columnId: string, cardId: string) => {
+    const res = await apiCards("unmerge", { columnId, cardId });
+    if (res.ok) {
+      await handleRefresh();
+    }
+  }, [squadSlug, handleRefresh]);
 
   // --- Column operations ---
 
@@ -238,12 +246,27 @@ export default function RetroBoard({
     );
     if (!currentCol) return;
 
-    // Check if dropped on another card in same column (reorder or merge)
+    // Check if dropped on another card in same column
     const overCardIdx = currentCol.cards.findIndex((c) => c.id === overId);
     const activeCardIdx = currentCol.cards.findIndex((c) => c.id === activeId);
 
     if (overCardIdx >= 0 && activeCardIdx >= 0 && activeId !== overId) {
-      // Reorder within column
+      // Check if merge should happen (admin + same column + confirm)
+      if (permissions.canMergeCards && mergeMode) {
+        const targetCard = currentCol.cards[overCardIdx];
+        const sourceCard = currentCol.cards[activeCardIdx];
+        if (confirm(`Deseja unir os cards?\n\n"${sourceCard.text.slice(0, 50)}..."\ncom\n"${targetCard.text.slice(0, 50)}..."`)) {
+          await apiCards("merge", {
+            targetCardId: targetCard.id,
+            sourceCardId: sourceCard.id,
+            columnId: currentCol.id,
+          });
+          await handleRefresh();
+          return;
+        }
+      }
+
+      // Regular reorder within column
       const reordered = arrayMove(currentCol.cards, activeCardIdx, overCardIdx);
       const updatedBoard = {
         ...board,
@@ -272,7 +295,7 @@ export default function RetroBoard({
     }
   }
 
-  // --- Board refresh (polling) ---
+  // --- Board refresh (polling every 5s for multi-user sync) ---
 
   const handleRefresh = useCallback(async () => {
     const res = await fetch(`/api/retro/${squadSlug}`);
@@ -281,6 +304,12 @@ export default function RetroBoard({
       setBoard(data.board);
     }
   }, [squadSlug]);
+
+  // Auto-polling for real-time collaboration
+  useEffect(() => {
+    const interval = setInterval(handleRefresh, 5000);
+    return () => clearInterval(interval);
+  }, [handleRefresh]);
 
   // --- Settings update ---
 
@@ -305,6 +334,8 @@ export default function RetroBoard({
         onAddColumn={handleAddColumn}
         onSettingsUpdate={handleSettingsUpdate}
         onRefresh={handleRefresh}
+        mergeMode={mergeMode}
+        onToggleMergeMode={() => setMergeMode(!mergeMode)}
       />
 
       {/* Board com colunas */}
@@ -331,6 +362,7 @@ export default function RetroBoard({
                   onDeleteCard={handleDeleteCard}
                   onReact={handleReact}
                   onVote={handleVote}
+                  onUnmerge={handleUnmerge}
                   onRename={handleRenameColumn}
                   onDelete={handleDeleteColumn}
                 />

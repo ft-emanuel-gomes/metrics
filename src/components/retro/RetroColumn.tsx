@@ -16,6 +16,7 @@ interface RetroColumnProps {
   onDeleteCard: (columnId: string, cardId: string) => Promise<void>;
   onReact: (columnId: string, cardId: string, reactionType: string) => Promise<void>;
   onVote: (columnId: string, cardId: string) => Promise<void>;
+  onUnmerge: (columnId: string, cardId: string) => Promise<void>;
   onRename: (columnId: string, title: string) => Promise<void>;
   onDelete: (columnId: string) => Promise<void>;
 }
@@ -30,6 +31,7 @@ export default function RetroColumn({
   onDeleteCard,
   onReact,
   onVote,
+  onUnmerge,
   onRename,
   onDelete,
 }: RetroColumnProps) {
@@ -144,6 +146,7 @@ export default function RetroColumn({
               onDelete={onDeleteCard}
               onReact={onReact}
               onVote={onVote}
+              onUnmerge={onUnmerge}
             />
           ))}
         </SortableContext>

@@ -163,6 +163,11 @@ export interface VotePayload {
   columnId: string;
 }
 
+export interface UnmergePayload {
+  cardId: string;
+  columnId: string;
+}
+
 export interface TimerPayload {
   action: "start" | "pause" | "reset" | "set";
   durationSeconds?: number;

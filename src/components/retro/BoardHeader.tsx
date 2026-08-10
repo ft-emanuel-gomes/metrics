@@ -16,6 +16,8 @@ interface BoardHeaderProps {
   onAddColumn: (title: string) => Promise<void>;
   onSettingsUpdate: (settings: Partial<RetroBoardSettings>) => Promise<void>;
   onRefresh: () => Promise<void>;
+  mergeMode: boolean;
+  onToggleMergeMode: () => void;
 }
 
 export default function BoardHeader({
@@ -25,6 +27,8 @@ export default function BoardHeader({
   onAddColumn,
   onSettingsUpdate,
   onRefresh,
+  mergeMode,
+  onToggleMergeMode,
 }: BoardHeaderProps) {
   const [showSettings, setShowSettings] = useState(false);
   const [showShare, setShowShare] = useState(false);
@@ -73,6 +77,24 @@ export default function BoardHeader({
                 onAddColumn={onAddColumn}
                 onOpenTimer={() => setShowTimerControl(!showTimerControl)}
               />
+            )}
+
+            {/* Merge Mode (admin only) */}
+            {permissions.canMergeCards && (
+              <button
+                onClick={onToggleMergeMode}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition ${
+                  mergeMode
+                    ? "bg-amber-500/20 text-amber-300 ring-1 ring-amber-500/40"
+                    : "bg-white/5 text-gray-400 hover:bg-white/10"
+                }`}
+                title={mergeMode ? "Desativar modo merge" : "Ativar modo merge (arraste card sobre outro para unir)"}
+              >
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                </svg>
+                Merge
+              </button>
             )}
 
             {/* Compartilhar */}
