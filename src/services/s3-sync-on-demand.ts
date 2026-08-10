@@ -165,29 +165,24 @@ export async function fetchAndSaveMonthPeriod(
 export async function ensureWipAndR2(
   squad: SquadConfig
 ): Promise<{ wipRaw: RawWipData | null; r2Raw: RawR2Data | null }> {
-  let wipRaw = await loadRawWip(squad.slug).catch(() => null);
+  // WIP é sempre real-time — buscar do Jira a cada request (dados mudam constantemente)
+  const wipIssues = await fetchWipIssues(squad.project);
+  const wipKeys = wipIssues.map((i) => i.key);
+  const wipChangelogs = await fetchChangelogsBatch(wipKeys);
+
+  const wipRaw: RawWipData = {
+    issues: wipIssues.map((i) => ({
+      key: i.key,
+      summary: i.summary,
+      status: i.status,
+      issueType: i.issueType,
+      transitions: wipChangelogs.get(i.key) || [],
+    })),
+    fetchedAt: new Date().toISOString(),
+  };
+  await saveRawWip(squad.slug, wipRaw);
+
   let r2Raw = await loadRawR2(squad.slug).catch(() => null);
-
-  // Se WIP não existe, buscar do Jira
-  if (!wipRaw) {
-    const wipIssues = await fetchWipIssues(squad.project);
-    const wipKeys = wipIssues.map((i) => i.key);
-    const wipChangelogs = await fetchChangelogsBatch(wipKeys);
-
-    wipRaw = {
-      issues: wipIssues.map((i) => ({
-        key: i.key,
-        summary: i.summary,
-        status: i.status,
-        issueType: i.issueType,
-        transitions: wipChangelogs.get(i.key) || [],
-      })),
-      fetchedAt: new Date().toISOString(),
-    };
-    await saveRawWip(squad.slug, wipRaw);
-  }
-
-  // Se R2 não existe, buscar do Jira
   if (!r2Raw) {
     const projectVersions = await fetchProjectVersions("EP");
     const activeRelease = findActiveRelease(projectVersions);

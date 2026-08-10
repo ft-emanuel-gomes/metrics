@@ -153,8 +153,15 @@ export function buildDashboardFromRaw(
   let wipFiltered = wipRaw ? wipRaw.issues : [];
   if (wipRaw && issueTypeFilter && issueTypeFilter.length > 0) {
     wipFiltered = wipRaw.issues.filter((i) => {
-      if (!i.issueType) return true; // dados antigos sem issueType — manter
-      return matchesFilter(i.issueType, issueTypeFilter);
+      // Se issueType não está salvo no raw (dados antigos), inferir pelo key prefix ou excluir Design por nome
+      const type = i.issueType || "";
+      if (!type) {
+        // Dados antigos: não tem issueType — aceitar se não estamos pedindo Design exclusively
+        // Se o filtro inclui Design E é o único tipo, rejeitar items sem tipo (são provavelmente Eng)
+        const isDesignOnly = issueTypeFilter.length === 1 && issueTypeFilter[0] === "Design";
+        return !isDesignOnly;
+      }
+      return matchesFilter(type, issueTypeFilter);
     });
   }
   const wipAging = wipFiltered.length > 0
