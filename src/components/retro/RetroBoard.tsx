@@ -37,6 +37,7 @@ export default function RetroBoard({
   const [activeCard, setActiveCard] = useState<RetroCard | null>(null);
   const [activeColumnId, setActiveColumnId] = useState<string | null>(null);
   const [mergeMode, setMergeMode] = useState(false);
+  const [pollPaused, setPollPaused] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
@@ -310,15 +311,17 @@ export default function RetroBoard({
     }
   }, [squadSlug]);
 
-  // Auto-polling for real-time collaboration
+  // Auto-polling for real-time collaboration (paused during local operations)
   useEffect(() => {
+    if (pollPaused) return;
     const interval = setInterval(handleRefresh, 5000);
     return () => clearInterval(interval);
-  }, [handleRefresh]);
+  }, [handleRefresh, pollPaused]);
 
   // --- Settings update ---
 
   const handleSettingsUpdate = useCallback(async (settings: Partial<RetroBoardType["settings"]>) => {
+    setPollPaused(true);
     const res = await fetch(`/api/retro/${squadSlug}/settings`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -327,6 +330,8 @@ export default function RetroBoard({
     if (res.ok) {
       setBoard((prev) => ({ ...prev, settings: { ...prev.settings, ...settings } }));
     }
+    // Resume polling after a short delay to let S3 propagate
+    setTimeout(() => setPollPaused(false), 2000);
   }, [squadSlug]);
 
   return (

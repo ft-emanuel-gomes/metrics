@@ -43,12 +43,12 @@ export default function RetroColumn({
 
   const { setNodeRef, isOver } = useDroppable({ id: column.id });
 
-  const cardIds = column.cards.map((c) => c.id);
-
   // Filtrar cards se hideCards ativo (cada um vê só os seus)
   const visibleCards = settings.hideCards
     ? column.cards.filter((c) => c.authorId === currentUserId)
     : column.cards;
+
+  const cardIds = visibleCards.map((c) => c.id);
 
   async function handleSubmitCard() {
     const text = newCardText.trim();
