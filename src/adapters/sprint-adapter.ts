@@ -219,8 +219,14 @@ export async function fetchSprintDashboard(
     story: { type: "História", p85Days: percentiles.p85, sampleSize: percentiles.sampleSize },
   };
 
-  // 6. WIP Aging (realtime — issues atualmente no fluxo, sem filtro de sprint)
-  const wipIssues = await fetchWipIssues(squad.project);
+  // 6. WIP Aging (realtime — issues atualmente no fluxo, filtrado por issueType)
+  let wipIssues = await fetchWipIssues(squad.project);
+  // Aplicar filtro por issue type no WIP (excluir Design quando não solicitado)
+  if (issueTypeFilter && issueTypeFilter.length > 0) {
+    wipIssues = wipIssues.filter((i) =>
+      issueTypeFilter.includes(i.issueType) || issueTypeFilter.includes(normalizeType(i.issueType))
+    );
+  }
   const wipKeys = wipIssues.map((i) => i.key);
   const wipChangelogs = await fetchChangelogsBatch(wipKeys);
   const wipWithChangelogs = wipIssues.map((i) => ({

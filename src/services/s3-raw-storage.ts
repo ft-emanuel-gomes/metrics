@@ -45,6 +45,7 @@ export interface RawWipData {
     key: string;
     summary: string;
     status: string;
+    issueType?: string;
     transitions: StatusTransition[];
   }[];
   fetchedAt: string;

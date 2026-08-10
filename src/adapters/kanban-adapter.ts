@@ -194,8 +194,14 @@ export async function fetchKanbanDashboard(
     });
   }
 
-  // 3. WIP Aging (substitui transbordo para Kanban)
-  const wipIssues = await fetchWipIssues(squad.project);
+  // 3. WIP Aging (substitui transbordo para Kanban, filtrado por issueType)
+  let wipIssues = await fetchWipIssues(squad.project);
+  // Aplicar filtro por issue type no WIP (excluir Design quando não solicitado)
+  if (issueTypeFilter && issueTypeFilter.length > 0) {
+    wipIssues = wipIssues.filter((i) =>
+      issueTypeFilter.includes(i.issueType) || issueTypeFilter.includes(i.issueType === "Story" ? "História" : i.issueType)
+    );
+  }
   const wipKeys = wipIssues.map((i) => i.key);
   const wipChangelogs = await fetchChangelogsBatch(wipKeys);
   const wipWithChangelogs = wipIssues.map((i) => ({

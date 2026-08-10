@@ -149,9 +149,16 @@ export function buildDashboardFromRaw(
     });
   }
 
-  // WIP Aging
-  const wipAging = wipRaw
-    ? calculateWipAging(wipRaw.issues)
+  // WIP Aging (filtrar por issueType — excluir Design quando não solicitado)
+  let wipFiltered = wipRaw ? wipRaw.issues : [];
+  if (wipRaw && issueTypeFilter && issueTypeFilter.length > 0) {
+    wipFiltered = wipRaw.issues.filter((i) => {
+      if (!i.issueType) return true; // dados antigos sem issueType — manter
+      return matchesFilter(i.issueType, issueTypeFilter);
+    });
+  }
+  const wipAging = wipFiltered.length > 0
+    ? calculateWipAging(wipFiltered)
     : undefined;
 
   // R2 Progress

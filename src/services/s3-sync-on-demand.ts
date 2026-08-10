@@ -179,6 +179,7 @@ export async function ensureWipAndR2(
         key: i.key,
         summary: i.summary,
         status: i.status,
+        issueType: i.issueType,
         transitions: wipChangelogs.get(i.key) || [],
       })),
       fetchedAt: new Date().toISOString(),
