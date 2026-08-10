@@ -28,8 +28,8 @@ function createS3Client(): S3Client {
   const config: ConstructorParameters<typeof S3Client>[0] = {
     region: process.env.S3_REGION || "us-east-1",
     credentials: {
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
+      accessKeyId: process.env.S3_ACCESS_KEY || "minioadmin",
+      secretAccessKey: process.env.S3_SECRET_KEY || "minioadmin",
     },
   };
   if (process.env.S3_ENDPOINT) {
