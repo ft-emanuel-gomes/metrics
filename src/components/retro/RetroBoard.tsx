@@ -137,9 +137,14 @@ export default function RetroBoard({
   const handleUnmerge = useCallback(async (columnId: string, cardId: string) => {
     const res = await apiCards("unmerge", { columnId, cardId });
     if (res.ok) {
-      await handleRefresh();
+      // Refresh board after unmerge
+      const refreshRes = await fetch(`/api/retro/${squadSlug}`);
+      if (refreshRes.ok) {
+        const data = await refreshRes.json();
+        setBoard(data.board);
+      }
     }
-  }, [squadSlug, handleRefresh]);
+  }, [squadSlug]);
 
   // --- Column operations ---
 
