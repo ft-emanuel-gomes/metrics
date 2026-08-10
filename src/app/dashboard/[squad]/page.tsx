@@ -60,7 +60,7 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
 
   // Parse issue type filter (multi-select, separado por vírgula)
   // Default: História, Task, Bug e Tech Debt sempre selecionados
-  const DEFAULT_ISSUE_TYPES = ["História", "Bug", "Task", "Tech Debt"];
+  const DEFAULT_ISSUE_TYPES = ["História", "Bug", "Task", "Tech Debt", "Kaizen", "Spike"];
   const issueTypeFilter = resolvedSearch.issueType
     ? resolvedSearch.issueType.split(",").filter(Boolean)
     : DEFAULT_ISSUE_TYPES;

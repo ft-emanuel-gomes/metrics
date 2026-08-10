@@ -94,8 +94,8 @@ export default function SquadHealthIndicator({ squad }: SquadHealthIndicatorProp
   useEffect(() => {
     const controller = new AbortController();
 
-    // Passar o filtro padrão de issue types (mesmo da dashboard)
-    const defaultTypes = ["História", "Bug", "Task", "Tech Debt"];
+    // Passar o filtro padrão de issue types (Engenharia — todas exceto Design)
+    const defaultTypes = ["História", "Bug", "Task", "Tech Debt", "Kaizen", "Spike"];
     const params = new URLSearchParams({ issueType: defaultTypes.join(",") });
 
     fetch(`/api/metrics/${squad.slug}?${params.toString()}`, { signal: controller.signal })
