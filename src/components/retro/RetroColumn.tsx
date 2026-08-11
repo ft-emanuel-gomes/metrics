@@ -46,8 +46,8 @@ export default function RetroColumn({
 
   const { setNodeRef, isOver } = useDroppable({ id: column.id });
 
-  // Filtrar cards se hideCards ativo (cada um vê só os seus)
-  const visibleCards = settings.hideCards
+  // Filtrar cards se hideCards ativo (cada um vê só os seus — admin vê todos)
+  const visibleCards = settings.hideCards && permissions.role !== "admin"
     ? column.cards.filter((c) => c.authorId === currentUserId)
     : column.cards;
 

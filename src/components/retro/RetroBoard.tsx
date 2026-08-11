@@ -132,6 +132,11 @@ export default function RetroBoard({
         );
         return { ...prev, columns };
       });
+    } else {
+      const data = await res.json().catch(() => null);
+      if (data?.error) {
+        alert(data.error);
+      }
     }
   }, [squadSlug]);
 
