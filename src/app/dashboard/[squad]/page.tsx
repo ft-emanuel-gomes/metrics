@@ -258,7 +258,7 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
 
         <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
           <ThroughputDonuts periodMetrics={data.periodMetrics} />
-          <FlowEfficiencyBars periodMetrics={data.periodMetrics} />
+          {!isDesignMode && <FlowEfficiencyBars periodMetrics={data.periodMetrics} />}
         </div>
 
         <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
