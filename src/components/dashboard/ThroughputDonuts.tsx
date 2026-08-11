@@ -11,7 +11,8 @@ interface ThroughputDonutsProps {
 }
 
 const TYPE_COLORS: Record<string, string> = {
-  "HistÃƒÂ³ria": "#34d399",
+  "Historia": "#34d399",
+  "Story": "#34d399",
   "Bug": "#f87171",
   "Design": "#818cf8",
   "Tech Debt": "#fbbf24",
@@ -36,7 +37,7 @@ export default function ThroughputDonuts({ periodMetrics }: ThroughputDonutsProp
   return (
     <div className="theme-section relative">
       <h3 className="text-[11px] font-bold uppercase tracking-wide t-secondary mb-3">
-        VazÃƒÂ£o Sprints Ã¢â‚¬â€ Por Tipo
+        Vazao Sprints — Por Tipo
       </h3>
       <div className="flex items-start justify-center gap-8 mx-auto">
         {periodMetrics.map((pm) => {
@@ -96,17 +97,17 @@ export default function ThroughputDonuts({ periodMetrics }: ThroughputDonutsProp
                   height={120}
                 />
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <span className="text-2xl font-black text-white">{pm.throughput.total}</span>
+                  <span className="text-2xl font-black" style={{ color: "var(--text-primary)" }}>{pm.throughput.total}</span>
                 </div>
               </div>
-              <p className="mt-1 text-[9px] text-gray-400">{pm.period.shortName}</p>
+              <p className="mt-1 text-[9px] t-muted">{pm.period.shortName}</p>
             </div>
           );
         })}
       </div>
 
       {/* Legend */}
-      <div className="mt-3 flex justify-center gap-4 text-[9px] text-gray-400">
+      <div className="mt-3 flex justify-center gap-4 text-[9px] t-secondary">
         {Array.from(allTypes).map((type) => (
           <span key={type} className="flex items-center gap-1">
             <span className="inline-block h-2 w-2 rounded-full" style={{ background: TYPE_COLORS[type] || "#94a3b8" }} />
@@ -115,15 +116,15 @@ export default function ThroughputDonuts({ periodMetrics }: ThroughputDonutsProp
         ))}
       </div>
 
-      {/* Popover Ã¢â‚¬â€ aparece ao CLICAR no segmento */}
+      {/* Popover — aparece ao CLICAR no segmento */}
       {popover && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setPopover(null)}>
-          <div className="bg-gray-900 border border-white/10 rounded-xl p-4 max-w-xs w-full max-h-80 overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="rounded-xl p-4 max-w-xs w-full max-h-80 overflow-y-auto shadow-2xl" style={{ backgroundColor: "var(--bg-card)", border: "0.5px solid var(--border-primary)" }} onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-3">
-              <h4 className="text-xs font-bold text-white">
+              <h4 className="text-xs font-bold" style={{ color: "var(--text-primary)" }}>
                 {popover.type}: {popover.count}
               </h4>
-              <button onClick={() => setPopover(null)} className="text-gray-500 hover:text-white text-sm">Ã¢Å“â€¢</button>
+              <button onClick={() => setPopover(null)} className="t-muted hover:opacity-70 text-sm">&#10005;</button>
             </div>
             <p className="text-[9px] t-muted mb-2">{popover.period}</p>
             <div className="space-y-1">
@@ -133,7 +134,7 @@ export default function ThroughputDonuts({ periodMetrics }: ThroughputDonutsProp
                   href={`https://montebravo.atlassian.net/browse/${key}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block text-[11px] text-indigo-400 hover:text-indigo-300 hover:underline py-0.5"
+                  className="block text-[11px] t-accent hover:underline py-0.5"
                 >
                   {key}
                 </a>

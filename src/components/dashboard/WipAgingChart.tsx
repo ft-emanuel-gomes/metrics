@@ -84,19 +84,19 @@ export default function WipAgingChart({ wipAging }: WipAgingChartProps) {
   return (
     <div className="theme-section relative">
       <h3 className="text-[11px] font-bold uppercase tracking-wide t-secondary mb-3">
-        WIP Aging â€” Itens em Andamento ({wipAging.totalWip} total)
+        WIP Aging — Itens em Andamento ({wipAging.totalWip} total)
       </h3>
       <Chart options={options} series={series} type="bar" height={180} />
 
-      {/* Modal â€” aparece ao CLICAR na barra */}
+      {/* Modal — aparece ao CLICAR na barra */}
       {popover && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setPopover(null)}>
-          <div className="bg-gray-900 border border-white/10 rounded-xl p-4 max-w-sm w-full max-h-96 overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="rounded-xl p-4 max-w-sm w-full max-h-96 overflow-y-auto shadow-2xl" style={{ backgroundColor: "var(--bg-card)", border: "0.5px solid var(--border-primary)" }} onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-3">
-              <h4 className="text-xs font-bold text-white">
+              <h4 className="text-xs font-bold" style={{ color: "var(--text-primary)" }}>
                 Bucket {popover.bucket}: {popover.issues.length} itens
               </h4>
-              <button onClick={() => setPopover(null)} className="text-gray-500 hover:text-white text-sm">âœ•</button>
+              <button onClick={() => setPopover(null)} className="t-muted hover:opacity-70 text-sm">&#10005;</button>
             </div>
             <div className="space-y-1.5">
               {popover.issues.map((issue) => (
@@ -105,10 +105,10 @@ export default function WipAgingChart({ wipAging }: WipAgingChartProps) {
                   href={`https://montebravo.atlassian.net/browse/${issue.key}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-between text-[12px] text-indigo-400 hover:text-indigo-300 hover:underline py-0.5"
+                  className="flex items-center justify-between text-[12px] t-accent hover:underline py-0.5"
                 >
                   <span>{issue.key}</span>
-                  <span className="text-[11px] text-white ml-2">{issue.agingDays}d â€” {issue.status}</span>
+                  <span className="text-[11px] t-primary ml-2">{issue.agingDays}d — {issue.status}</span>
                 </a>
               ))}
             </div>

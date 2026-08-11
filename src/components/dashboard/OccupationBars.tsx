@@ -49,24 +49,22 @@ export default function OccupationBars({ periodMetrics, teamSize }: OccupationBa
     tooltip: {
       theme: "dark",
       y: {
-        formatter: (_val: number) => {
-          return `${_val}%`;
-        },
+        formatter: (_val: number) => `${_val}%`,
       },
     },
     theme: { mode: "dark" },
   };
 
-  const series = [{ name: "OcupaÃƒÂ§ÃƒÂ£o", data: values }];
+  const series = [{ name: "Ocupacao", data: values }];
 
   return (
     <div className="theme-section">
       <h3 className="text-[11px] font-bold uppercase tracking-wide t-secondary mb-3">
-        OcupaÃƒÂ§ÃƒÂ£o do Time Ã¢â‚¬â€ Original Estimate vs Capacidade
+        Ocupacao do Time — Original Estimate vs Capacidade
       </h3>
       <Chart options={options} series={series} type="bar" height={160} />
       <p className="mt-2 text-center text-[9px] t-muted">
-        Capacidade: pessoas Ãƒâ€” 6h/dia Ãƒâ€” dias ÃƒÂºteis (valor configurado por sprint via Capacidade)
+        Capacidade: pessoas x 6h/dia x dias uteis (valor configurado por sprint via Capacidade)
       </p>
     </div>
   );
