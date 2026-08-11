@@ -51,7 +51,7 @@ export default async function RetrospectiveHome() {
             <Link
               key={squadSlug}
               href={`/retrospectiva/${squadSlug}`}
-              className="group relative rounded-xl border border-white/10 bg-white/5 p-5 hover:border-violet-500/40 hover:bg-violet-500/5 transition"
+              className="group relative flex flex-col rounded-xl border border-white/10 bg-white/5 p-5 hover:border-violet-500/40 hover:bg-violet-500/5 transition min-h-[120px]"
             >
               {/* Squad name */}
               <h3 className="text-sm font-bold text-white group-hover:text-violet-300 transition">
@@ -59,8 +59,9 @@ export default async function RetrospectiveHome() {
               </h3>
 
               {/* Board info */}
+              <div className="mt-auto pt-3">
               {board ? (
-                <div className="mt-3">
+                <>
                   <div className="flex items-center gap-3 text-[10px] text-gray-400">
                     <span className="flex items-center gap-1">
                       <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -78,7 +79,7 @@ export default async function RetrospectiveHome() {
                   </div>
 
                   {/* Colunas preview com tooltip */}
-                  <div className="mt-3 flex gap-1.5">
+                  <div className="mt-2 flex gap-1.5">
                     {board.columns.map((col, idx) => (
                       <div
                         key={idx}
@@ -103,12 +104,13 @@ export default async function RetrospectiveHome() {
                       </div>
                     ))}
                   </div>
-                </div>
+                </>
               ) : (
-                <p className="mt-3 text-[10px] text-gray-500">
+                <p className="text-[10px] text-gray-500">
                   Nenhum board criado ainda. Clique para criar.
                 </p>
               )}
+              </div>
 
               {/* Arrow icon */}
               <div className="absolute top-5 right-4 text-gray-600 group-hover:text-violet-400 transition">
