@@ -7,6 +7,7 @@ import LogoutButton from "@/components/home/LogoutButton";
 import MetasOverlay from "@/components/home/MetasOverlay";
 import AiAgilistaButton from "@/components/home/AiAgilistaButton";
 import RetroButton from "@/components/home/RetroButton";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 import { getAuthSession } from "@/services/auth-session";
 
 export default async function HomePage() {
@@ -41,6 +42,7 @@ export default async function HomePage() {
             {session.isAdmin && <RetroButton />}
             {session.isAdmin && <AiAgilistaButton />}
             <SyncButton />
+            <ThemeToggle />
           </div>
         </div>
 

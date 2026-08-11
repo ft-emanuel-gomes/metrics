@@ -1,1 +1,118 @@
 @import "tailwindcss";
+
+/* ===== Theme System — Monte Bravo Metrics ===== */
+
+:root,
+[data-theme="dark"] {
+  --bg-primary: #0D0D0F;
+  --bg-secondary: #18181B;
+  --bg-card: #18181B;
+  --bg-hover: #222225;
+  --border-primary: #26262A;
+  --border-hover: #3a3a3e;
+  --text-primary: #f2f2f0;
+  --text-secondary: #A8A8A2;
+  --text-muted: #6B6B66;
+  --accent: #9791E8;
+  --accent-bg: rgba(151, 145, 232, 0.12);
+  --ring-bg: #2A2A2D;
+  --pill-up-bg: #1C2A0E;
+  --pill-up-text: #97C459;
+  --pill-down-bg: #34190E;
+  --pill-down-text: #F0997B;
+  --pill-neutral-bg: #222225;
+  --pill-neutral-text: #A8A8A2;
+  --tab-active-bg: #F2F2F0;
+  --tab-active-text: #101012;
+  --tab-inactive-text: #A8A8A2;
+}
+
+[data-theme="light"] {
+  --bg-primary: #EFEEEA;
+  --bg-secondary: #F7F7F5;
+  --bg-card: #FFFFFF;
+  --bg-hover: #F1EFE8;
+  --border-primary: #E5E4DE;
+  --border-hover: #D1D0C8;
+  --text-primary: #1a1a1a;
+  --text-secondary: #6B6B66;
+  --text-muted: #9A9A94;
+  --accent: #534AB7;
+  --accent-bg: rgba(83, 74, 183, 0.08);
+  --ring-bg: #E5E4DE;
+  --pill-up-bg: #EAF3DE;
+  --pill-up-text: #3B6D11;
+  --pill-down-bg: #FAECE7;
+  --pill-down-text: #993C1D;
+  --pill-neutral-bg: #F1EFE8;
+  --pill-neutral-text: #6B6B66;
+  --tab-active-bg: #1A1A18;
+  --tab-active-text: #FAFAF8;
+  --tab-inactive-text: #6B6B66;
+}
+
+/* Base body styles */
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Utility classes for themed components */
+.theme-card {
+  background-color: var(--bg-card);
+  border: 0.5px solid var(--border-primary);
+  border-radius: 12px;
+  padding: 16px 18px;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.theme-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-hover);
+}
+
+.theme-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 20px;
+  gap: 4px;
+}
+
+.theme-pill-up {
+  background-color: var(--pill-up-bg);
+  color: var(--pill-up-text);
+}
+
+.theme-pill-down {
+  background-color: var(--pill-down-bg);
+  color: var(--pill-down-text);
+}
+
+.theme-pill-neutral {
+  background-color: var(--pill-neutral-bg);
+  color: var(--pill-neutral-text);
+}
+
+.theme-tab {
+  font-size: 13px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  color: var(--tab-inactive-text);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.theme-tab-active {
+  background-color: var(--tab-active-bg);
+  color: var(--tab-active-text);
+  font-weight: 500;
+}
+
+/* Print styles */
+@media print {
+  .no-print { display: none !important; }
+}

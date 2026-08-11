@@ -58,7 +58,6 @@ export default function PeriodSelector({
       params.delete("months");
     }
 
-    // Limpar params antigos de kanban (startDate/endDate)
     params.delete("startDate");
     params.delete("endDate");
 
@@ -96,67 +95,52 @@ export default function PeriodSelector({
   }
 
   return (
-    <div className={`space-y-2 ${isPending ? "opacity-50 pointer-events-none" : ""}`}>
+    <div className={`space-y-3 ${isPending ? "opacity-50 pointer-events-none" : ""}`}>
       {/* Loading indicator */}
       {isPending && (
-        <div className="flex items-center gap-2 text-[10px] text-indigo-300">
-          <div className="h-3 w-3 animate-spin rounded-full border-2 border-indigo-400 border-t-transparent" />
+        <div className="flex items-center gap-2 text-[11px]" style={{ color: "var(--accent)" }}>
+          <div className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
           Recarregando métricas...
         </div>
       )}
-      {/* Linha 1: Sprints ou Meses */}
-      {methodology === "sprint" ? (
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[10px] text-gray-500 uppercase font-semibold">
-            Sprints:
-          </span>
-          {availableSprints.map((sprint) => {
+
+      {/* Período: Sprint Tabs ou Month Tabs */}
+      <div className="flex flex-wrap items-center gap-2">
+        {methodology === "sprint" ? (
+          availableSprints.map((sprint) => {
             const isSelected = currentSprintIds.includes(sprint.id);
             return (
               <button
                 key={sprint.id}
                 onClick={() => toggleSprint(sprint.id)}
                 disabled={isPending}
-                className={`rounded-full px-2.5 py-1 text-[10px] font-medium transition ${
-                  isSelected
-                    ? "bg-indigo-500/20 text-indigo-300 ring-1 ring-indigo-500/40"
-                    : "bg-white/5 text-gray-400 hover:bg-white/10"
-                }`}
+                className={`theme-tab ${isSelected ? "theme-tab-active" : ""}`}
               >
                 {simplifySprintName(sprint.name)}
               </button>
             );
-          })}
-        </div>
-      ) : (
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[10px] text-gray-500 uppercase font-semibold">
-            Meses:
-          </span>
-          {availableMonths.map((month) => {
+          })
+        ) : (
+          availableMonths.map((month) => {
             const isSelected = currentMonths.includes(month.value);
             return (
               <button
                 key={month.value}
                 onClick={() => toggleMonth(month.value)}
                 disabled={isPending}
-                className={`rounded-full px-2.5 py-1 text-[10px] font-medium transition ${
-                  isSelected
-                    ? "bg-indigo-500/20 text-indigo-300 ring-1 ring-indigo-500/40"
-                    : "bg-white/5 text-gray-400 hover:bg-white/10"
-                }`}
+                className={`theme-tab ${isSelected ? "theme-tab-active" : ""}`}
               >
                 {month.label}
               </button>
             );
-          })}
-        </div>
-      )}
+          })
+        )}
+      </div>
 
-      {/* Linha 2: Issue Types */}
+      {/* Issue Type filter pills */}
       {availableIssueTypes.length > 0 && (
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[10px] text-gray-500 uppercase font-semibold">
+          <span className="text-[10px] font-medium uppercase" style={{ color: "var(--text-muted)" }}>
             Tipos:
           </span>
           {availableIssueTypes.map((type) => {
@@ -166,11 +150,12 @@ export default function PeriodSelector({
                 key={type}
                 onClick={() => toggleType(type)}
                 disabled={isPending}
-                className={`rounded-full px-2.5 py-1 text-[10px] font-medium transition ${
-                  isSelected
-                    ? "bg-indigo-500/20 text-indigo-300 ring-1 ring-indigo-500/40"
-                    : "bg-white/5 text-gray-400 hover:bg-white/10"
-                }`}
+                className="text-[11px] font-medium px-3 py-1 rounded-full transition"
+                style={{
+                  backgroundColor: isSelected ? "var(--accent-bg)" : "var(--pill-neutral-bg)",
+                  color: isSelected ? "var(--accent)" : "var(--text-secondary)",
+                  border: isSelected ? `1px solid var(--accent)` : "1px solid transparent",
+                }}
               >
                 {type}
               </button>

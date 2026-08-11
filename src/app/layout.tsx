@@ -13,14 +13,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="pt-BR" className="dark">
+    <html lang="pt-BR" data-theme="dark">
       <head>
         <link
           href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
           rel="stylesheet"
         />
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function() {
+            var t = localStorage.getItem('theme');
+            if (t) document.documentElement.setAttribute('data-theme', t);
+          })();
+        `}} />
       </head>
-      <body className="bg-gray-950 text-gray-200 antialiased" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+      <body className="antialiased" style={{ fontFamily: "'Inter', system-ui, sans-serif", backgroundColor: "var(--bg-primary)", color: "var(--text-primary)" }}>
         {children}
       </body>
     </html>

@@ -25,6 +25,7 @@ import PeriodSelector from "@/components/dashboard/PeriodSelector";
 import ExportButton from "@/components/dashboard/ExportButton";
 import MonteCarloButton from "@/components/dashboard/MonteCarloButton";
 import DesignToggle from "@/components/dashboard/DesignToggle";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 import { formatFullDate } from "@/lib/utils";
 
 // Desabilitar cache do Next.js (dados dinâmicos com filtros)
@@ -209,6 +210,7 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
             <DesignToggle />
             <MonteCarloButton squad={slug} defaultTeamSize={displayTeamSize} availableSprints={availableSprints} />
             <ExportButton squad={slug} />
+            <ThemeToggle />
           </div>
         </div>
 
