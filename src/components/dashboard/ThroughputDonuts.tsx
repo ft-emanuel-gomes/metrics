@@ -11,7 +11,7 @@ interface ThroughputDonutsProps {
 }
 
 const TYPE_COLORS: Record<string, string> = {
-  "História": "#34d399",
+  "HistÃƒÂ³ria": "#34d399",
   "Bug": "#f87171",
   "Design": "#818cf8",
   "Tech Debt": "#fbbf24",
@@ -34,9 +34,9 @@ export default function ThroughputDonuts({ periodMetrics }: ThroughputDonutsProp
   periodMetrics.forEach((pm) => pm.throughput.byType.forEach((t) => allTypes.add(t.type)));
 
   return (
-    <div className="rounded-xl border border-white/5 bg-white/5 p-4 relative">
-      <h3 className="text-[11px] font-bold uppercase tracking-wide text-gray-400 mb-3">
-        Vazão Sprints — Por Tipo
+    <div className="theme-section relative">
+      <h3 className="text-[11px] font-bold uppercase tracking-wide t-secondary mb-3">
+        VazÃƒÂ£o Sprints Ã¢â‚¬â€ Por Tipo
       </h3>
       <div className="flex items-start justify-center gap-8 mx-auto">
         {periodMetrics.map((pm) => {
@@ -115,7 +115,7 @@ export default function ThroughputDonuts({ periodMetrics }: ThroughputDonutsProp
         ))}
       </div>
 
-      {/* Popover — aparece ao CLICAR no segmento */}
+      {/* Popover Ã¢â‚¬â€ aparece ao CLICAR no segmento */}
       {popover && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setPopover(null)}>
           <div className="bg-gray-900 border border-white/10 rounded-xl p-4 max-w-xs w-full max-h-80 overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
@@ -123,9 +123,9 @@ export default function ThroughputDonuts({ periodMetrics }: ThroughputDonutsProp
               <h4 className="text-xs font-bold text-white">
                 {popover.type}: {popover.count}
               </h4>
-              <button onClick={() => setPopover(null)} className="text-gray-500 hover:text-white text-sm">✕</button>
+              <button onClick={() => setPopover(null)} className="text-gray-500 hover:text-white text-sm">Ã¢Å“â€¢</button>
             </div>
-            <p className="text-[9px] text-gray-500 mb-2">{popover.period}</p>
+            <p className="text-[9px] t-muted mb-2">{popover.period}</p>
             <div className="space-y-1">
               {popover.issueKeys.map((key) => (
                 <a

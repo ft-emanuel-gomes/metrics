@@ -5,8 +5,8 @@ interface SpilloverDotsProps {
 }
 
 /**
- * Calcula tamanho dos dots baseado no máximo de itens.
- * Mais agressivo na redução para evitar overflow.
+ * Calcula tamanho dos dots baseado no mÃ¡ximo de itens.
+ * Mais agressivo na reduÃ§Ã£o para evitar overflow.
  */
 function getDotSize(maxDots: number): number {
   if (maxDots <= 12) return 14;
@@ -23,9 +23,9 @@ export default function SpilloverDots({ periodMetrics }: SpilloverDotsProps) {
   const dotSize = getDotSize(maxDots);
 
   return (
-    <div className="rounded-xl border border-white/5 bg-white/5 p-4">
-      <h3 className="text-[11px] font-bold uppercase tracking-wide text-gray-400 mb-3">
-        Transbordo — Sprint Report
+    <div className="theme-section">
+      <h3 className="text-[11px] font-bold uppercase tracking-wide t-secondary mb-3">
+        Transbordo â€” Sprint Report
       </h3>
       <div className="space-y-2.5">
         {periodMetrics.map((pm) => {

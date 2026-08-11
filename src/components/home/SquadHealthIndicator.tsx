@@ -124,19 +124,20 @@ export default function SquadHealthIndicator({ squad }: SquadHealthIndicatorProp
   return (
     <Link
       href={`/dashboard/${squad.slug}`}
-      className={`group relative rounded-xl border-2 ${BORDER_COLORS[health]} bg-white/5 p-4 transition hover:bg-white/10`}
+      className={`group relative rounded-xl border-2 ${BORDER_COLORS[health]} p-4 transition`}
+      style={{ backgroundColor: "var(--bg-card)" }}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
-        <h2 className="text-sm font-bold text-white group-hover:text-indigo-300">
+        <h2 className="text-sm font-bold group-hover:opacity-80" style={{ color: "var(--text-primary)" }}>
           {squad.name}
         </h2>
         <span
-          className={`rounded-full px-2 py-0.5 text-[9px] font-semibold uppercase ${
-            squad.methodology === "sprint"
-              ? "bg-indigo-500/15 text-indigo-300"
-              : "bg-amber-500/15 text-amber-300"
-          }`}
+          className="rounded-full px-2 py-0.5 text-[9px] font-semibold uppercase"
+          style={{
+            backgroundColor: squad.methodology === "sprint" ? "var(--accent-bg)" : "rgba(245, 158, 11, 0.1)",
+            color: squad.methodology === "sprint" ? "var(--accent)" : "#f59e0b",
+          }}
         >
           {squad.methodology}
         </span>
@@ -152,7 +153,7 @@ export default function SquadHealthIndicator({ squad }: SquadHealthIndicatorProp
                   m.status === "green" ? "bg-emerald-500" : "bg-red-500"
                 }`}
               />
-              <span className="text-[11px] text-white">
+              <span className="text-[11px]" style={{ color: "var(--text-primary)" }}>
                 {m.label}: <strong>{m.value}</strong>
               </span>
             </div>
@@ -160,9 +161,9 @@ export default function SquadHealthIndicator({ squad }: SquadHealthIndicatorProp
         </div>
       ) : (
         <div className="space-y-1">
-          <div className="h-2.5 w-3/4 rounded bg-white/5 animate-pulse" />
-          <div className="h-2.5 w-2/3 rounded bg-white/5 animate-pulse" />
-          <div className="h-2.5 w-1/2 rounded bg-white/5 animate-pulse" />
+          <div className="h-2.5 w-3/4 rounded animate-pulse" style={{ backgroundColor: "var(--bg-hover)" }} />
+          <div className="h-2.5 w-2/3 rounded animate-pulse" style={{ backgroundColor: "var(--bg-hover)" }} />
+          <div className="h-2.5 w-1/2 rounded animate-pulse" style={{ backgroundColor: "var(--bg-hover)" }} />
         </div>
       )}
     </Link>

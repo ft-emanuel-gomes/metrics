@@ -99,7 +99,7 @@ export default function LoginPage() {
     <main className="min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         {/* Card de login */}
-        <div className="rounded-xl border border-white/10 bg-white/5 p-6 text-center">
+        <div className="rounded-xl p-6 text-center" style={{ backgroundColor: "var(--bg-card)", border: "0.5px solid var(--border-primary)" }}>
           {/* Logo */}
           <Image
             src="/images/logo-montebravo-center.svg"
@@ -108,7 +108,7 @@ export default function LoginPage() {
             height={40}
             className="h-9 w-auto block mx-auto mb-2"
           />
-          <p className="text-sm text-gray-400 mb-6">
+          <p className="text-sm mb-6" style={{ color: "var(--text-secondary)" }}>
             Métricas Ágeis
           </p>
 
@@ -122,7 +122,7 @@ export default function LoginPage() {
           {/* Formulário */}
           <form onSubmit={handleSubmit} className="space-y-4 text-left">
             <div>
-              <label htmlFor="email" className="block text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5">
+              <label htmlFor="email" className="block text-[11px] font-semibold uppercase tracking-wide mb-1.5" style={{ color: "var(--text-secondary)" }}>
                 Email corporativo
               </label>
               <input
@@ -132,7 +132,8 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="seu.nome@montebravo.com.br"
                 disabled={status === "loading"}
-                className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder-gray-500 outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition"
+                className="w-full rounded-lg px-3 py-2.5 text-sm outline-none transition"
+                style={{ backgroundColor: "var(--bg-secondary)", border: "0.5px solid var(--border-primary)", color: "var(--text-primary)" }}
                 autoComplete="email"
                 autoFocus
               />

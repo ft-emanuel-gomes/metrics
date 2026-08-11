@@ -8,18 +8,18 @@ export default function R1vsR2Table({ rows }: R1vsR2TableProps) {
   if (rows.length === 0) return null;
 
   return (
-    <div className="rounded-xl border border-white/5 bg-white/5 p-4">
-      <h3 className="mb-3 text-[11px] font-bold uppercase tracking-wide text-gray-400">
-        R1 vs R2 — Comparativo (Percentil 85)
+    <div className="theme-section">
+      <h3 className="mb-3 text-[11px] font-bold uppercase tracking-wide t-secondary">
+        R1 vs R2 â€” Comparativo (Percentil 85)
       </h3>
       <div className="overflow-x-auto">
         <table className="w-full text-[10px]">
           <thead>
             <tr className="bg-indigo-500/10 text-indigo-300">
-              <th className="px-2 py-1.5 text-left font-semibold">Métrica</th>
+              <th className="px-2 py-1.5 text-left font-semibold">MÃ©trica</th>
               <th className="px-2 py-1.5 text-center font-semibold">R1</th>
               <th className="px-2 py-1.5 text-center font-semibold">R2</th>
-              <th className="px-2 py-1.5 text-center font-semibold">Variação</th>
+              <th className="px-2 py-1.5 text-center font-semibold">VariaÃ§Ã£o</th>
             </tr>
           </thead>
           <tbody>

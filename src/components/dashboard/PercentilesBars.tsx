@@ -39,15 +39,15 @@ export default function PercentilesBars({ p50, p85, p95 }: PercentilesProps) {
   const series = [{ name: "Dias", data: [p50 ?? 0, p85 ?? 0, p95 ?? 0] }];
 
   return (
-    <div className="rounded-xl border border-white/5 bg-white/5 p-4">
-      <h3 className="mb-3 text-[11px] font-bold uppercase tracking-wide text-gray-400">
-        Confiança de Entrega — Percentis (combinados)
+    <div className="theme-section">
+      <h3 className="mb-3 text-[11px] font-bold uppercase tracking-wide t-secondary">
+        ConfianÃ§a de Entrega â€” Percentis (combinados)
       </h3>
       <Chart options={options} series={series} type="bar" height={140} />
       <div className="mt-2 space-y-1 text-[9px] text-gray-400">
-        <p>50% das entregas em até {p50 ?? "N/A"} dias</p>
-        <p>85% das entregas em até {p85 ?? "N/A"} dias</p>
-        <p>95% das entregas em até {p95 ?? "N/A"} dias</p>
+        <p>50% das entregas em atÃ© {p50 ?? "N/A"} dias</p>
+        <p>85% das entregas em atÃ© {p85 ?? "N/A"} dias</p>
+        <p>95% das entregas em atÃ© {p95 ?? "N/A"} dias</p>
       </div>
     </div>
   );

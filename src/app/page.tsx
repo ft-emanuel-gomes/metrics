@@ -34,7 +34,7 @@ export default async function HomePage() {
               height={44}
               className="h-11 w-auto"
             />
-            <p className="mt-1.5 text-xs text-gray-500">
+            <p className="mt-1.5 text-xs" style={{ color: "var(--text-muted)" }}>
               Selecione uma squad para visualizar o painel de performance.
             </p>
           </div>
@@ -55,7 +55,7 @@ export default async function HomePage() {
       </div>
 
       {/* Footer — FAQ e Sair à direita */}
-      <footer className="mt-6 flex items-center justify-end gap-2 pt-4 border-t border-white/5">
+      <footer className="mt-6 flex items-center justify-end gap-2 pt-4" style={{ borderTop: "1px solid var(--border-primary)" }}>
         <MetasOverlay />
         <LogoutButton />
       </footer>

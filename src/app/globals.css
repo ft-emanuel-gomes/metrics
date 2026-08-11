@@ -116,3 +116,22 @@ body {
 @media print {
   .no-print { display: none !important; }
 }
+
+/* Chart/section wrapper — used by all dashboard chart components */
+.theme-section {
+  background-color: var(--bg-card);
+  border: 0.5px solid var(--border-primary);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.theme-section h3 {
+  color: var(--text-secondary);
+}
+
+/* Themed text utility */
+.t-primary { color: var(--text-primary); }
+.t-secondary { color: var(--text-secondary); }
+.t-muted { color: var(--text-muted); }
+.t-accent { color: var(--accent); }
+

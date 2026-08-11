@@ -82,13 +82,13 @@ export default function WipAgingChart({ wipAging }: WipAgingChartProps) {
   const series = [{ name: "Itens", data: values }];
 
   return (
-    <div className="rounded-xl border border-white/5 bg-white/5 p-4 relative">
-      <h3 className="text-[11px] font-bold uppercase tracking-wide text-gray-400 mb-3">
-        WIP Aging — Itens em Andamento ({wipAging.totalWip} total)
+    <div className="theme-section relative">
+      <h3 className="text-[11px] font-bold uppercase tracking-wide t-secondary mb-3">
+        WIP Aging â€” Itens em Andamento ({wipAging.totalWip} total)
       </h3>
       <Chart options={options} series={series} type="bar" height={180} />
 
-      {/* Modal — aparece ao CLICAR na barra */}
+      {/* Modal â€” aparece ao CLICAR na barra */}
       {popover && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setPopover(null)}>
           <div className="bg-gray-900 border border-white/10 rounded-xl p-4 max-w-sm w-full max-h-96 overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
@@ -96,7 +96,7 @@ export default function WipAgingChart({ wipAging }: WipAgingChartProps) {
               <h4 className="text-xs font-bold text-white">
                 Bucket {popover.bucket}: {popover.issues.length} itens
               </h4>
-              <button onClick={() => setPopover(null)} className="text-gray-500 hover:text-white text-sm">✕</button>
+              <button onClick={() => setPopover(null)} className="text-gray-500 hover:text-white text-sm">âœ•</button>
             </div>
             <div className="space-y-1.5">
               {popover.issues.map((issue) => (
@@ -108,7 +108,7 @@ export default function WipAgingChart({ wipAging }: WipAgingChartProps) {
                   className="flex items-center justify-between text-[12px] text-indigo-400 hover:text-indigo-300 hover:underline py-0.5"
                 >
                   <span>{issue.key}</span>
-                  <span className="text-[11px] text-white ml-2">{issue.agingDays}d — {issue.status}</span>
+                  <span className="text-[11px] text-white ml-2">{issue.agingDays}d â€” {issue.status}</span>
                 </a>
               ))}
             </div>

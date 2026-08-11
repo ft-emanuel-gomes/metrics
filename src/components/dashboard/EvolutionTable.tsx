@@ -12,29 +12,29 @@ const TREND_STYLES = {
 };
 
 const TREND_LABELS = {
-  crescente: "↑ Crescente",
-  decrescente: "↓ Decrescente",
-  estavel: "→ Estável",
-  variavel: "↔ Variável",
+  crescente: "â†‘ Crescente",
+  decrescente: "â†“ Decrescente",
+  estavel: "â†’ EstÃ¡vel",
+  variavel: "â†” VariÃ¡vel",
 };
 
 export default function EvolutionTable({ evolution, periods }: EvolutionTableProps) {
   return (
-    <div className="rounded-xl border border-white/5 bg-white/5 p-4">
-      <h3 className="mb-3 text-[11px] font-bold uppercase tracking-wide text-gray-400">
-        Evolução das Métricas
+    <div className="theme-section">
+      <h3 className="mb-3 text-[11px] font-bold uppercase tracking-wide t-secondary">
+        EvoluÃ§Ã£o das MÃ©tricas
       </h3>
       <div className="overflow-x-auto">
         <table className="w-full text-[10px]">
           <thead>
             <tr className="bg-indigo-500/10 text-indigo-300">
-              <th className="px-2 py-1.5 text-left font-semibold">Métrica</th>
+              <th className="px-2 py-1.5 text-left font-semibold">MÃ©trica</th>
               {periods.map((p) => (
                 <th key={p.shortName} className="px-2 py-1.5 text-center font-semibold">
                   {p.shortName}
                 </th>
               ))}
-              <th className="px-2 py-1.5 text-center font-semibold">Tendência</th>
+              <th className="px-2 py-1.5 text-center font-semibold">TendÃªncia</th>
             </tr>
           </thead>
           <tbody>

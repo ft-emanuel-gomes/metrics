@@ -17,10 +17,11 @@ export default function InsightsGrid({ insights }: InsightsGridProps) {
       {insights.map((insight, idx) => (
         <div
           key={idx}
-          className={`rounded-lg border-l-[3px] bg-white/5 p-3.5 ${SEVERITY_STYLES[insight.severity]}`}
+          className={`rounded-lg border-l-[3px] p-3.5 ${SEVERITY_STYLES[insight.severity]}`}
+          style={{ backgroundColor: "var(--bg-card)" }}
         >
-          <p className="text-[11px] font-bold text-white">{insight.title}</p>
-          <p className="mt-1 text-[9px] leading-relaxed text-gray-400">
+          <p className="text-[11px] font-bold" style={{ color: "var(--text-primary)" }}>{insight.title}</p>
+          <p className="mt-1 text-[9px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
             {insight.text}
           </p>
         </div>

@@ -47,9 +47,9 @@ export default function BurndownChart({ burndown, deadline, totalFeatures, compl
   ];
 
   return (
-    <div className="rounded-xl border border-white/5 bg-white/5 p-4">
-      <h3 className="mb-3 text-[11px] font-bold uppercase tracking-wide text-gray-400">
-        R2 — Burndown (Features)
+    <div className="theme-section">
+      <h3 className="mb-3 text-[11px] font-bold uppercase tracking-wide t-secondary">
+        R2 â€” Burndown (Features)
       </h3>
       <Chart options={options} series={series} type="line" height={180} />
       <p className="mt-2 text-center text-[10px] text-amber-400">

@@ -56,9 +56,9 @@ export default function CycleTimeChart({
   const series = [{ name: "P85 (dias)", data: values }];
 
   return (
-    <div className="rounded-xl border border-white/5 bg-white/5 p-4">
-      <h3 className="text-[11px] font-bold uppercase tracking-wide text-gray-400 mb-3">
-        Cycle Time — Evolução (P85, dias corridos)
+    <div className="theme-section">
+      <h3 className="text-[11px] font-bold uppercase tracking-wide t-secondary mb-3">
+        Cycle Time â€” EvoluÃ§Ã£o (P85, dias corridos)
       </h3>
       <Chart options={options} series={series} type="bar" height={200} />
       {stakeholderNote && (

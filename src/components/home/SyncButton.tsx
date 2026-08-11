@@ -37,9 +37,10 @@ export default function SyncButton() {
         disabled={status === "syncing"}
         className={`flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold transition ${
           status === "syncing"
-            ? "bg-indigo-500/20 text-indigo-300 cursor-wait"
-            : "bg-indigo-500/15 text-indigo-300 hover:bg-indigo-500/30 hover:text-white"
+            ? "cursor-wait"
+            : "hover:opacity-80"
         }`}
+        style={{ backgroundColor: "var(--accent-bg)", color: "var(--accent)" }}
       >
         {status === "syncing" ? (
           <>

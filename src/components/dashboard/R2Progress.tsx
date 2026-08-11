@@ -13,7 +13,7 @@ export default function R2Progress({ r2Progress }: R2ProgressProps) {
   const { epics, features, riskInsight, releaseName } = r2Progress;
 
   const buildSeries = (item: typeof epics) => [
-    { name: "Concluído", data: [item.done] },
+    { name: "ConcluÃ­do", data: [item.done] },
     { name: "Em Andamento", data: [item.inProgress] },
     { name: "Pendente", data: [item.pending] },
   ];
@@ -54,16 +54,16 @@ export default function R2Progress({ r2Progress }: R2ProgressProps) {
   };
 
   return (
-    <div className="rounded-xl border border-white/5 bg-white/5 p-4">
-      <h3 className="text-[11px] font-bold uppercase tracking-wide text-gray-400 mb-4">
-        Progresso Release — Por Tipo de Item
+    <div className="theme-section">
+      <h3 className="text-[11px] font-bold uppercase tracking-wide t-secondary mb-4">
+        Progresso Release â€” Por Tipo de Item
       </h3>
 
       <div className="space-y-4">
-        {/* Épicos */}
+        {/* Ã‰picos */}
         <div className="text-center">
           <p className="text-[10px] font-semibold text-indigo-300 mb-1">
-            Épicos ({epics.total})
+            Ã‰picos ({epics.total})
           </p>
           <div className="mx-auto max-w-md">
             <Chart
@@ -90,7 +90,7 @@ export default function R2Progress({ r2Progress }: R2ProgressProps) {
           </div>
         </div>
 
-        {/* Total (Épicos + Features) */}
+        {/* Total (Ã‰picos + Features) */}
         <div className="text-center">
           <p className="text-[10px] font-semibold text-indigo-300 mb-1">
             Total ({epics.total + features.total})
@@ -114,7 +114,7 @@ export default function R2Progress({ r2Progress }: R2ProgressProps) {
       {/* Legend */}
       <div className="mt-4 flex justify-center gap-3 text-[9px] text-gray-400">
         <span className="flex items-center gap-1">
-          <span className="h-2 w-2 rounded-full bg-emerald-500" /> Concluído
+          <span className="h-2 w-2 rounded-full bg-emerald-500" /> ConcluÃ­do
         </span>
         <span className="flex items-center gap-1">
           <span className="h-2 w-2 rounded-full bg-indigo-500" /> Em andamento

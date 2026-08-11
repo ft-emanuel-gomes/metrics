@@ -195,16 +195,16 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
     <main className="min-h-screen p-4 lg:p-6">
       <div className="mx-auto">
         {/* Header */}
-        <div className="h-1 rounded bg-gradient-to-r from-indigo-500 via-violet-500 to-violet-400 mb-4" />
+        <div className="h-1 rounded mb-4" style={{ background: "linear-gradient(to right, var(--accent), #a78bfa)" }} />
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-xl font-bold text-white">
+            <h1 className="text-xl font-medium" style={{ color: "var(--text-primary)" }}>
               {squad.name}
             </h1>
-            <span className="inline-block mt-1 rounded-full bg-indigo-500/15 px-3 py-1 text-[11px] font-bold text-indigo-300 uppercase">
+            <span className="inline-block mt-1 rounded-full px-3 py-1 text-[11px] font-bold uppercase" style={{ backgroundColor: "var(--accent-bg)", color: "var(--accent)" }}>
               {isDesignMode ? `DESIGN · ${periodLabel}` : periodLabel}
             </span>
-            <p className="mt-1.5 text-xs text-white/70">{periodDates}</p>
+            <p className="mt-1.5 text-xs" style={{ color: "var(--text-secondary)" }}>{periodDates}</p>
           </div>
           <div className="flex gap-2">
             <DesignToggle />
@@ -228,7 +228,7 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
         </div>
 
         {/* Última atualização + alerta de dados históricos */}
-        <p className="mt-2 text-[9px] text-gray-600">
+        <p className="mt-2 text-[9px]" style={{ color: "var(--text-muted)" }}>
           Última atualização: {new Date(data.generatedAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}
         </p>
         {data.isHistoricalFallback && (

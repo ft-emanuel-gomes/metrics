@@ -81,17 +81,17 @@ export default function BugsQuality({ data }: BugsQualityProps) {
   const totalBugs = data.reduce((s, d) => s + d.bugs + d.subBugs, 0);
 
   return (
-    <div className="rounded-xl border border-white/5 bg-white/5 p-4 relative">
-      <h3 className="text-[11px] font-bold uppercase tracking-wide text-gray-400 mb-3">
-        Qualidade — Bugs e Sub-bugs Concluídos
-        <MetricTooltip text="Bug: Correção de falha identificada em algo já entregue em produção. Sub-Bug: Correção de falha de algum comportamento inesperado em QA." />
+    <div className="theme-section relative">
+      <h3 className="text-[11px] font-bold uppercase tracking-wide t-secondary mb-3">
+        Qualidade Ã¢â‚¬â€ Bugs e Sub-bugs ConcluÃƒÂ­dos
+        <MetricTooltip text="Bug: CorreÃƒÂ§ÃƒÂ£o de falha identificada em algo jÃƒÂ¡ entregue em produÃƒÂ§ÃƒÂ£o. Sub-Bug: CorreÃƒÂ§ÃƒÂ£o de falha de algum comportamento inesperado em QA." />
       </h3>
       <Chart options={options} series={series} type="bar" height={180} />
-      <p className="mt-2 text-center text-[9px] text-gray-500">
-        Total: {totalBugs} defeitos concluídos nas sprints selecionadas
+      <p className="mt-2 text-center text-[9px] t-muted">
+        Total: {totalBugs} defeitos concluÃƒÂ­dos nas sprints selecionadas
       </p>
 
-      {/* Popover — aparece ao CLICAR na barra */}
+      {/* Popover Ã¢â‚¬â€ aparece ao CLICAR na barra */}
       {popover && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setPopover(null)}>
           <div className="bg-gray-900 border border-white/10 rounded-xl p-4 max-w-xs w-full max-h-80 overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
@@ -99,9 +99,9 @@ export default function BugsQuality({ data }: BugsQualityProps) {
               <h4 className="text-xs font-bold text-white">
                 {popover.type}: {popover.keys.length}
               </h4>
-              <button onClick={() => setPopover(null)} className="text-gray-500 hover:text-white text-sm">✕</button>
+              <button onClick={() => setPopover(null)} className="text-gray-500 hover:text-white text-sm">Ã¢Å“â€¢</button>
             </div>
-            <p className="text-[9px] text-gray-500 mb-2">{popover.period}</p>
+            <p className="text-[9px] t-muted mb-2">{popover.period}</p>
             <div className="space-y-1">
               {popover.keys.map((key) => (
                 <a
