@@ -94,8 +94,9 @@ export function buildDashboardFromRaw(
     // Vazão
     const throughput = calculateThroughput(completedIssues as JiraIssue[]);
 
-    // Eficiência de Fluxo
-    const flowEfficiency = calculatePeriodFlowEfficiency(issuesWithChangelogs);
+    // Eficiência de Fluxo (Design usa regra diferente: apenas In Progress = ativo)
+    const isDesignMode = issueTypeFilter?.length === 1 && issueTypeFilter[0] === "Design";
+    const flowEfficiency = calculatePeriodFlowEfficiency(issuesWithChangelogs, isDesignMode);
 
     // Transbordo (sprint only)
     let spillover;

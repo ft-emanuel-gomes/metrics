@@ -60,7 +60,7 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
 
   // Parse issue type filter (multi-select, separado por vírgula)
   // Default: História, Task, Bug e Tech Debt sempre selecionados
-  const DEFAULT_ISSUE_TYPES = ["História", "Bug", "Task", "Tech Debt", "Kaizen", "Spike"];
+  const DEFAULT_ISSUE_TYPES = ["História", "Bug", "Task", "Tech Debt"];
   const issueTypeFilter = resolvedSearch.issueType
     ? resolvedSearch.issueType.split(",").filter(Boolean)
     : DEFAULT_ISSUE_TYPES;
@@ -292,9 +292,12 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
           </div>
         )}
 
-        {/* Insights */}
+        {/* Insights (em Design mode, filtrar insights de R2/R3/Features) */}
         <div className="mt-4">
-          <InsightsGrid insights={data.insights} />
+          <InsightsGrid insights={isDesignMode
+            ? data.insights.filter((i) => !i.title.match(/R[23]|Feature|Release|Épico/i))
+            : data.insights
+          } />
         </div>
       </div>
     </main>

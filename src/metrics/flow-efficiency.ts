@@ -1,6 +1,17 @@
 import { StatusTransition } from "@/services/jira-changelog";
 import { ACTIVE_STATES, WAIT_STATES } from "@/config/status-mapping";
 
+// Design issues: apenas "In Progress" é ativo, "Design Review" é espera
+const DESIGN_ACTIVE_STATES = new Set(["In Progress", "Em Progresso", "Em Desenvolvimento"]);
+const DESIGN_WAIT_STATES = new Set([
+  "To Do", "A Fazer", "Pendente",
+  "Design Review",  // Para Design, revisão é ESPERA (não produtivo)
+  "Code Review", "Revisão de Código",
+  "Waiting for Test", "Aguardando Teste",
+  "Waiting for Delivery", "Aguardando Implantação", "Aguardando Deploy",
+  "Test", "Em Teste", "Testing",
+]);
+
 /**
  * Resultado de eficiência de fluxo para uma issue individual.
  */
@@ -45,9 +56,13 @@ export interface FlowEfficiencyResult {
  */
 export function calculateIssueFlowEfficiency(
   issueKey: string,
-  transitions: StatusTransition[]
+  transitions: StatusTransition[],
+  isDesign: boolean = false
 ): IssueFlowEfficiency | null {
   if (transitions.length < 2) return null;
+
+  const activeSet = isDesign ? DESIGN_ACTIVE_STATES : ACTIVE_STATES;
+  const waitSet = isDesign ? DESIGN_WAIT_STATES : WAIT_STATES;
 
   let activeTimeMs = 0;
   let waitTimeMs = 0;
@@ -65,18 +80,17 @@ export function calculateIssueFlowEfficiency(
 
     const targetStatus = current.toStatus;
 
-    if (ACTIVE_STATES.has(targetStatus)) {
+    if (activeSet.has(targetStatus)) {
       activeTimeMs += duration;
-    } else if (WAIT_STATES.has(targetStatus)) {
+    } else if (waitSet.has(targetStatus)) {
       waitTimeMs += duration;
     }
     // Estados ignorados (Cancelado, Backlog, etc.) não somam em nenhum
   }
 
   // Para a última transição, considerar o tempo até agora se não for "done"
-  // (para issues concluídas, a última transição É para Concluído, então não soma)
   const lastTransition = transitions[transitions.length - 1];
-  if (ACTIVE_STATES.has(lastTransition.toStatus)) {
+  if (activeSet.has(lastTransition.toStatus)) {
     // Se a última transição foi para um estado ativo e a issue está concluída,
     // não deveria chegar aqui (a última seria → Concluído)
     // Mas por segurança, não adicionamos tempo extra
@@ -100,12 +114,14 @@ export function calculateIssueFlowEfficiency(
  * Média das eficiências individuais de cada issue concluída.
  */
 export function calculatePeriodFlowEfficiency(
-  issuesWithChangelogs: { key: string; transitions: StatusTransition[] }[]
+  issuesWithChangelogs: { key: string; transitions: StatusTransition[]; issueType?: string }[],
+  isDesignMode: boolean = false
 ): FlowEfficiencyPeriodResult {
   const results: IssueFlowEfficiency[] = [];
 
   for (const issue of issuesWithChangelogs) {
-    const eff = calculateIssueFlowEfficiency(issue.key, issue.transitions);
+    const isDesign = isDesignMode || issue.issueType === "Design";
+    const eff = calculateIssueFlowEfficiency(issue.key, issue.transitions, isDesign);
     if (eff !== null) {
       results.push(eff);
     }

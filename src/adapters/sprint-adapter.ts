@@ -120,8 +120,9 @@ export async function fetchSprintDashboard(
     // Vazão
     const throughput = calculateThroughput(completedWithCL);
 
-    // Eficiência de Fluxo
-    const flowEfficiency = calculatePeriodFlowEfficiency(issuesWithChangelogs);
+    // Eficiência de Fluxo (Design usa regra diferente: apenas In Progress = ativo)
+    const isDesignMode = issueTypeFilter?.length === 1 && issueTypeFilter[0] === "Design";
+    const flowEfficiency = calculatePeriodFlowEfficiency(issuesWithChangelogs, isDesignMode);
 
     // Transbordo
     const spilledIssues = await fetchSpilledIssues(
