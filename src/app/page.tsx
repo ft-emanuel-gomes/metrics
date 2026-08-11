@@ -1,6 +1,6 @@
-import Image from "next/image";
 import { redirect } from "next/navigation";
 import { SQUADS_CONFIG } from "@/config/squads";
+import ThemedLogo from "@/components/ui/ThemedLogo";
 import SquadHealthIndicator from "@/components/home/SquadHealthIndicator";
 import SyncButton from "@/components/home/SyncButton";
 import LogoutButton from "@/components/home/LogoutButton";
@@ -27,7 +27,7 @@ export default async function HomePage() {
         {/* Header — Logotipo + AI Agilista + Update */}
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <Image
+            <ThemedLogo
               src="/images/logo-montebravo.svg"
               alt="Monte Bravo"
               width={200}

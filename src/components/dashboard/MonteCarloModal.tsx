@@ -46,11 +46,11 @@ export default function MonteCarloModal({
   availableIssueTypes,
   onClose,
 }: MonteCarloModalProps) {
-  // Ãšltimas 3 sprints prÃ©-selecionadas (availableSprints vem mais recente primeiro)
+  // Últimas 3 sprints pré-selecionadas (availableSprints vem mais recente primeiro)
   const [selectedSprints, setSelectedSprints] = useState<number[]>(
     availableSprints.slice(0, 3).map((s) => s.id)
   );
-  const [selectedTypes, setSelectedTypes] = useState<string[]>(["HistÃ³ria"]);
+  const [selectedTypes, setSelectedTypes] = useState<string[]>(["História"]);
   const [itemCount, setItemCount] = useState<number>(30);
   const [teamSize, setTeamSize] = useState<number>(defaultTeamSize);
   const [startDate, setStartDate] = useState<string>(new Date().toISOString().split("T")[0]);
@@ -58,7 +58,7 @@ export default function MonteCarloModal({
   const [result, setResult] = useState<SimulationResult | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
 
-  // Carregar Ãºltima simulaÃ§Ã£o salva ao abrir o modal
+  // Carregar última simulação salva ao abrir o modal
   useEffect(() => {
     try {
       const saved = localStorage.getItem(`monte-carlo-${squad}`);
@@ -72,7 +72,7 @@ export default function MonteCarloModal({
           if (parsed._params.itemCount) setItemCount(parsed._params.itemCount);
           if (parsed._params.teamSize) setTeamSize(parsed._params.teamSize);
           if (parsed._params.startDate) setStartDate(parsed._params.startDate);
-          // Sprints e tipos NÃƒO sÃ£o restaurados â€” sempre usa default (Ãºltimas 3 + HistÃ³ria)
+          // Sprints e tipos NÃO são restaurados — sempre usa default (últimas 3 + História)
         }
       }
     } catch { /* ignore */ }
@@ -119,18 +119,18 @@ export default function MonteCarloModal({
       if (res.ok && data.dateP50) {
         setResult(data);
         setStatus("done");
-        // Salvar Ãºltima simulaÃ§Ã£o no localStorage
+        // Salvar última simulação no localStorage
         localStorage.setItem(`monte-carlo-${squad}`, JSON.stringify({
           ...data,
           _savedAt: new Date().toISOString(),
           _params: { sprints: selectedSprints, types: selectedTypes, itemCount, teamSize, startDate },
         }));
       } else {
-        setErrorMsg(data.message || "Erro na simulaÃ§Ã£o.");
+        setErrorMsg(data.message || "Erro na simulação.");
         setStatus("error");
       }
     } catch {
-      setErrorMsg("Falha na conexÃ£o.");
+      setErrorMsg("Falha na conexão.");
       setStatus("error");
     }
   }
@@ -144,9 +144,9 @@ export default function MonteCarloModal({
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-bold text-white">
-            Monte Carlo â€” PrevisÃ£o de Entrega
+            Monte Carlo — Previsão de Entrega
           </h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-white text-lg">âœ•</button>
+          <button onClick={onClose} className="text-gray-500 hover:text-white text-lg">✕</button>
         </div>
 
         {/* Filtro de Sprints */}
@@ -223,7 +223,7 @@ export default function MonteCarloModal({
           </div>
           <div>
             <label className="block text-[10px] t-muted uppercase font-semibold mb-1">
-              InÃ­cio
+              Início
             </label>
             <input
               type="date"
@@ -241,7 +241,7 @@ export default function MonteCarloModal({
           </div>
         )}
 
-        {/* BotÃ£o simular */}
+        {/* Botão simular */}
         <button
           onClick={runSimulation}
           disabled={status === "loading"}
@@ -264,31 +264,31 @@ export default function MonteCarloModal({
         {/* Resultados */}
         {result && (
           <div className="mt-5 rounded-lg border border-white/10 bg-white/5 p-4">
-            <h3 className="text-xs font-bold text-white mb-3">Resultado da SimulaÃ§Ã£o</h3>
+            <h3 className="text-xs font-bold text-white mb-3">Resultado da Simulação</h3>
 
             {/* Metadados */}
             <div className="flex gap-4 mb-4 text-[10px] text-gray-400">
-              <span>VazÃ£o diÃ¡ria: <strong className="text-white">{result.avgDailyThroughput}</strong> itens/dia</span>
+              <span>Vazão diária: <strong className="text-white">{result.avgDailyThroughput}</strong> itens/dia</span>
               <span>Ajuste: <strong className="text-white">{Math.round((result.capacityAdjustment - 1) * 100)}%</strong></span>
-              <span>Itens no perÃ­odo: <strong className="text-white">{result.totalItemsInPeriod}</strong></span>
+              <span>Itens no período: <strong className="text-white">{result.totalItemsInPeriod}</strong></span>
             </div>
 
-            {/* PrevisÃµes */}
+            {/* Previsões */}
             <div className="space-y-2">
               <div className="flex items-center justify-between rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-3 py-2">
                 <span className="text-xs text-emerald-300 font-semibold">50% de probabilidade</span>
                 <span className="text-sm font-bold text-white">{formatDate(result.dateP50)}</span>
-                <span className="text-[10px] text-gray-400">{result.daysP50} dias Ãºteis ({Math.ceil(result.daysP50 / 10)} sprints)</span>
+                <span className="text-[10px] text-gray-400">{result.daysP50} dias úteis ({Math.ceil(result.daysP50 / 10)} sprints)</span>
               </div>
               <div className="flex items-center justify-between rounded-lg bg-amber-500/10 border border-amber-500/20 px-3 py-2">
                 <span className="text-xs text-amber-300 font-semibold">75% de probabilidade</span>
                 <span className="text-sm font-bold text-white">{formatDate(result.dateP75)}</span>
-                <span className="text-[10px] text-gray-400">{result.daysP75} dias Ãºteis ({Math.ceil(result.daysP75 / 10)} sprints)</span>
+                <span className="text-[10px] text-gray-400">{result.daysP75} dias úteis ({Math.ceil(result.daysP75 / 10)} sprints)</span>
               </div>
               <div className="flex items-center justify-between rounded-lg bg-indigo-500/10 border border-indigo-500/20 px-3 py-2">
                 <span className="text-xs text-indigo-300 font-semibold">85% de probabilidade</span>
                 <span className="text-sm font-bold text-white">{formatDate(result.dateP85)}</span>
-                <span className="text-[10px] text-gray-400">{result.daysP85} dias Ãºteis ({Math.ceil(result.daysP85 / 10)} sprints)</span>
+                <span className="text-[10px] text-gray-400">{result.daysP85} dias úteis ({Math.ceil(result.daysP85 / 10)} sprints)</span>
               </div>
             </div>
           </div>

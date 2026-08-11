@@ -58,7 +58,7 @@ export default function CycleTimeChart({
   return (
     <div className="theme-section">
       <h3 className="text-[11px] font-bold uppercase tracking-wide t-secondary mb-3">
-        Cycle Time â€” EvoluÃ§Ã£o (P85, dias corridos)
+        Cycle Time — Evolução (P85, dias corridos)
       </h3>
       <Chart options={options} series={series} type="bar" height={200} />
       {stakeholderNote && (

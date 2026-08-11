@@ -2,6 +2,7 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import ThemedLogo from "@/components/ui/ThemedLogo";
 import Image from "next/image";
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -101,7 +102,7 @@ export default function LoginPage() {
         {/* Card de login */}
         <div className="rounded-xl p-6 text-center" style={{ backgroundColor: "var(--bg-card)", border: "0.5px solid var(--border-primary)" }}>
           {/* Logo */}
-          <Image
+          <ThemedLogo
             src="/images/logo-montebravo-center.svg"
             alt="Monte Bravo"
             width={180}

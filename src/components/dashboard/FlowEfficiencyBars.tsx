@@ -78,7 +78,7 @@ export default function FlowEfficiencyBars({ periodMetrics }: FlowEfficiencyBars
     theme: { mode: "dark" },
   };
 
-  const series = [{ name: "EficiÃªncia", data: values }];
+  const series = [{ name: "Eficiência", data: values }];
 
   // Detectar gargalo
   const avgEfficiency = values.reduce((s, v) => s + v, 0) / values.length;
@@ -87,7 +87,7 @@ export default function FlowEfficiencyBars({ periodMetrics }: FlowEfficiencyBars
   return (
     <div className="theme-section">
       <h3 className="text-[11px] font-bold uppercase tracking-wide t-secondary mb-3">
-        EficiÃªncia de Fluxo â€” EvoluÃ§Ã£o
+        Eficiência de Fluxo — Evolução
       </h3>
       <Chart options={options} series={series} type="bar" height={160} />
       {showBottleneck && (
