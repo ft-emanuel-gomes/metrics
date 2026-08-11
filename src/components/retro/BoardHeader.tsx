@@ -41,7 +41,7 @@ export default function BoardHeader({
 
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-gray-900/95 backdrop-blur-sm px-4 py-3">
+      <header className="sticky top-0 z-40 px-4 py-3" style={{ backgroundColor: "var(--bg-secondary)", borderBottom: "0.5px solid var(--border-primary)" }}>
         <div className="flex items-center justify-between">
           {/* Left: Squad name + voltar */}
           <div className="flex items-center gap-3">

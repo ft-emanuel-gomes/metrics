@@ -72,9 +72,13 @@ export default function RetroColumn({
   return (
     <div
       ref={setNodeRef}
-      className={`flex flex-col w-72 min-w-[288px] rounded-xl border bg-gray-900/80 transition ${
-        isOver ? "border-violet-500/50 bg-violet-500/5" : "border-white/10"
+      className={`flex flex-col w-72 min-w-[288px] rounded-xl border transition ${
+        isOver ? "border-violet-500/50" : ""
       }`}
+      style={{
+        backgroundColor: "var(--bg-secondary)",
+        borderColor: isOver ? undefined : "var(--border-primary)",
+      }}
     >
       {/* Column header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">

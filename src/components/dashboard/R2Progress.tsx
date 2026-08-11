@@ -13,8 +13,8 @@ export default function R2Progress({ r2Progress }: R2ProgressProps) {
   const { epics, features, riskInsight, releaseName } = r2Progress;
 
   const buildSeries = (item: typeof epics) => [
-    { name: "ConcluÃ­do", data: [item.done] },
-    { name: "Em Andamento", data: [item.inProgress] },
+    { name: "Concluído", data: [item.done] },
+    { name: "Em andamento", data: [item.inProgress] },
     { name: "Pendente", data: [item.pending] },
   ];
 
@@ -30,7 +30,7 @@ export default function R2Progress({ r2Progress }: R2ProgressProps) {
     plotOptions: {
       bar: { horizontal: true, borderRadius: 4, barHeight: "80%" },
     },
-    colors: ["#10b981", "#6366f1", "rgba(255,255,255,0.15)"],
+    colors: ["#10b981", "#6366f1", "#d1d5db"],
     xaxis: {
       categories: [""],
       labels: { show: false },
@@ -56,14 +56,14 @@ export default function R2Progress({ r2Progress }: R2ProgressProps) {
   return (
     <div className="theme-section">
       <h3 className="text-[11px] font-bold uppercase tracking-wide t-secondary mb-4">
-        Progresso Release â€” Por Tipo de Item
+        Progresso Release — Por Tipo de Item
       </h3>
 
       <div className="space-y-4">
-        {/* Ã‰picos */}
+        {/* Épicos */}
         <div className="text-center">
-          <p className="text-[10px] font-semibold text-indigo-300 mb-1">
-            Ã‰picos ({epics.total})
+          <p className="text-[10px] font-semibold t-accent mb-1">
+            Épicos ({epics.total})
           </p>
           <div className="mx-auto max-w-md">
             <Chart
@@ -77,7 +77,7 @@ export default function R2Progress({ r2Progress }: R2ProgressProps) {
 
         {/* Features */}
         <div className="text-center">
-          <p className="text-[10px] font-semibold text-indigo-300 mb-1">
+          <p className="text-[10px] font-semibold t-accent mb-1">
             Features ({features.total})
           </p>
           <div className="mx-auto max-w-md">
@@ -90,9 +90,9 @@ export default function R2Progress({ r2Progress }: R2ProgressProps) {
           </div>
         </div>
 
-        {/* Total (Ã‰picos + Features) */}
+        {/* Total */}
         <div className="text-center">
-          <p className="text-[10px] font-semibold text-indigo-300 mb-1">
+          <p className="text-[10px] font-semibold t-secondary mb-1">
             Total ({epics.total + features.total})
           </p>
           <div className="mx-auto max-w-md">
@@ -111,23 +111,27 @@ export default function R2Progress({ r2Progress }: R2ProgressProps) {
         </div>
       </div>
 
-      {/* Legend */}
-      <div className="mt-4 flex justify-center gap-3 text-[9px] text-gray-400">
-        <span className="flex items-center gap-1">
-          <span className="h-2 w-2 rounded-full bg-emerald-500" /> ConcluÃ­do
+      {/* Legenda */}
+      <div className="mt-4 flex items-center justify-center gap-4 text-[10px]">
+        <span className="flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+          <span className="t-secondary">Concluído</span>
         </span>
-        <span className="flex items-center gap-1">
-          <span className="h-2 w-2 rounded-full bg-indigo-500" /> Em andamento
+        <span className="flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-full bg-indigo-500" />
+          <span className="t-secondary">Em andamento</span>
         </span>
-        <span className="flex items-center gap-1">
-          <span className="h-2 w-2 rounded-full bg-white/15" /> Pendente
+        <span className="flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-full bg-gray-300" />
+          <span className="t-secondary">Pendente</span>
         </span>
       </div>
 
+      {/* Risk insight */}
       {riskInsight && (
-        <div className="mt-3 rounded-md bg-amber-500/10 px-3 py-2 text-center text-[10px] text-amber-400">
-          {riskInsight}
-        </div>
+        <p className="mt-3 text-center text-[10px] font-medium text-amber-500">
+          {releaseName || "Release"} deadline: {riskInsight}
+        </p>
       )}
     </div>
   );

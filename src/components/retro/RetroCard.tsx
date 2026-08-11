@@ -73,8 +73,8 @@ export default function RetroCardComponent({
 
   if (isDragging) {
     return (
-      <div className="rounded-lg border border-violet-500/40 bg-gray-800 p-3 shadow-2xl rotate-2 scale-105">
-        <p className="text-sm text-white whitespace-pre-wrap">{card.text}</p>
+      <div className="rounded-lg border p-3 shadow-2xl rotate-2 scale-105" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--accent)" }}>
+        <p className="text-sm whitespace-pre-wrap" style={{ color: "var(--text-primary)" }}>{card.text}</p>
       </div>
     );
   }
@@ -85,7 +85,8 @@ export default function RetroCardComponent({
       style={style}
       {...attributes}
       {...listeners}
-      className="group rounded-lg border border-white/10 bg-gray-800/90 p-3 cursor-grab active:cursor-grabbing hover:border-white/20 transition"
+      className="group rounded-lg border p-3 cursor-grab active:cursor-grabbing transition"
+      style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}
     >
       {/* Card content */}
       {isEditing ? (
