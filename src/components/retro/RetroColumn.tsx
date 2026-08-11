@@ -19,6 +19,7 @@ interface RetroColumnProps {
   onUnmerge: (columnId: string, cardId: string) => Promise<void>;
   onRename: (columnId: string, title: string) => Promise<void>;
   onDelete: (columnId: string) => Promise<void>;
+  onClear: (columnId: string) => Promise<void>;
 }
 
 export default function RetroColumn({
@@ -34,12 +35,14 @@ export default function RetroColumn({
   onUnmerge,
   onRename,
   onDelete,
+  onClear,
 }: RetroColumnProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [newCardText, setNewCardText] = useState("");
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameText, setRenameText] = useState(column.title);
   const [showMenu, setShowMenu] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   const { setNodeRef, isOver } = useDroppable({ id: column.id });
 
@@ -117,6 +120,12 @@ export default function RetroColumn({
                     className="w-full px-3 py-1.5 text-left text-[11px] text-gray-300 hover:bg-white/10"
                   >
                     Renomear
+                  </button>
+                  <button
+                    onClick={() => { setShowClearConfirm(true); setShowMenu(false); }}
+                    className="w-full px-3 py-1.5 text-left text-[11px] text-amber-400 hover:bg-amber-500/10"
+                  >
+                    Limpar coluna
                   </button>
                   <button
                     onClick={() => { onDelete(column.id); setShowMenu(false); }}
@@ -202,6 +211,33 @@ export default function RetroColumn({
           )
         )}
       </div>
+
+      {/* Confirmation popup para limpar coluna */}
+      {showClearConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="w-full max-w-xs rounded-xl border border-white/10 bg-gray-900 p-5 shadow-2xl">
+            <h4 className="text-sm font-bold text-white mb-2">Limpar coluna</h4>
+            <p className="text-[11px] text-gray-400 mb-4">
+              Tem certeza que deseja remover todos os <strong className="text-white">{column.cards.length} cards</strong> da coluna &quot;{column.title}&quot;?
+              <br /><span className="text-red-400">Esta ação não pode ser desfeita.</span>
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowClearConfirm(false)}
+                className="rounded-md bg-white/10 px-3 py-1.5 text-[11px] font-semibold text-gray-300 hover:bg-white/15 transition"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={async () => { await onClear(column.id); setShowClearConfirm(false); }}
+                className="rounded-md bg-red-600 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-red-500 transition"
+              >
+                Limpar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

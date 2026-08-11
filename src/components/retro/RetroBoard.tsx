@@ -181,6 +181,17 @@ export default function RetroBoard({
     await apiSaveBoard(updatedBoard);
   }, [board, squadSlug]);
 
+  const handleClearColumn = useCallback(async (columnId: string) => {
+    const updatedBoard = {
+      ...board,
+      columns: board.columns.map((col) =>
+        col.id === columnId ? { ...col, cards: [] } : col
+      ),
+    };
+    setBoard(updatedBoard);
+    await apiSaveBoard(updatedBoard);
+  }, [board, squadSlug]);
+
   // --- Drag and drop ---
 
   function handleDragStart(event: DragStartEvent) {
@@ -375,6 +386,7 @@ export default function RetroBoard({
                   onUnmerge={handleUnmerge}
                   onRename={handleRenameColumn}
                   onDelete={handleDeleteColumn}
+                  onClear={handleClearColumn}
                 />
               ))}
           </div>
