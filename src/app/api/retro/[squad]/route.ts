@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthSession } from "@/services/auth-session";
-import { getLatestBoard, createBoard, saveBoard } from "@/services/retro-storage";
+import { getLatestBoard, createBoard, saveBoard, loadBoard } from "@/services/retro-storage";
 import { canAccessBoard, getRetroRole, getRetroPermissions } from "@/services/retro-permissions";
 import { getSquadBySlug } from "@/config/squads";
 import type { RetroBoard } from "@/types/retro";
@@ -30,7 +30,11 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error: "Squad não encontrada" }, { status: 404 });
   }
 
-  let board = await getLatestBoard(squadSlug);
+  // Se boardId fornecido via query param, carregar board específico
+  const boardId = _request.nextUrl.searchParams.get("boardId");
+  let board = boardId
+    ? await loadBoard(squadSlug, boardId)
+    : await getLatestBoard(squadSlug);
 
   // Se não existe board, criar um padrão automaticamente (para Admins)
   if (!board && session.isAdmin) {

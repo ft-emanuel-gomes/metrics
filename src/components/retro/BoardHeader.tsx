@@ -46,7 +46,7 @@ export default function BoardHeader({
           {/* Left: Squad name + voltar */}
           <div className="flex items-center gap-3">
             <Link
-              href="/retrospectiva"
+              href={`/retrospectiva/${squadSlug}`}
               className="rounded-md p-1.5 text-gray-500 hover:bg-white/10 hover:text-white transition"
               title="Voltar"
             >

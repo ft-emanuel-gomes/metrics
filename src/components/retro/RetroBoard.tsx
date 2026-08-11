@@ -144,13 +144,13 @@ export default function RetroBoard({
     const res = await apiCards("unmerge", { columnId, cardId });
     if (res.ok) {
       // Refresh board after unmerge
-      const refreshRes = await fetch(`/api/retro/${squadSlug}`);
+      const refreshRes = await fetch(`/api/retro/${squadSlug}?boardId=${board.id}`);
       if (refreshRes.ok) {
         const data = await refreshRes.json();
         setBoard(data.board);
       }
     }
-  }, [squadSlug]);
+  }, [squadSlug, board.id]);
 
   // --- Column operations ---
 
@@ -320,12 +320,12 @@ export default function RetroBoard({
   // --- Board refresh (polling every 5s for multi-user sync) ---
 
   const handleRefresh = useCallback(async () => {
-    const res = await fetch(`/api/retro/${squadSlug}`);
+    const res = await fetch(`/api/retro/${squadSlug}?boardId=${board.id}`);
     if (res.ok) {
       const data = await res.json();
       setBoard(data.board);
     }
-  }, [squadSlug]);
+  }, [squadSlug, board.id]);
 
   // Auto-polling for real-time collaboration (paused during local operations)
   useEffect(() => {
