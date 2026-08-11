@@ -214,42 +214,8 @@ export default function RetroBoard({
   }
 
   function handleDragOver(event: DragOverEvent) {
-    const { active, over } = event;
-    if (!over) return;
-
-    const activeId = active.id as string;
-    const overId = over.id as string;
-
-    // Find source column
-    const sourceCol = board.columns.find((col) =>
-      col.cards.some((c) => c.id === activeId)
-    );
-    if (!sourceCol) return;
-
-    // Find target column (could be card id or column id)
-    let targetCol = board.columns.find((col) => col.id === overId);
-    if (!targetCol) {
-      targetCol = board.columns.find((col) =>
-        col.cards.some((c) => c.id === overId)
-      );
-    }
-    if (!targetCol || sourceCol.id === targetCol.id) return;
-
-    // Move card between columns (optimistic UI)
-    setBoard((prev) => {
-      const sourceCards = sourceCol.cards.filter((c) => c.id !== activeId);
-      const movedCard = sourceCol.cards.find((c) => c.id === activeId)!;
-      const targetCards = [...targetCol!.cards, movedCard];
-
-      return {
-        ...prev,
-        columns: prev.columns.map((col) => {
-          if (col.id === sourceCol.id) return { ...col, cards: sourceCards };
-          if (col.id === targetCol!.id) return { ...col, cards: targetCards };
-          return col;
-        }),
-      };
-    });
+    // Cards não podem ser movidos entre colunas — permanecem na coluna original
+    return;
   }
 
   async function handleDragEnd(event: DragEndEvent) {
@@ -298,21 +264,12 @@ export default function RetroBoard({
       };
       setBoard(updatedBoard);
 
-      // Persist move
+      // Persist reorder within column
       await apiCards("move", {
         cardId: activeId,
-        fromColumnId: activeColumnId || currentCol.id,
+        fromColumnId: currentCol.id,
         toColumnId: currentCol.id,
         newIndex: overCardIdx,
-      });
-    } else if (activeColumnId && activeColumnId !== currentCol.id) {
-      // Cross-column move already handled in dragOver, just persist
-      const newIndex = currentCol.cards.findIndex((c) => c.id === activeId);
-      await apiCards("move", {
-        cardId: activeId,
-        fromColumnId: activeColumnId,
-        toColumnId: currentCol.id,
-        newIndex: newIndex >= 0 ? newIndex : currentCol.cards.length - 1,
       });
     }
   }
