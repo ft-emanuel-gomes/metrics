@@ -28,7 +28,7 @@ export default async function RetrospectiveHome() {
 
   return (
     <main className="min-h-screen px-6 py-6">
-      <div className="mx-auto max-w-6xl">
+      <div className="w-full">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
