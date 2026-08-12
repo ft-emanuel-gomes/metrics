@@ -239,51 +239,65 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
         )}
 
         {/* KPI Cards */}
-        <div className="mt-4">
-          <KpiCards kpis={data.kpis} squad={slug} availableSprints={availableSprints} isDesignMode={isDesignMode} />
-        </div>
-
-        {/* Section 1: Performance Operacional */}
-        <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <CycleTimeChart
-            periodMetrics={data.periodMetrics}
-            stakeholderNote={data.stakeholderNote}
-          />
-          {!isDesignMode ? (
-            <R2Progress r2Progress={data.r2Progress} />
-          ) : (
-            data.wipAging && <WipAgingChart wipAging={data.wipAging} />
-          )}
-        </div>
-
-        <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <ThroughputDonuts periodMetrics={data.periodMetrics} />
-          {!isDesignMode && <FlowEfficiencyBars periodMetrics={data.periodMetrics} />}
-        </div>
-
         {!isDesignMode && (
-          <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-            {squad.methodology === "sprint" && (
-              <SpilloverDots periodMetrics={data.periodMetrics} />
-            )}
-            <OccupationBars periodMetrics={data.periodMetrics} teamSize={displayTeamSize} />
+          <div className="mt-4">
+            <KpiCards kpis={data.kpis} squad={slug} availableSprints={availableSprints} isDesignMode={isDesignMode} />
           </div>
         )}
 
-        {/* WIP Aging + Qualidade (lado a lado) — somente Engenharia */}
-        {!isDesignMode && (
-          <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-            {data.wipAging && <WipAgingChart wipAging={data.wipAging} />}
-            {data.bugsQuality.length > 0 && <BugsQuality data={data.bugsQuality} />}
+        {/* Design Mode: Layout split — KPIs left, Charts right */}
+        {isDesignMode && (
+          <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-[280px_1fr]">
+            {/* Left: KPI cards stacked */}
+            <div className="space-y-3">
+              <KpiCards kpis={data.kpis} squad={slug} availableSprints={availableSprints} isDesignMode={isDesignMode} />
+            </div>
+
+            {/* Right: Charts stacked */}
+            <div className="space-y-4">
+              <CycleTimeChart
+                periodMetrics={data.periodMetrics}
+                stakeholderNote={data.stakeholderNote}
+              />
+              {data.wipAging && <WipAgingChart wipAging={data.wipAging} />}
+              <ThroughputDonuts periodMetrics={data.periodMetrics} />
+            </div>
           </div>
         )}
 
-        {/* Section 2: Previsibilidade e Diagnóstico (somente Engenharia) */}
+        {/* Engineering Mode: Layout padrao */}
         {!isDesignMode && (
-          <div className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <PercentilesBars {...data.percentiles} />
-            <ForecastCards forecast={data.forecast} />
-          </div>
+          <>
+            <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+              <CycleTimeChart
+                periodMetrics={data.periodMetrics}
+                stakeholderNote={data.stakeholderNote}
+              />
+              <R2Progress r2Progress={data.r2Progress} />
+            </div>
+
+            <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+              <ThroughputDonuts periodMetrics={data.periodMetrics} />
+              <FlowEfficiencyBars periodMetrics={data.periodMetrics} />
+            </div>
+
+            <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+              {squad.methodology === "sprint" && (
+                <SpilloverDots periodMetrics={data.periodMetrics} />
+              )}
+              <OccupationBars periodMetrics={data.periodMetrics} teamSize={displayTeamSize} />
+            </div>
+
+            <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+              {data.wipAging && <WipAgingChart wipAging={data.wipAging} />}
+              {data.bugsQuality.length > 0 && <BugsQuality data={data.bugsQuality} />}
+            </div>
+
+            <div className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-2">
+              <PercentilesBars {...data.percentiles} />
+              <ForecastCards forecast={data.forecast} />
+            </div>
+          </>
         )}
 
         {/* Evolution Table (somente Engenharia — em Design já aparece acima) */}
