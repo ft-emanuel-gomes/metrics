@@ -259,7 +259,6 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
         <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
           <ThroughputDonuts periodMetrics={data.periodMetrics} />
           {!isDesignMode && <FlowEfficiencyBars periodMetrics={data.periodMetrics} />}
-          {isDesignMode && data.wipAging && <WipAgingChart wipAging={data.wipAging} />}
         </div>
 
         {!isDesignMode && (
@@ -294,10 +293,10 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
           </div>
         )}
 
-        {/* Insights (em Design mode, filtrar insights de R2/R3/Features) */}
+        {/* Insights (em Design mode, filtrar insights irrelevantes) */}
         <div className="mt-4">
           <InsightsGrid insights={isDesignMode
-            ? data.insights.filter((i) => !i.title.match(/R[23]|Feature|Release|Épico/i))
+            ? data.insights.filter((i) => !i.title.match(/R[23]|Feature|Release|Épico|Eficiência|eficiência|gargalo|Ocupação|ocupação/i))
             : data.insights
           } />
         </div>
