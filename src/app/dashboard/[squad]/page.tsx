@@ -239,29 +239,19 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
         )}
 
         {/* KPI Cards */}
-        {!isDesignMode && (
-          <div className="mt-4">
-            <KpiCards kpis={data.kpis} squad={slug} availableSprints={availableSprints} isDesignMode={isDesignMode} />
-          </div>
-        )}
+        <div className="mt-4">
+          <KpiCards kpis={data.kpis} squad={slug} availableSprints={availableSprints} isDesignMode={isDesignMode} />
+        </div>
 
-        {/* Design Mode: Layout split — KPIs left, Charts right */}
+        {/* Design Mode: 3 colunas — cada chart abaixo do seu KPI */}
         {isDesignMode && (
-          <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-[280px_1fr]">
-            {/* Left: KPI cards stacked */}
-            <div className="space-y-3">
-              <KpiCards kpis={data.kpis} squad={slug} availableSprints={availableSprints} isDesignMode={isDesignMode} />
-            </div>
-
-            {/* Right: Charts stacked */}
-            <div className="space-y-4">
-              <CycleTimeChart
-                periodMetrics={data.periodMetrics}
-                stakeholderNote={data.stakeholderNote}
-              />
-              {data.wipAging && <WipAgingChart wipAging={data.wipAging} />}
-              <ThroughputDonuts periodMetrics={data.periodMetrics} />
-            </div>
+          <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <CycleTimeChart
+              periodMetrics={data.periodMetrics}
+              stakeholderNote={data.stakeholderNote}
+            />
+            <ThroughputDonuts periodMetrics={data.periodMetrics} />
+            {data.wipAging && <WipAgingChart wipAging={data.wipAging} />}
           </div>
         )}
 

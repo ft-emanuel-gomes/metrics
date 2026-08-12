@@ -85,11 +85,11 @@ export default function KpiCards({ kpis, squad, availableSprints, isDesignMode }
   ];
 
   const colCount = isDesignMode
-    ? "grid-cols-1"
+    ? "lg:grid-cols-3"
     : items.length >= 6 ? "lg:grid-cols-6" : items.length === 5 ? "lg:grid-cols-5" : "lg:grid-cols-4";
 
   return (
-    <div className={`grid gap-3.5 ${isDesignMode ? "grid-cols-1" : `grid-cols-2 sm:grid-cols-3 ${colCount}`}`}>
+    <div className={`grid grid-cols-2 gap-3.5 sm:grid-cols-3 ${colCount}`}>
       {items.map((item, idx) => (
         <KpiCard
           key={`${item.label}-${idx}`}
