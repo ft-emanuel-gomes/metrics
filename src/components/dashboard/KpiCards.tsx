@@ -73,14 +73,13 @@ function KpiCard({ item, extra }: { item: KpiItem; extra?: React.ReactNode }) {
 }
 
 export default function KpiCards({ kpis, squad, availableSprints, isDesignMode }: KpiCardsProps) {
-  // Em modo Design: excluir Transbordo e Eficiencia de Fluxo (nao se aplica)
+  // Em modo Design: excluir Transbordo, Eficiencia de Fluxo e Ocupacao
   const items: KpiItem[] = [
     kpis.cycleTime,
     kpis.throughput,
     ...(!isDesignMode ? [kpis.flowEfficiency] : []),
-    // Transbordo/WIP Aging card primario — excluir se Design mode
     ...(!isDesignMode ? [kpis.spilloverOrWip] : []),
-    kpis.occupation,
+    ...(!isDesignMode ? [kpis.occupation] : []),
     // Adicionar WIP Aging como card extra somente se for diferente do spilloverOrWip (Sprint squads)
     ...(kpis.wipAging && kpis.wipAging.label !== kpis.spilloverOrWip.label ? [kpis.wipAging] : []),
   ];

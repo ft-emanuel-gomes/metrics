@@ -259,17 +259,17 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
         <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
           <ThroughputDonuts periodMetrics={data.periodMetrics} />
           {!isDesignMode && <FlowEfficiencyBars periodMetrics={data.periodMetrics} />}
+          {isDesignMode && data.wipAging && <WipAgingChart wipAging={data.wipAging} />}
         </div>
 
-        <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-          {!isDesignMode && squad.methodology === "sprint" && (
-            <SpilloverDots periodMetrics={data.periodMetrics} />
-          )}
-          <OccupationBars periodMetrics={data.periodMetrics} teamSize={displayTeamSize} />
-          {isDesignMode && (
-            <EvolutionTable evolution={data.evolution} periods={data.periods} />
-          )}
-        </div>
+        {!isDesignMode && (
+          <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+            {squad.methodology === "sprint" && (
+              <SpilloverDots periodMetrics={data.periodMetrics} />
+            )}
+            <OccupationBars periodMetrics={data.periodMetrics} teamSize={displayTeamSize} />
+          </div>
+        )}
 
         {/* WIP Aging + Qualidade (lado a lado) — somente Engenharia */}
         {!isDesignMode && (
