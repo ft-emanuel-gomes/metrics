@@ -84,9 +84,13 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
       if (requestedSprintIds && requestedSprintIds.length > 0) {
         periodIds = requestedSprintIds.map((id) => `sprint-${id}`);
         sprintIdsToFetch = requestedSprintIds;
-      } else if (rawMeta) {
+      } else if (rawMeta && rawMeta.sprintIds && rawMeta.sprintIds.length > 0) {
         periodIds = rawMeta.sprintIds.map((id) => `sprint-${id}`);
         sprintIdsToFetch = rawMeta.sprintIds;
+      } else if (rawMeta && rawMeta.monthKeys && rawMeta.monthKeys.length > 0) {
+        // Fallback: squad mudou de kanban para sprint mas ainda tem dados mensais no S3
+        periodIds = rawMeta.monthKeys.map((m) => `month-${m}`);
+        monthsToFetch = rawMeta.monthKeys;
       }
     } else {
       if (requestedMonths && requestedMonths.length > 0) {
@@ -106,9 +110,9 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
           if (existing) return existing;
 
           // Não existe no S3 — buscar do Jira e salvar
-          if (squad.methodology === "sprint" && sprintIdsToFetch[idx]) {
+          if (sprintIdsToFetch[idx]) {
             return fetchAndSaveSprintPeriod(squad, sprintIdsToFetch[idx]);
-          } else if (squad.methodology === "kanban" && monthsToFetch[idx]) {
+          } else if (monthsToFetch[idx]) {
             return fetchAndSaveMonthPeriod(squad, monthsToFetch[idx]);
           }
           return null;
