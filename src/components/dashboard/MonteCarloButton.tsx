@@ -9,7 +9,7 @@ interface MonteCarloButtonProps {
   availableSprints: { id: number; name: string }[];
 }
 
-const ALL_ISSUE_TYPES = ["História", "Bug", "Design", "Tech Debt", "Task", "Kaizen", "Spike"];
+const ALL_ISSUE_TYPES = ["História", "Bug", "Tech Debt", "Task", "Kaizen", "Spike"];
 
 export default function MonteCarloButton({ squad, defaultTeamSize, availableSprints }: MonteCarloButtonProps) {
   const [isOpen, setIsOpen] = useState(false);

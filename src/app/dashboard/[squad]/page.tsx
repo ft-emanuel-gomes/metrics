@@ -187,8 +187,8 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
   const remaining = data.r2Progress.epics.total + data.r2Progress.features.total
     - data.r2Progress.epics.done - data.r2Progress.features.done;
 
-  // Tipos de issue disponíveis (lista fixa — sempre mostra todas as opções)
-  const allIssueTypes = ["História", "Bug", "Design", "Tech Debt", "Task", "Kaizen", "Spike"];
+  // Tipos de issue disponíveis (sem Design — Design só via toggle)
+  const allIssueTypes = ["História", "Bug", "Tech Debt", "Task", "Kaizen", "Spike"];
 
   return (
     <main className="min-h-screen p-4 lg:p-6">
@@ -220,7 +220,7 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
             currentSprintIds={currentSprintIds}
             availableMonths={availableMonths}
             currentMonths={currentMonths}
-            availableIssueTypes={allIssueTypes}
+            availableIssueTypes={isDesignMode ? [] : allIssueTypes}
             currentIssueTypes={issueTypeFilter}
           />
         </div>
