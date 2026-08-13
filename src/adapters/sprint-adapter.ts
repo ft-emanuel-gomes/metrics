@@ -62,6 +62,12 @@ export async function fetchSprintDashboard(
     sprints = sprints.slice(-3);
   }
 
+  // Se menos de 3 sprints concluídas, usar adapter Kanban (últimos 3 meses) como fallback
+  if (sprints.length < 3 && !requestedSprintIds) {
+    const { fetchKanbanDashboard } = await import("./kanban-adapter");
+    return fetchKanbanDashboard(squad, undefined, undefined, issueTypeFilter);
+  }
+
   const periods = sprintsToPeriods(sprints);
 
   // 2. Para cada sprint, buscar dados e calcular métricas

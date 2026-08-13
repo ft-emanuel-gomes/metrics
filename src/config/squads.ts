@@ -66,8 +66,8 @@ export const SQUADS_CONFIG: Record<string, SquadConfig> = {
     project: "RI",
     name: "Squad Riscos",
     slug: "riscos",
-    methodology: "kanban",
-    boardId: 1902, // Downstream - Riscos (kanban)
+    methodology: "sprint",
+    boardId: 1902,
     teamSize: 6,
     r2FixVersion: "R2 - COMPLIANCE, ONBOARDING E FEE-BASED",
     teamFieldValue: "Squad Riscos",
@@ -110,8 +110,8 @@ export const SQUADS_CONFIG: Record<string, SquadConfig> = {
     project: "RF",
     name: "Squad Renda Fixa",
     slug: "renda-fixa",
-    methodology: "kanban",
-    boardId: 1830, // Downstream - Renda Fixa (kanban)
+    methodology: "sprint",
+    boardId: 1830,
     teamSize: 6,
     r2FixVersion: "R2 - COMPLIANCE, ONBOARDING E FEE-BASED",
     teamFieldValue: "Squad Renda Fixa e Híbridos",
