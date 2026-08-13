@@ -137,7 +137,7 @@ export default function PeriodSelector({
         )}
       </div>
 
-      {/* Issue Type filter pills */}
+      {/* Issue Type filter — mesmo estilo das sprint tabs */}
       {availableIssueTypes.length > 0 && (
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-[10px] font-medium uppercase" style={{ color: "var(--text-muted)" }}>
@@ -150,12 +150,7 @@ export default function PeriodSelector({
                 key={type}
                 onClick={() => toggleType(type)}
                 disabled={isPending}
-                className="text-[11px] font-medium px-3 py-1 rounded-full transition"
-                style={{
-                  backgroundColor: isSelected ? "var(--accent-bg)" : "var(--pill-neutral-bg)",
-                  color: isSelected ? "var(--accent)" : "var(--text-secondary)",
-                  border: isSelected ? `1px solid var(--accent)` : "1px solid transparent",
-                }}
+                className={`theme-tab ${isSelected ? "theme-tab-active" : ""}`}
               >
                 {type}
               </button>
