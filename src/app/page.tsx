@@ -2,11 +2,10 @@ import { redirect } from "next/navigation";
 import { SQUADS_CONFIG } from "@/config/squads";
 import ThemedLogo from "@/components/ui/ThemedLogo";
 import SquadHealthIndicator from "@/components/home/SquadHealthIndicator";
+import AdminMenu from "@/components/home/AdminMenu";
 import SyncButton from "@/components/home/SyncButton";
 import LogoutButton from "@/components/home/LogoutButton";
 import MetasOverlay from "@/components/home/MetasOverlay";
-import AiAgilistaButton from "@/components/home/AiAgilistaButton";
-import RetroButton from "@/components/home/RetroButton";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import { getAuthSession } from "@/services/auth-session";
 
@@ -39,8 +38,7 @@ export default async function HomePage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            {session.isAdmin && <RetroButton />}
-            {session.isAdmin && <AiAgilistaButton />}
+            {session.isAdmin && <AdminMenu />}
             <SyncButton />
             <ThemeToggle />
           </div>
