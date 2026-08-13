@@ -62,8 +62,9 @@ export async function fetchSprintDashboard(
     sprints = sprints.slice(-3);
   }
 
-  // Se menos de 3 sprints concluídas, usar adapter Kanban (últimos 3 meses) como fallback
-  if (sprints.length < 3 && !requestedSprintIds) {
+  // Se NENHUMA sprint concluída, usar adapter Kanban (últimos 3 meses) como fallback
+  // Quando tiver 1+ sprints concluídas, usa o que tem (mesmo que <3)
+  if (sprints.length === 0 && !requestedSprintIds) {
     const { fetchKanbanDashboard } = await import("./kanban-adapter");
     return fetchKanbanDashboard(squad, undefined, undefined, issueTypeFilter);
   }
