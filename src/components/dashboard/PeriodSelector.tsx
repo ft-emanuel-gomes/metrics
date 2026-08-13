@@ -104,7 +104,7 @@ export default function PeriodSelector({
         </div>
       )}
 
-      {/* Período: Sprint Tabs ou Month Tabs */}
+      {/* Período: Sprint Tabs ou Month Tabs — pill style com borda */}
       <div className="flex flex-wrap items-center gap-2">
         {methodology === "sprint" ? (
           availableSprints.map((sprint) => {
@@ -114,7 +114,12 @@ export default function PeriodSelector({
                 key={sprint.id}
                 onClick={() => toggleSprint(sprint.id)}
                 disabled={isPending}
-                className={`theme-tab ${isSelected ? "theme-tab-active" : ""}`}
+                className="text-[11px] font-medium px-3 py-1 rounded-full transition"
+                style={{
+                  backgroundColor: isSelected ? "var(--accent-bg)" : "var(--pill-neutral-bg)",
+                  color: isSelected ? "var(--accent)" : "var(--text-secondary)",
+                  border: isSelected ? `1px solid var(--accent)` : "1px solid transparent",
+                }}
               >
                 {simplifySprintName(sprint.name)}
               </button>
@@ -128,7 +133,12 @@ export default function PeriodSelector({
                 key={month.value}
                 onClick={() => toggleMonth(month.value)}
                 disabled={isPending}
-                className={`theme-tab ${isSelected ? "theme-tab-active" : ""}`}
+                className="text-[11px] font-medium px-3 py-1 rounded-full transition"
+                style={{
+                  backgroundColor: isSelected ? "var(--accent-bg)" : "var(--pill-neutral-bg)",
+                  color: isSelected ? "var(--accent)" : "var(--text-secondary)",
+                  border: isSelected ? `1px solid var(--accent)` : "1px solid transparent",
+                }}
               >
                 {month.label}
               </button>
@@ -137,7 +147,7 @@ export default function PeriodSelector({
         )}
       </div>
 
-      {/* Issue Type filter — mesmo estilo das sprint tabs */}
+      {/* Issue Type filter — pill style com borda */}
       {availableIssueTypes.length > 0 && (
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-[10px] font-medium uppercase" style={{ color: "var(--text-muted)" }}>
@@ -150,7 +160,12 @@ export default function PeriodSelector({
                 key={type}
                 onClick={() => toggleType(type)}
                 disabled={isPending}
-                className={`theme-tab ${isSelected ? "theme-tab-active" : ""}`}
+                className="text-[11px] font-medium px-3 py-1 rounded-full transition"
+                style={{
+                  backgroundColor: isSelected ? "var(--accent-bg)" : "var(--pill-neutral-bg)",
+                  color: isSelected ? "var(--accent)" : "var(--text-secondary)",
+                  border: isSelected ? `1px solid var(--accent)` : "1px solid transparent",
+                }}
               >
                 {type}
               </button>
