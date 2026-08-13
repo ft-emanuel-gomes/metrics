@@ -40,12 +40,20 @@ export async function callAgilista(
 export async function buildJiraContext(slug: string): Promise<string> {
   const { getSquadBySlug } = await import("@/config/squads");
   const { fetchWipIssues, fetchWipIssuesWithEstimates } = await import("@/services/jira-search");
+  const { fetchActiveSprint } = await import("@/services/jira-sprints");
 
   const squad = getSquadBySlug(slug);
   if (!squad) return "❌ Squad não encontrada.";
 
   try {
-    const wipIssues = await fetchWipIssues(squad.project);
+    // Para squads Sprint, buscar apenas itens da sprint ativa
+    let activeSprintId: number | undefined;
+    if (squad.methodology === "sprint") {
+      const activeSprint = await fetchActiveSprint(squad.boardId);
+      activeSprintId = activeSprint?.id;
+    }
+
+    const wipIssues = await fetchWipIssues(squad.project, activeSprintId);
 
     if (wipIssues.length === 0) {
       return `✅ **${squad.name}** — Nenhum item em andamento. Board limpo!`;

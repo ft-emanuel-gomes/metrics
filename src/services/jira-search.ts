@@ -547,12 +547,14 @@ export async function fetchCompletedBugs(
 /**
  * Busca issues em andamento (WIP) para squads Kanban.
  */
-export async function fetchWipIssues(project: string): Promise<JiraIssue[]> {
+export async function fetchWipIssues(project: string, activeSprintId?: number): Promise<JiraIssue[]> {
+  const sprintClause = activeSprintId ? `AND sprint = ${activeSprintId}` : "";
   const jql = `
     project = "${project}"
     AND status in ("To Do", "In Progress", "Design Review", "Code Review", "Test", "Waiting for Test", "Waiting for Delivery")
     AND issuetype in (História, Story, Bug, Design, "Technical Debt", Kaizen, Task, Spike)
     AND status != Cancelado
+    ${sprintClause}
   `.trim().replace(/\s+/g, " ");
 
   // WIP não usa cache (precisa ser real-time)

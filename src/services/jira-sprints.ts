@@ -95,6 +95,35 @@ export async function fetchClosedSprints(
 }
 
 /**
+ * Busca a sprint ativa de um board.
+ * Retorna null se nenhuma sprint ativa.
+ */
+export async function fetchActiveSprint(boardId: number): Promise<SprintData | null> {
+  const client = getJiraClient();
+
+  try {
+    const response = await client.get<JiraSprintsResponse>(
+      `/rest/agile/1.0/board/${boardId}/sprint`,
+      { state: "active", maxResults: 1 }
+    );
+
+    if (response.values.length === 0) return null;
+
+    const raw = response.values[0];
+    return {
+      id: raw.id,
+      name: raw.name,
+      state: "active",
+      startDate: raw.startDate || new Date().toISOString(),
+      endDate: raw.endDate || new Date().toISOString(),
+      completeDate: raw.completeDate,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Busca as últimas N sprints concluídas para uma squad.
  * Converte para o formato Period usado nos adapters.
  */
