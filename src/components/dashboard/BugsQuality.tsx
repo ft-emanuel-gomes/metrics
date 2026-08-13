@@ -52,7 +52,7 @@ export default function BugsQuality({ data }: BugsQualityProps) {
     plotOptions: {
       bar: { borderRadius: 4, columnWidth: "50%" },
     },
-    colors: ["#f87171", "#fb923c"],
+    colors: ["#FF5630", "#FF991F"],
     dataLabels: {
       enabled: true,
       style: { fontSize: "10px", fontWeight: 700 },

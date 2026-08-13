@@ -11,14 +11,14 @@ interface ThroughputDonutsProps {
 }
 
 const TYPE_COLORS: Record<string, string> = {
-  "Historia": "#34d399",
-  "Story": "#34d399",
-  "Bug": "#f87171",
-  "Design": "#818cf8",
-  "Tech Debt": "#fbbf24",
-  "Task": "#a78bfa",
-  "Kaizen": "#38bdf8",
-  "Spike": "#fb923c",
+  "Historia": "#36B37E",
+  "Story": "#36B37E",
+  "Bug": "#FF5630",
+  "Design": "#6554C0",
+  "Tech Debt": "#FF991F",
+  "Task": "#2684FF",
+  "Kaizen": "#00B8D9",
+  "Spike": "#FF8B00",
 };
 
 interface PopoverData {

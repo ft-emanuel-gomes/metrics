@@ -108,7 +108,7 @@ export default function CapacityButton({ squad, availableSprints }: CapacityButt
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="rounded-md bg-white/10 px-3 py-1.5 text-[10px] font-semibold text-gray-300 hover:bg-white/15 transition"
+        className="rounded-lg bg-violet-500/15 px-3 py-2 text-[10px] font-semibold text-violet-300 hover:bg-violet-500/25 transition"
       >
         Capacidade
       </button>
