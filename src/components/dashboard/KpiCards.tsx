@@ -81,7 +81,15 @@ export default function KpiCards({ kpis, squad, availableSprints, isDesignMode, 
     ? [
         kpis.cycleTime,
         kpis.throughput,
-        kpis.wipAging || kpis.spilloverOrWip,
+        kpis.wipAging || {
+          label: "WIP Aging (>10d)",
+          value: "0%",
+          numericValue: 0,
+          status: "good" as const,
+          delta: "0/0 itens",
+          deltaDirection: "flat" as const,
+          previousValue: "Total WIP: 0",
+        },
       ]
     : [
         kpis.cycleTime,
