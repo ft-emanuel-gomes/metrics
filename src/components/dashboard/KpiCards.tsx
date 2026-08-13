@@ -1,12 +1,14 @@
 import type { KpiSummary, KpiItem } from "@/adapters/types";
 import MetricTooltip from "@/components/ui/MetricTooltip";
 import CapacityButton from "./CapacityButton";
+import MonteCarloButton from "./MonteCarloButton";
 
 interface KpiCardsProps {
   kpis: KpiSummary;
   squad?: string;
   availableSprints?: { id: number; name: string }[];
   isDesignMode?: boolean;
+  teamSize?: number;
 }
 
 const METRIC_TOOLTIPS: Record<string, string> = {
@@ -72,7 +74,7 @@ function KpiCard({ item, extra }: { item: KpiItem; extra?: React.ReactNode }) {
   );
 }
 
-export default function KpiCards({ kpis, squad, availableSprints, isDesignMode }: KpiCardsProps) {
+export default function KpiCards({ kpis, squad, availableSprints, isDesignMode, teamSize }: KpiCardsProps) {
   // Em modo Design: excluir Transbordo, Eficiencia de Fluxo e Ocupacao
   const items: KpiItem[] = [
     kpis.cycleTime,
@@ -94,9 +96,13 @@ export default function KpiCards({ kpis, squad, availableSprints, isDesignMode }
         <KpiCard
           key={`${item.label}-${idx}`}
           item={item}
-          extra={item.label === "Ocupação" && squad && availableSprints ? (
-            <CapacityButton squad={squad} availableSprints={availableSprints} />
-          ) : undefined}
+          extra={
+            item.label === "Ocupação" && squad && availableSprints
+              ? <CapacityButton squad={squad} availableSprints={availableSprints} />
+              : item.label === "Vazão" && squad && availableSprints
+              ? <MonteCarloButton squad={squad} defaultTeamSize={teamSize || 6} availableSprints={availableSprints} />
+              : undefined
+          }
         />
       ))}
     </div>
