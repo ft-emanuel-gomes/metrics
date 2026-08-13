@@ -156,13 +156,11 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
 
   // Buscar sprints disponíveis para o seletor (somente sprint squads)
   const availableSprints = squad.methodology === "sprint"
-    ? (await fetchClosedSprints(squad.boardId, 10)).map((s) => ({ id: s.id, name: s.name }))
+    ? await fetchClosedSprints(squad.boardId, 10).then((s) => s.map((sp) => ({ id: sp.id, name: sp.name }))).catch(() => [])
     : [];
 
-  // Gerar meses disponíveis para Kanban (últimos 6 meses)
-  const availableMonths = squad.methodology === "kanban"
-    ? generateAvailableMonths(6)
-    : [];
+  // Gerar meses disponíveis (tanto para kanban quanto para sprint squads sem sprints concluídas)
+  const availableMonths = generateAvailableMonths(6);
 
   // Meses atualmente selecionados (default: últimos 3 via data.periods)
   const currentMonths = requestedMonths || data.periods.map((p) => {
