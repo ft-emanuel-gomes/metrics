@@ -75,16 +75,23 @@ function KpiCard({ item, extra }: { item: KpiItem; extra?: React.ReactNode }) {
 }
 
 export default function KpiCards({ kpis, squad, availableSprints, isDesignMode, teamSize }: KpiCardsProps) {
-  // Em modo Design: excluir Transbordo, Eficiencia de Fluxo e Ocupacao
-  const items: KpiItem[] = [
-    kpis.cycleTime,
-    kpis.throughput,
-    ...(!isDesignMode ? [kpis.flowEfficiency] : []),
-    ...(!isDesignMode ? [kpis.spilloverOrWip] : []),
-    ...(!isDesignMode ? [kpis.occupation] : []),
-    // Adicionar WIP Aging como card extra somente se for diferente do spilloverOrWip (Sprint squads)
-    ...(kpis.wipAging && kpis.wipAging.label !== kpis.spilloverOrWip.label ? [kpis.wipAging] : []),
-  ];
+  // Em modo Design: Cycle Time + Vazao + WIP Aging (sempre 3 cards)
+  // Em modo Engenharia: todos os KPIs aplicaveis
+  const items: KpiItem[] = isDesignMode
+    ? [
+        kpis.cycleTime,
+        kpis.throughput,
+        kpis.wipAging || kpis.spilloverOrWip,
+      ]
+    : [
+        kpis.cycleTime,
+        kpis.throughput,
+        kpis.flowEfficiency,
+        kpis.spilloverOrWip,
+        kpis.occupation,
+        // WIP Aging extra somente se diferente do spilloverOrWip (Sprint squads)
+        ...(kpis.wipAging && kpis.wipAging.label !== kpis.spilloverOrWip.label ? [kpis.wipAging] : []),
+      ];
 
   const colCount = isDesignMode
     ? "lg:grid-cols-3"

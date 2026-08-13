@@ -249,7 +249,13 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
               stakeholderNote={data.stakeholderNote}
             />
             <ThroughputDonuts periodMetrics={data.periodMetrics} />
-            {data.wipAging && <WipAgingChart wipAging={data.wipAging} />}
+            {data.wipAging ? (
+              <WipAgingChart wipAging={data.wipAging} />
+            ) : (
+              <div className="theme-section flex items-center justify-center">
+                <p className="text-[11px] t-muted">Nenhum item Design em andamento</p>
+              </div>
+            )}
           </div>
         )}
 
