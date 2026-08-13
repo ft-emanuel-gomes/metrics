@@ -12,10 +12,12 @@ interface ThroughputDonutsProps {
 
 const TYPE_COLORS: Record<string, string> = {
   "Historia": "#36B37E",
+  "História": "#36B37E",
   "Story": "#36B37E",
   "Bug": "#FF5630",
   "Design": "#6554C0",
   "Tech Debt": "#FF991F",
+  "Technical Debt": "#FF991F",
   "Task": "#2684FF",
   "Kaizen": "#00B8D9",
   "Spike": "#FF8B00",
