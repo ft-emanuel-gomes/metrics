@@ -29,7 +29,7 @@ export default function ExportButton({ squad }: ExportButtonProps) {
     <button
       onClick={handleExport}
       disabled={isExporting}
-      className="rounded-md bg-violet-600 px-3 py-1.5 text-[10px] font-semibold text-white hover:bg-violet-500 disabled:opacity-40 transition"
+      className="btn-primary rounded-md px-3 py-1.5 text-[10px] disabled:opacity-40"
     >
       {isExporting ? "Gerando..." : "Exportar PDF"}
     </button>
