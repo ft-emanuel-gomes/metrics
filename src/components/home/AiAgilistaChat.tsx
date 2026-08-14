@@ -75,7 +75,7 @@ export default function AiAgilistaChat({ onClose }: { onClose: () => void }) {
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-white/10">
+        <div className="flex items-center justify-between px-5 py-3 border-b" style={{ borderColor: "var(--border-primary)" }}>
           <div className="flex items-center gap-3">
             <div className="h-8 w-8 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white text-sm font-bold">
               AI
@@ -96,7 +96,7 @@ export default function AiAgilistaChat({ onClose }: { onClose: () => void }) {
                   setInput(`Analise o fluxo da ${squadName} para a daily de hoje.`);
                 }
               }}
-              className="rounded-lg border border-white/10 bg-gray-800 px-2 py-1 text-[10px] text-gray-300 outline-none [&>option]:bg-gray-800 [&>option]:text-gray-200"
+              className="rounded-lg px-2 py-1 text-[10px] outline-none theme-input"
             >
               <option value="">Todas as squads</option>
               {SQUADS.map((s) => (
@@ -135,7 +135,7 @@ export default function AiAgilistaChat({ onClose }: { onClose: () => void }) {
         </div>
 
         {/* Input */}
-        <div className="px-5 py-3 border-t border-white/10">
+        <div className="px-5 py-3 border-t" style={{ borderColor: "var(--border-primary)" }}>
           <div className="flex items-center gap-2">
             <textarea
               value={input}
@@ -143,7 +143,7 @@ export default function AiAgilistaChat({ onClose }: { onClose: () => void }) {
               onKeyDown={handleKeyDown}
               placeholder="Ex: Analise o fluxo da Squad Custódia para a daily de hoje..."
               rows={1}
-              className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-500 outline-none resize-none focus:border-violet-500/50"
+              className="flex-1 rounded-xl px-4 py-2.5 text-sm placeholder-gray-500 outline-none resize-none theme-input"
             />
             <button
               onClick={handleSend}

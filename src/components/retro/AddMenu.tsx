@@ -76,7 +76,7 @@ export default function AddMenu({ onAddColumn, onOpenTimer }: AddMenuProps) {
           </button>
 
           {isOpen && (
-            <div className="absolute left-0 top-full mt-1 z-30 rounded-lg border border-white/10 bg-gray-800 py-1 shadow-xl min-w-[160px]">
+            <div className="absolute left-0 top-full mt-1 z-30 rounded-lg py-1 shadow-xl min-w-[160px]" style={{ backgroundColor: "var(--bg-card)", border: "0.5px solid var(--border-primary)" }}>
               <button
                 onClick={handleAddColumn}
                 className="w-full flex items-center gap-2 px-3 py-2 text-left text-[11px] text-gray-300 hover:bg-white/10"
