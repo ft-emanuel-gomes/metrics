@@ -52,7 +52,7 @@ export default function ShareModal({ squadSlug, onClose }: ShareModalProps) {
             onClick={handleCopy}
             className={`rounded-md px-3 py-2 text-[11px] font-semibold transition ${
               copied
-                ? "bg-emerald-600 text-white"
+                ? "btn-primary"
                 : "btn-primary"
             }`}
           >

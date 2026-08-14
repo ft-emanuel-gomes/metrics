@@ -177,10 +177,10 @@ body {
 .t-muted { color: var(--text-muted); }
 .t-accent { color: var(--accent); }
 
-/* Primary action button — adapts to theme */
+/* Primary action button — same style as Update button (accent-bg + accent text) */
 .btn-primary {
-  background-color: var(--accent);
-  color: #ffffff;
+  background-color: var(--accent-bg);
+  color: var(--accent);
   font-weight: 600;
   border-radius: 8px;
   padding: 8px 16px;
@@ -188,20 +188,18 @@ body {
   transition: opacity 0.15s ease;
   border: none;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .btn-primary:hover {
-  opacity: 0.85;
+  opacity: 0.8;
 }
 
 .btn-primary:disabled {
   opacity: 0.4;
   cursor: not-allowed;
-}
-
-/* In light mode, primary buttons use darker text for contrast on bright violet */
-[data-theme="light"] .btn-primary {
-  color: #1a1a1a;
 }
 
 /* Override Tailwind text-white in light mode for common elements */

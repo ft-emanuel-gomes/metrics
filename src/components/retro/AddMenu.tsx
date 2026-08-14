@@ -67,7 +67,7 @@ export default function AddMenu({ onAddColumn, onOpenTimer }: AddMenuProps) {
         <>
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="flex items-center gap-1.5 rounded-lg bg-violet-500/15 px-3 py-2 text-xs font-semibold text-violet-300 hover:bg-violet-500/25 transition"
+            className="btn-primary rounded-lg"
           >
             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
