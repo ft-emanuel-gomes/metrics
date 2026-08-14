@@ -26,7 +26,7 @@ export default function BoardSettingsModal({ settings, onSave, onClose }: BoardS
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-      <div className="w-full max-w-sm rounded-xl border border-white/10 bg-gray-900 p-6 shadow-2xl">
+      <div className="w-full max-w-sm rounded-xl theme-modal p-6 shadow-2xl">
         <h3 className="text-sm font-bold text-white mb-5">Configurações do Board</h3>
 
         <div className="space-y-4">
