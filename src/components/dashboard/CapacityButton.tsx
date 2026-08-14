@@ -193,7 +193,7 @@ export default function CapacityButton({ squad, availableSprints }: CapacityButt
               <button
                 onClick={handleSave}
                 disabled={saving || !selectedSprintId}
-                className="rounded-md bg-indigo-600 px-4 py-1.5 text-[10px] font-semibold text-white hover:bg-indigo-500 disabled:opacity-40 transition"
+                className="btn-primary rounded-md text-[10px] px-4 py-1.5 disabled:opacity-40"
               >
                 {saving ? "Salvando..." : "Salvar e Recalcular"}
               </button>

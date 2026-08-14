@@ -155,8 +155,7 @@ export default function RetroHome({ squadBoards, isAdmin }: RetroHomeProps) {
               <button
                 onClick={() => handleNewRetro(selectedSquad.squadSlug)}
                 disabled={creating}
-                className="w-full flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-xs font-semibold text-white mb-4 transition disabled:opacity-40"
-                style={{ backgroundColor: "var(--accent)" }}
+                className="btn-primary w-full justify-center rounded-lg px-4 py-3 mb-4 disabled:opacity-40"
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />

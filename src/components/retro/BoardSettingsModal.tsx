@@ -87,7 +87,7 @@ export default function BoardSettingsModal({ settings, onSave, onClose }: BoardS
                   onClick={() => setVoteScopePerColumn(false)}
                   className={`flex-1 rounded-md px-3 py-2 text-[11px] font-semibold transition ${
                     !voteScopePerColumn
-                      ? "bg-violet-600 text-white"
+                      ? "btn-primary"
                       : "bg-white/5 text-gray-400 hover:bg-white/10"
                   }`}
                 >
@@ -97,7 +97,7 @@ export default function BoardSettingsModal({ settings, onSave, onClose }: BoardS
                   onClick={() => setVoteScopePerColumn(true)}
                   className={`flex-1 rounded-md px-3 py-2 text-[11px] font-semibold transition ${
                     voteScopePerColumn
-                      ? "bg-violet-600 text-white"
+                      ? "btn-primary"
                       : "bg-white/5 text-gray-400 hover:bg-white/10"
                   }`}
                 >
@@ -119,7 +119,7 @@ export default function BoardSettingsModal({ settings, onSave, onClose }: BoardS
           <button
             onClick={handleSave}
             disabled={saving}
-            className="rounded-md bg-violet-600 px-4 py-1.5 text-[11px] font-semibold text-white hover:bg-violet-500 disabled:opacity-40 transition"
+            className="btn-primary rounded-md text-[11px] px-4 py-1.5 disabled:opacity-40"
           >
             {saving ? "Salvando..." : "Salvar"}
           </button>
