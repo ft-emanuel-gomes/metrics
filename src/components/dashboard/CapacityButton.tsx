@@ -169,8 +169,8 @@ export default function CapacityButton({ squad, availableSprints }: CapacityButt
             </div>
 
             {/* Info de capacidade calculada */}
-            <div className="rounded-md bg-indigo-500/10 p-3 mb-4">
-              <p className="text-[10px] text-indigo-300">
+            <div className="rounded-md p-3 mb-4" style={{ backgroundColor: "var(--accent-bg)" }}>
+              <p className="text-[10px]" style={{ color: "var(--accent)" }}>
                 Capacidade = {teamSize} pessoas × 6h/dia × {businessDays} dias = <strong>{capacityHours}h</strong>
               </p>
             </div>

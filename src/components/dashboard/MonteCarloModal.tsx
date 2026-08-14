@@ -159,11 +159,12 @@ export default function MonteCarloModal({
                 <button
                   key={sprint.id}
                   onClick={() => toggleSprint(sprint.id)}
-                  className={`rounded-full px-2 py-0.5 text-[10px] font-medium transition ${
-                    isSelected
-                      ? "bg-indigo-500/20 text-indigo-300 ring-1 ring-indigo-500/40"
-                      : "bg-white/5 text-gray-400 hover:bg-white/10"
-                  }`}
+                  className="rounded-full px-2.5 py-1 text-[10px] font-medium transition"
+                  style={{
+                    backgroundColor: isSelected ? "var(--accent-bg)" : "var(--pill-neutral-bg)",
+                    color: isSelected ? "var(--accent)" : "var(--text-secondary)",
+                    border: isSelected ? "1px solid var(--accent)" : "1px solid transparent",
+                  }}
                 >
                   {simplifySprintName(sprint.name)}
                 </button>
@@ -182,11 +183,12 @@ export default function MonteCarloModal({
                 <button
                   key={type}
                   onClick={() => toggleType(type)}
-                  className={`rounded-full px-2 py-0.5 text-[10px] font-medium transition ${
-                    isSelected
-                      ? "bg-indigo-500/20 text-indigo-300 ring-1 ring-indigo-500/40"
-                      : "bg-white/5 text-gray-400 hover:bg-white/10"
-                  }`}
+                  className="rounded-full px-2.5 py-1 text-[10px] font-medium transition"
+                  style={{
+                    backgroundColor: isSelected ? "var(--accent-bg)" : "var(--pill-neutral-bg)",
+                    color: isSelected ? "var(--accent)" : "var(--text-secondary)",
+                    border: isSelected ? "1px solid var(--accent)" : "1px solid transparent",
+                  }}
                 >
                   {type}
                 </button>
@@ -245,11 +247,7 @@ export default function MonteCarloModal({
         <button
           onClick={runSimulation}
           disabled={status === "loading"}
-          className={`w-full rounded-lg px-4 py-2.5 text-sm font-semibold transition ${
-            status === "loading"
-              ? "bg-indigo-500/30 text-indigo-300 cursor-wait"
-              : "bg-indigo-500 text-white hover:bg-indigo-600"
-          }`}
+          className="btn-primary w-full rounded-lg px-4 py-2.5 text-sm justify-center disabled:opacity-40"
         >
           {status === "loading" ? (
             <span className="flex items-center justify-center gap-2">
