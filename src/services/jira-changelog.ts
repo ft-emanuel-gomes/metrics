@@ -129,9 +129,13 @@ export async function fetchSprintAdditionDates(
 
         for (const entry of response.values) {
           for (const item of entry.items) {
-            if (item.field === "Sprint" && item.toString && item.toString.includes(String(sprintId))) {
-              // Encontrou a adição a esta sprint
-              foundDate = entry.created;
+            if (item.field === "Sprint" && item.toString) {
+              // Usar regex com word boundary para evitar falso positivo (ex: ID 10 vs 100)
+              const idPattern = new RegExp(`\\b${sprintId}\\b`);
+              if (idPattern.test(item.toString)) {
+                // Encontrou a adição a esta sprint
+                foundDate = entry.created;
+              }
             }
           }
         }
