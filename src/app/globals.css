@@ -139,6 +139,15 @@ body {
 [data-theme="light"] .text-white {
   color: var(--text-primary);
 }
+/* Preserve white text on colored button backgrounds */
+[data-theme="light"] .bg-indigo-600 .text-white,
+[data-theme="light"] .bg-violet-600 .text-white,
+[data-theme="light"] .bg-emerald-600 .text-white,
+[data-theme="light"] .bg-red-600 .text-white,
+[data-theme="light"] .bg-amber-600 .text-white,
+[data-theme="light"] button[style*="background-color: var(--accent)"] {
+  color: #ffffff !important;
+}
 [data-theme="light"] .text-gray-200,
 [data-theme="light"] .text-gray-300 {
   color: var(--text-primary);

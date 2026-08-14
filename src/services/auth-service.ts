@@ -115,7 +115,7 @@ export async function validateUserByEmail(email: string): Promise<AuthUser | nul
  */
 export function generateToken(user: AuthUser): string {
   const secret = process.env.JWT_SECRET || "dev-secret";
-  const expiresIn = process.env.JWT_EXPIRES_IN || "8h";
+  const expiresIn = process.env.JWT_EXPIRES_IN || "24h";
 
   const payload: Omit<JwtPayload, "iat" | "exp"> = {
     accountId: user.accountId,

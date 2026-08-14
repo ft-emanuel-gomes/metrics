@@ -46,20 +46,24 @@ export default function RetroBoard({
   // --- API helpers ---
 
   async function apiCards(action: string, payload: Record<string, unknown>) {
+    setPollPaused(true);
     const res = await fetch(`/api/retro/${squadSlug}/cards`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action, payload }),
     });
+    setTimeout(() => setPollPaused(false), 2000);
     return res;
   }
 
   async function apiSaveBoard(updatedBoard: RetroBoardType) {
+    setPollPaused(true);
     await fetch(`/api/retro/${squadSlug}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(updatedBoard),
     });
+    setTimeout(() => setPollPaused(false), 2000);
   }
 
   // --- Card operations ---

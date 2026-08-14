@@ -49,11 +49,23 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
   // Incluir permissões do usuário na resposta
   const role = getRetroRole(session.isAdmin);
   const permissions = getRetroPermissions(role);
+  const userId = session.accountId || session.email;
+
+  // Enforçar hideCards server-side: developers veem apenas seus cards
+  if (board.settings.hideCards && role !== "admin") {
+    board = {
+      ...board,
+      columns: board.columns.map((col) => ({
+        ...col,
+        cards: col.cards.filter((c) => c.authorId === userId),
+      })),
+    };
+  }
 
   return NextResponse.json({
     board,
     permissions,
-    currentUserId: session.accountId || session.email,
+    currentUserId: userId,
   });
 }
 

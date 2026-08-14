@@ -145,8 +145,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
       // Merge: combinar textos com quebra de linha
       targetCard.text = `${targetCard.text}\n---\n${sourceCard.text}`;
-      // Registrar merge
-      targetCard.mergedFrom = [...(targetCard.mergedFrom || []), sourceCard.id];
+      // Registrar merge com autoria para unmerge futuro
+      targetCard.mergedFrom = [...(targetCard.mergedFrom || []), JSON.stringify({ id: sourceCard.id, authorId: sourceCard.authorId, authorName: sourceCard.authorName })];
       // Combinar reações e votos
       for (const sourceReaction of sourceCard.reactions) {
         const existing = targetCard.reactions.find((r) => r.type === sourceReaction.type);
@@ -274,15 +274,28 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
       // Manter o primeiro texto no card original, criar novos cards para os demais
       card.text = parts[0];
+      const mergedAuthors = card.mergedFrom || [];
       card.mergedFrom = undefined;
 
-      // Criar cards separados para os textos restantes
+      // Criar cards separados para os textos restantes (preservar autoria se disponivel)
       for (let i = 1; i < parts.length; i++) {
+        let authorId = card.authorId;
+        let authorName = card.authorName;
+
+        // Tentar recuperar autoria original do merge metadata
+        if (mergedAuthors[i - 1]) {
+          try {
+            const meta = JSON.parse(mergedAuthors[i - 1]);
+            if (meta.authorId) authorId = meta.authorId;
+            if (meta.authorName) authorName = meta.authorName;
+          } catch { /* formato antigo (apenas ID) — usar autoria do card pai */ }
+        }
+
         const newCard: RetroCard = {
           id: `card-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
           text: parts[i],
-          authorId: card.authorId,
-          authorName: card.authorName,
+          authorId,
+          authorName,
           createdAt: new Date().toISOString(),
           reactions: [],
           votes: [],

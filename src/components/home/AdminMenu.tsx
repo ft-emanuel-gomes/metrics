@@ -2,9 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
+
+const AiAgilistaChat = dynamic(() => import("@/components/home/AiAgilistaChat"), { ssr: false });
 
 export default function AdminMenu() {
   const [isOpen, setIsOpen] = useState(false);
+  const [showAiChat, setShowAiChat] = useState(false);
 
   return (
     <div className="relative">
@@ -25,7 +29,7 @@ export default function AdminMenu() {
 
       {isOpen && (
         <>
-          {/* Backdrop para fechar */}
+          {/* Backdrop */}
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
 
           {/* Dropdown */}
@@ -44,38 +48,22 @@ export default function AdminMenu() {
               </svg>
               Retrospectiva
             </Link>
-            <AiAgilistaItem onClose={() => setIsOpen(false)} />
+            <button
+              onClick={() => { setIsOpen(false); setShowAiChat(true); }}
+              className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[12px] font-medium text-left transition hover:opacity-80"
+              style={{ color: "var(--text-primary)" }}
+            >
+              <svg className="h-4 w-4" style={{ color: "var(--accent)" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5" />
+              </svg>
+              Agile IA
+            </button>
           </div>
         </>
       )}
+
+      {/* Agile IA Chat Modal */}
+      {showAiChat && <AiAgilistaChat onClose={() => setShowAiChat(false)} />}
     </div>
   );
-}
-
-function AiAgilistaItem({ onClose }: { onClose: () => void }) {
-  const [isOpen, setIsOpen] = useState(false);
-
-  return (
-    <>
-      <button
-        onClick={() => { setIsOpen(true); onClose(); }}
-        className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[12px] font-medium text-left transition hover:opacity-80"
-        style={{ color: "var(--text-primary)" }}
-      >
-        <svg className="h-4 w-4" style={{ color: "var(--accent)" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5" />
-        </svg>
-        Agile IA
-      </button>
-
-      {isOpen && <AiAgilistaChat onClose={() => setIsOpen(false)} />}
-    </>
-  );
-}
-
-// Importar o chat component dinamicamente para evitar carregar tudo no bundle
-function AiAgilistaChat({ onClose }: { onClose: () => void }) {
-  // Renderiza o componente existente
-  const AiChat = require("@/components/home/AiAgilistaChat").default;
-  return <AiChat onClose={onClose} />;
 }

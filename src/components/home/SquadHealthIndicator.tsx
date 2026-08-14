@@ -24,19 +24,20 @@ const BORDER_COLORS: Record<HealthStatus, string> = {
 };
 
 /**
- * Avalia cada métrica contra sua meta e calcula o health geral.
+ * Avalia cada metrica contra sua meta e calcula o health geral.
  *
  * Metas:
- *   Cycle Time ≤ 15d
- *   Transbordo ≤ 2%
- *   Eficiência ≥ 60%
- *   Ocupação ≥ 80%
- *   WIP Aging ≤ 15% (itens acima de 15d)
+ *   Cycle Time <= 15d
+ *   Transbordo <= 20%
+ *   Eficiencia >= 60%
+ *   Ocupacao >= 80%
+ *   WIP Aging <= 7 itens criticos
+ *   Bugs <= 1 item
  *
  * Health:
- *   Verde: até 1 métrica abaixo da meta
- *   Amarelo: até 2 métricas abaixo da meta
- *   Vermelho: 3+ métricas abaixo da meta
+ *   Verde: ate 1 metrica abaixo da meta
+ *   Amarelo: ate 2 metricas abaixo da meta
+ *   Vermelho: 3+ metricas abaixo da meta
  */
 function evaluateMetrics(kpis: Record<string, { numericValue?: number; label?: string }>, bugCount: number = 0): {
   health: HealthStatus;
