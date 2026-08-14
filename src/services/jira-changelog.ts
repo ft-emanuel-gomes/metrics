@@ -102,3 +102,50 @@ export async function fetchChangelogsBatch(
 
   return results;
 }
+
+/**
+ * Busca a data em que cada issue foi adicionada a uma sprint específica.
+ * Retorna Map de issueKey → timestamp ISO (ou null se não encontrou no changelog).
+ * Usado para filtrar transbordo (excluir itens adicionados mid-sprint).
+ */
+export async function fetchSprintAdditionDates(
+  issueKeys: string[],
+  sprintId: number
+): Promise<Map<string, string | null>> {
+  const results = new Map<string, string | null>();
+  const client = getJiraClient();
+
+  const promises = issueKeys.map(async (key) => {
+    try {
+      let startAt = 0;
+      let foundDate: string | null = null;
+
+      // Percorrer todo o changelog buscando campo "Sprint"
+      while (true) {
+        const response = await client.get<JiraChangelogResponse>(
+          `/rest/api/3/issue/${key}/changelog`,
+          { startAt, maxResults: 100 }
+        );
+
+        for (const entry of response.values) {
+          for (const item of entry.items) {
+            if (item.field === "Sprint" && item.toString && item.toString.includes(String(sprintId))) {
+              // Encontrou a adição a esta sprint
+              foundDate = entry.created;
+            }
+          }
+        }
+
+        if (startAt + response.maxResults >= response.total) break;
+        startAt += response.maxResults;
+      }
+
+      results.set(key, foundDate);
+    } catch {
+      results.set(key, null);
+    }
+  });
+
+  await Promise.all(promises);
+  return results;
+}

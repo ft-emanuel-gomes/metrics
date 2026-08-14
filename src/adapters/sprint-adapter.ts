@@ -11,7 +11,7 @@ import {
   fetchR2Features,
   fetchWipIssues,
 } from "@/services/jira-search";
-import { fetchChangelogsBatch } from "@/services/jira-changelog";
+import { fetchChangelogsBatch, fetchSprintAdditionDates } from "@/services/jira-changelog";
 import { getSprintCapacity, getSprintBusinessDays } from "@/services/capacity-store";
 import { fetchProjectVersions, findActiveRelease } from "@/services/jira-versions";
 import { calculateCycleTimeP85, generateCycleTimeNote } from "@/metrics/cycle-time";
@@ -131,13 +131,30 @@ export async function fetchSprintDashboard(
     const isDesignMode = issueTypeFilter?.length === 1 && issueTypeFilter[0] === "Design";
     const flowEfficiency = calculatePeriodFlowEfficiency(issuesWithChangelogs, isDesignMode);
 
-    // Transbordo
-    const spilledIssues = await fetchSpilledIssues(
+    // Transbordo — filtrar apenas issues comprometidas desde o início da sprint
+    // (excluir adicionadas mid-sprint via changelog)
+    let spilledIssues = await fetchSpilledIssues(
       squad.project,
       sprint.id,
       sprint.startDate,
       effectiveEndDate
     );
+    // Buscar data de adição à sprint para cada issue
+    if (spilledIssues.length > 0) {
+      const spilledKeys = spilledIssues.map((i) => i.key);
+      const additionDates = await fetchSprintAdditionDates(spilledKeys, sprint.id);
+      const sprintStartMs = new Date(sprint.startDate).getTime();
+
+      spilledIssues = spilledIssues.filter((issue) => {
+        const addedAt = additionDates.get(issue.key);
+        if (!addedAt) {
+          // Sem registro no changelog — assumir comprometida desde o início
+          return true;
+        }
+        // Manter apenas se foi adicionada ANTES ou no momento do start
+        return new Date(addedAt).getTime() <= sprintStartMs;
+      });
+    }
     const spillover = calculateSpillover(spilledIssues, completedWithCL);
 
     // Ocupação (regra: max entre soma subtasks filhas vs estimate da Standard Issue)
