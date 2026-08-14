@@ -71,7 +71,7 @@ export default function AiAgilistaChat({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onClose}>
       <div
-        className="bg-gray-900 border border-violet-500/30 rounded-2xl w-full max-w-2xl h-[80vh] flex flex-col shadow-2xl shadow-violet-500/10"
+        className="theme-modal rounded-2xl w-full max-w-2xl h-[80vh] flex flex-col shadow-2xl shadow-violet-500/10"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

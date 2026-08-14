@@ -129,6 +129,49 @@ body {
   color: var(--text-secondary);
 }
 
+/* Modal wrapper — themed background for overlays */
+.theme-modal {
+  background-color: var(--bg-card);
+  border: 0.5px solid var(--border-primary);
+  color: var(--text-primary);
+}
+
+/* Input themed */
+.theme-input {
+  background-color: var(--bg-secondary);
+  border: 0.5px solid var(--border-primary);
+  color: var(--text-primary);
+  border-radius: 8px;
+  padding: 8px 12px;
+  outline: none;
+}
+
+.theme-input:focus {
+  border-color: var(--accent);
+}
+
+/* Table themed */
+.theme-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.theme-table th {
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-primary);
+  padding: 8px;
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.theme-table td {
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-primary);
+  padding: 8px;
+  font-size: 12px;
+}
+
 /* Themed text utility */
 .t-primary { color: var(--text-primary); }
 .t-secondary { color: var(--text-secondary); }

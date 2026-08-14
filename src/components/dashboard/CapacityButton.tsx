@@ -116,8 +116,8 @@ export default function CapacityButton({ squad, availableSprints }: CapacityButt
       {/* Modal */}
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="w-full max-w-sm rounded-xl border border-white/10 bg-gray-900 p-6 shadow-2xl">
-            <h3 className="text-sm font-bold text-white mb-4">
+          <div className="w-full max-w-sm rounded-xl p-6 shadow-2xl theme-modal">
+            <h3 className="text-sm font-bold mb-4" style={{ color: "var(--text-primary)" }}>
               Definir Capacidade do Time
             </h3>
 
@@ -128,7 +128,7 @@ export default function CapacityButton({ squad, availableSprints }: CapacityButt
             <select
               value={selectedSprintId}
               onChange={(e) => setSelectedSprintId(e.target.value)}
-              className="w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white mb-4 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="w-full rounded-md border border-white/10 theme-input mb-4"
             >
               {availableSprints.map((s) => (
                 <option key={s.id} value={String(s.id)} className="bg-gray-900">
@@ -150,7 +150,7 @@ export default function CapacityButton({ squad, availableSprints }: CapacityButt
                   max={50}
                   value={teamSize}
                   onChange={(e) => setTeamSize(Number(e.target.value))}
-                  className="w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="w-full rounded-md theme-input"
                 />
               </div>
               <div>
@@ -163,7 +163,7 @@ export default function CapacityButton({ squad, availableSprints }: CapacityButt
                   max={30}
                   value={businessDays}
                   onChange={(e) => setBusinessDays(Number(e.target.value))}
-                  className="w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="w-full rounded-md theme-input"
                 />
               </div>
             </div>
