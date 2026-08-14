@@ -53,7 +53,7 @@ export default function ShareModal({ squadSlug, onClose }: ShareModalProps) {
             className={`rounded-md px-3 py-2 text-[11px] font-semibold transition ${
               copied
                 ? "bg-emerald-600 text-white"
-                : "bg-violet-600 text-white hover:bg-violet-500"
+                : "btn-primary"
             }`}
           >
             {copied ? "Copiado!" : "Copiar"}

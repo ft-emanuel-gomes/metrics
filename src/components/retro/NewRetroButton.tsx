@@ -39,7 +39,7 @@ export default function NewRetroButton({ squadSlug, squadName }: NewRetroButtonP
     <button
       onClick={handleCreate}
       disabled={creating}
-      className="flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-xs font-semibold text-white hover:bg-violet-500 disabled:opacity-40 transition"
+      className="flex items-center gap-2 btn-primary rounded-lg px-4 py-2 text-xs disabled:opacity-40"
     >
       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />

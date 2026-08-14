@@ -18,7 +18,7 @@ export default function MonteCarloButton({ squad, defaultTeamSize, availableSpri
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="rounded-lg bg-violet-500/15 px-3 py-2 text-xs font-semibold text-violet-300 hover:bg-violet-500/25 transition"
+        className="btn-primary rounded-lg px-3 py-2 text-xs"
       >
         Monte Carlo
       </button>
