@@ -23,6 +23,7 @@ import InsightsGrid from "@/components/dashboard/InsightsGrid";
 import BugsQuality from "@/components/dashboard/BugsQuality";
 import PeriodSelector from "@/components/dashboard/PeriodSelector";
 import ExportButton from "@/components/dashboard/ExportButton";
+import AdminDashboardMenu from "@/components/dashboard/AdminDashboardMenu";
 import DesignToggle from "@/components/dashboard/DesignToggle";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import { formatFullDate } from "@/lib/utils";
@@ -209,7 +210,9 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
           </div>
           <div className="flex gap-2">
             <DesignToggle />
-            <ExportButton squad={slug} />
+            {session.isAdmin && (
+              <AdminDashboardMenu squad={slug} teamSize={displayTeamSize} availableSprints={availableSprints} />
+            )}
             <ThemeToggle />
           </div>
         </div>
@@ -240,7 +243,7 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
 
         {/* KPI Cards */}
         <div className="mt-4">
-          <KpiCards kpis={data.kpis} squad={slug} availableSprints={availableSprints} isDesignMode={isDesignMode} teamSize={displayTeamSize} />
+          <KpiCards kpis={data.kpis} squad={slug} availableSprints={availableSprints} isDesignMode={isDesignMode} />
         </div>
 
         {/* Design Mode: 3 colunas — cada chart abaixo do seu KPI */}
