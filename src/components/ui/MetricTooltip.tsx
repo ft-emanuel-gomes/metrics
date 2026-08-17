@@ -42,7 +42,8 @@ export default function MetricTooltip({ text }: MetricTooltipProps) {
       {isOpen && mounted && createPortal(
         <div
           style={{ top: position.top, left: position.left, transform: "translate(-50%, -100%)" }}
-          className="fixed z-[9999] w-56 p-2.5 rounded-lg bg-gray-800 border border-white/10 shadow-2xl text-[9px] text-gray-300 leading-relaxed whitespace-normal pointer-events-none"
+          className="fixed z-[9999] w-56 p-2.5 rounded-lg shadow-2xl text-[9px] leading-relaxed whitespace-normal pointer-events-none"
+          style={{ backgroundColor: "var(--bg-secondary)", border: "0.5px solid var(--border-primary)", color: "var(--text-primary)" }}
         >
           {text}
         </div>,
