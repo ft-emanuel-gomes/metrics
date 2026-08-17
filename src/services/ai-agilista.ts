@@ -49,8 +49,13 @@ export async function buildJiraContext(slug: string): Promise<string> {
     // Para squads Sprint, buscar apenas itens da sprint ativa
     let activeSprintId: number | undefined;
     if (squad.methodology === "sprint") {
-      const activeSprint = await fetchActiveSprint(squad.boardId);
-      activeSprintId = activeSprint?.id;
+      try {
+        const activeSprint = await fetchActiveSprint(squad.boardId);
+        activeSprintId = activeSprint?.id;
+      } catch {
+        // Board pode não suportar sprints (ex: transição de kanban para sprint)
+        activeSprintId = undefined;
+      }
     }
 
     const wipIssues = await fetchWipIssues(squad.project, activeSprintId);
