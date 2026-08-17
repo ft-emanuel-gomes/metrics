@@ -17,16 +17,22 @@ const VERTICALS: VerticalGroup[] = [
   { name: "Operação", slugs: ["custodia", "consolidacao"] },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ allowedSquads, isAdmin }: { allowedSquads: string[]; isAdmin: boolean }) {
   const pathname = usePathname();
 
+  // Filtrar slugs por permissão (admin vê tudo)
+  const filteredVerticals = VERTICALS.map((v) => ({
+    ...v,
+    slugs: isAdmin ? v.slugs : v.slugs.filter((slug) => allowedSquads.includes(slug)),
+  })).filter((v) => v.slugs.length > 0);
+
   // Determinar qual vertical está ativa (para abrir automaticamente)
-  const activeVertical = VERTICALS.find((v) =>
+  const activeVertical = filteredVerticals.find((v) =>
     v.slugs.some((slug) => pathname === `/dashboard/${slug}`)
   );
 
   const [expanded, setExpanded] = useState<Record<string, boolean>>(
-    Object.fromEntries(VERTICALS.map((v) => [v.name, v.name === activeVertical?.name]))
+    Object.fromEntries(filteredVerticals.map((v) => [v.name, v.name === activeVertical?.name]))
   );
 
   function toggleVertical(name: string) {
@@ -40,7 +46,7 @@ export default function Sidebar() {
       </div>
 
       <nav className="space-y-1">
-        {VERTICALS.map((vertical) => {
+        {filteredVerticals.map((vertical) => {
           const isExpanded = expanded[vertical.name];
           const hasActive = vertical.slugs.some((slug) => pathname === `/dashboard/${slug}`);
 
