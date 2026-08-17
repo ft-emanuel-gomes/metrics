@@ -11,6 +11,8 @@ interface SprintOption {
 interface CapacityButtonProps {
   squad: string;
   availableSprints: SprintOption[];
+  autoOpen?: boolean;
+  onAutoClose?: () => void;
 }
 
 interface SavedCapacityEntry {
@@ -18,9 +20,9 @@ interface SavedCapacityEntry {
   businessDays?: number;
 }
 
-export default function CapacityButton({ squad, availableSprints }: CapacityButtonProps) {
+export default function CapacityButton({ squad, availableSprints, autoOpen, onAutoClose }: CapacityButtonProps) {
   const router = useRouter();
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(autoOpen || false);
   const [teamSize, setTeamSize] = useState(6);
   const [businessDays, setBusinessDays] = useState(10);
   const [selectedSprintId, setSelectedSprintId] = useState<string>("");
@@ -83,7 +85,7 @@ export default function CapacityButton({ squad, availableSprints }: CapacityButt
         setMessage("Salvo! Recarregando métricas...");
         setSavedCapacities((prev) => ({ ...prev, [selectedSprintId]: { teamSize, businessDays } }));
         setTimeout(() => {
-          setIsOpen(false);
+          setIsOpen(false); if (onAutoClose) onAutoClose();
           setMessage("");
           router.refresh();
         }, 1000);
@@ -106,12 +108,14 @@ export default function CapacityButton({ squad, availableSprints }: CapacityButt
 
   return (
     <>
-      <button
-        onClick={() => setIsOpen(true)}
-        className="btn-primary rounded-lg px-3 py-2 text-[10px]"
+      {!autoOpen && (
+        <button
+          onClick={() => setIsOpen(true)}
+          className="btn-primary rounded-lg px-3 py-2 text-[10px]"
       >
         Capacidade
       </button>
+      )}
 
       {/* Modal */}
       {isOpen && (
@@ -185,7 +189,7 @@ export default function CapacityButton({ squad, availableSprints }: CapacityButt
             {/* Botões */}
             <div className="flex justify-end gap-2">
               <button
-                onClick={() => { setIsOpen(false); setMessage(""); }}
+                onClick={() => { setIsOpen(false); if (onAutoClose) onAutoClose(); setMessage(""); }}
                 className="rounded-md bg-white/10 px-3 py-1.5 text-[10px] font-semibold text-gray-300 hover:bg-white/15 transition"
               >
                 Cancelar

@@ -112,11 +112,6 @@ export default function KpiCards({ kpis, squad, availableSprints, isDesignMode }
         <KpiCard
           key={`${item.label}-${idx}`}
           item={item}
-          extra={
-            item.label === "Ocupação" && squad && availableSprints
-              ? <CapacityButton squad={squad} availableSprints={availableSprints} />
-              : undefined
-          }
         />
       ))}
     </div>

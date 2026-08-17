@@ -5,6 +5,9 @@ import dynamic from "next/dynamic";
 
 const MonteCarloModal = dynamic(() => import("./MonteCarloModal"), { ssr: false });
 
+// CapacityButton rendered with autoOpen triggers its modal immediately
+import CapacityButton from "./CapacityButton";
+
 interface AdminDashboardMenuProps {
   squad: string;
   teamSize: number;
@@ -20,6 +23,7 @@ export default function AdminDashboardMenu({
 }: AdminDashboardMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [showMonteCarlo, setShowMonteCarlo] = useState(false);
+  const [showCapacity, setShowCapacity] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
   async function handleExport() {
@@ -76,6 +80,16 @@ export default function AdminDashboardMenu({
               Monte Carlo
             </button>
             <button
+              onClick={() => { setIsOpen(false); setShowCapacity(true); }}
+              className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[12px] font-medium text-left transition hover:opacity-80"
+              style={{ color: "var(--text-primary)" }}
+            >
+              <svg className="h-4 w-4" style={{ color: "var(--accent)" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              Capacidade
+            </button>
+            <button
               onClick={() => { setIsOpen(false); handleExport(); }}
               disabled={isExporting}
               className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[12px] font-medium text-left transition hover:opacity-80 disabled:opacity-40"
@@ -99,6 +113,11 @@ export default function AdminDashboardMenu({
           availableIssueTypes={ALL_ISSUE_TYPES}
           onClose={() => setShowMonteCarlo(false)}
         />
+      )}
+
+      {/* Capacity Modal — renders CapacityButton which auto-opens via state */}
+      {showCapacity && (
+        <CapacityButton squad={squad} availableSprints={availableSprints} autoOpen onAutoClose={() => setShowCapacity(false)} />
       )}
     </div>
   );
