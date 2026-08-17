@@ -35,20 +35,24 @@ function KpiCard({ item, extra }: { item: KpiItem; extra?: React.ReactNode }) {
   const pillClass = getPillClass(item);
 
   return (
-    <div className="theme-card">
-      <div className="flex items-center justify-between">
+    <div className="theme-card flex flex-col h-full">
+      {/* Row 1: Label + button (fixed height) */}
+      <div className="flex items-center justify-between min-h-[24px]">
         <span className="block text-[11px] font-medium" style={{ color: "var(--text-secondary)" }}>
           {item.label}
           {tooltip && <MetricTooltip text={tooltip} />}
         </span>
         {extra}
       </div>
+
+      {/* Row 2: Value (always same position) */}
       <p className="mt-2 text-[30px] font-medium leading-none" style={{ color: "var(--text-primary)" }}>
         {item.value}
       </p>
 
-      {item.delta && (
-        <div className="mt-2.5">
+      {/* Row 3: Pill/delta (bottom, auto margin pushes down) */}
+      <div className="mt-auto pt-2">
+        {item.delta && (
           <span className={pillClass}>
             {item.deltaDirection === "up" && (
               <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -62,14 +66,13 @@ function KpiCard({ item, extra }: { item: KpiItem; extra?: React.ReactNode }) {
             )}
             {item.delta}
           </span>
-        </div>
-      )}
-
-      {!item.delta && item.previousValue && (
-        <p className="mt-2 text-[10px]" style={{ color: "var(--text-muted)" }}>
-          {item.previousValue}
-        </p>
-      )}
+        )}
+        {!item.delta && item.previousValue && (
+          <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>
+            {item.previousValue}
+          </p>
+        )}
+      </div>
     </div>
   );
 }
