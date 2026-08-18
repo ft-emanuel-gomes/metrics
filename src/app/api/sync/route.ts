@@ -80,7 +80,19 @@ export async function POST() {
 
 async function syncSprintSquad(squad: SquadConfig): Promise<number> {
   // 1. Buscar últimas 10 sprints (salvar todas para flexibilidade de filtro)
-  const sprints = await getLatestSprints(squad.boardId, 10);
+  let sprints: SprintData[] = [];
+  try {
+    sprints = await getLatestSprints(squad.boardId, 10);
+  } catch {
+    // Board não suporta sprints — usar sync kanban como fallback
+    return syncKanbanSquad(squad);
+  }
+
+  if (sprints.length === 0) {
+    // Nenhuma sprint concluída — usar sync kanban como fallback
+    return syncKanbanSquad(squad);
+  }
+
   await saveRawSprints(squad.slug, sprints);
 
   // 2. Para cada sprint, buscar dados brutos

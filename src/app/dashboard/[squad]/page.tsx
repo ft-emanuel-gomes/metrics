@@ -87,6 +87,9 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
         sprintIdsToFetch = requestedSprintIds;
       } else {
         // Sempre consultar Jira para saber quais sprints estão concluídas (fonte da verdade)
+        // Flush sprint cache para garantir dados frescos
+        const { getCacheManager } = await import("@/cache/cache-manager");
+        getCacheManager().del(`sprints:${squad.boardId}`);
         const closedSprints = await fetchClosedSprints(squad.boardId, 3).catch(() => []);
         if (closedSprints.length > 0) {
           const latestIds = closedSprints.map((s) => s.id);
