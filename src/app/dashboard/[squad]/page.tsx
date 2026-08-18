@@ -85,13 +85,21 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
       if (requestedSprintIds && requestedSprintIds.length > 0) {
         periodIds = requestedSprintIds.map((id) => `sprint-${id}`);
         sprintIdsToFetch = requestedSprintIds;
-      } else if (rawMeta && rawMeta.sprintIds && rawMeta.sprintIds.length > 0) {
-        periodIds = rawMeta.sprintIds.map((id) => `sprint-${id}`);
-        sprintIdsToFetch = rawMeta.sprintIds;
-      } else if (rawMeta && rawMeta.monthKeys && rawMeta.monthKeys.length > 0) {
-        // Fallback: squad mudou de kanban para sprint mas ainda tem dados mensais no S3
-        periodIds = rawMeta.monthKeys.map((m) => `month-${m}`);
-        monthsToFetch = rawMeta.monthKeys;
+      } else {
+        // Sempre consultar Jira para saber quais sprints estão concluídas (fonte da verdade)
+        const closedSprints = await fetchClosedSprints(squad.boardId, 3).catch(() => []);
+        if (closedSprints.length > 0) {
+          const latestIds = closedSprints.map((s) => s.id);
+          periodIds = latestIds.map((id) => `sprint-${id}`);
+          sprintIdsToFetch = latestIds;
+        } else if (rawMeta && rawMeta.sprintIds && rawMeta.sprintIds.length > 0) {
+          periodIds = rawMeta.sprintIds.map((id) => `sprint-${id}`);
+          sprintIdsToFetch = rawMeta.sprintIds;
+        } else if (rawMeta && rawMeta.monthKeys && rawMeta.monthKeys.length > 0) {
+          // Fallback: squad mudou de kanban para sprint mas ainda tem dados mensais no S3
+          periodIds = rawMeta.monthKeys.map((m) => `month-${m}`);
+          monthsToFetch = rawMeta.monthKeys;
+        }
       }
     } else {
       if (requestedMonths && requestedMonths.length > 0) {
