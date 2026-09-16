@@ -67,7 +67,7 @@ export const SQUADS_CONFIG: Record<string, SquadConfig> = {
     name: "Squad Riscos",
     slug: "riscos",
     methodology: "sprint",
-    boardId: 1902,
+    boardId: 2021, // Downstream Scrum - Riscos (scrum)
     teamSize: 6,
     r2FixVersion: "R2 - COMPLIANCE, ONBOARDING E FEE-BASED",
     teamFieldValue: "Squad Riscos",
@@ -89,7 +89,7 @@ export const SQUADS_CONFIG: Record<string, SquadConfig> = {
     name: "Squad Experiência Digital",
     slug: "experiencia",
     methodology: "sprint",
-    boardId: 1974, // Downstream - Scrum Experiência Digital (scrum)
+    boardId: 2064, // Downstream - Experiência Digital (scrum)
     teamSize: 6,
     r2FixVersion: "R2 - COMPLIANCE, ONBOARDING E FEE-BASED",
     teamFieldValue: "Squad Experiência Digital",
@@ -111,7 +111,7 @@ export const SQUADS_CONFIG: Record<string, SquadConfig> = {
     name: "Squad Renda Fixa",
     slug: "renda-fixa",
     methodology: "sprint",
-    boardId: 1830,
+    boardId: 2023, // Downstream Scrum Renda Fixa (scrum)
     teamSize: 6,
     r2FixVersion: "R2 - COMPLIANCE, ONBOARDING E FEE-BASED",
     teamFieldValue: "Squad Renda Fixa e Híbridos",
