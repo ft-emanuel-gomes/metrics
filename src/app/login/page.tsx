@@ -14,6 +14,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   no_email: "Email não encontrado na conta Atlassian.",
   no_permissions: "Usuário sem permissão em nenhum projeto.",
   no_squads: "Usuário sem acesso a nenhuma squad.",
+  state_mismatch: "Sessão de login inválida. Tente novamente.",
   internal: "Erro interno. Tente novamente.",
 };
 
