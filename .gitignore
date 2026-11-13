@@ -4,6 +4,11 @@ node_modules/
 # Next.js
 .next/
 out/
+# Gerados a cada build/dev (alternam entre .next/types e .next/dev/types)
+next-env.d.ts
+
+# TypeScript
+*.tsbuildinfo
 
 # Environment
 .env
