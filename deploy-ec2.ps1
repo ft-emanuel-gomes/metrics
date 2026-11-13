@@ -52,7 +52,7 @@ param(
     [string]$SsmPrefix = "/metrics",
 
     # Branch a implantar
-    [string]$GitBranch = "feat/sprint-2-improvements",
+    [string]$GitBranch = "main",
     [string]$GitRepo = "https://github.com/ft-emanuel-gomes/metrics.git",
 
     # Domínio público (CloudFront) para o redirect do OAuth
