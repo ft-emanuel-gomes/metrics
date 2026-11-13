@@ -13,7 +13,9 @@ export const dynamic = "force-dynamic";
  * (ver /api/auth/callback), que troca o `code` por tokens e cria a sessão.
  *
  * Scopes:
- * - read:me, read:account  → necessários para GET https://api.atlassian.com/me (identidade)
+ * - read:me                → necessário para GET https://api.atlassian.com/me (identidade)
+ *                            (somente scopes cadastrados no app OAuth do developer console
+ *                             podem ser pedidos; read:account NÃO está cadastrado)
  * - offline_access         → necessário para receber refresh_token (login silencioso futuro)
  */
 export async function GET(request: NextRequest) {
@@ -28,7 +30,7 @@ export async function GET(request: NextRequest) {
   // state anti-CSRF: valor aleatório, enviado à Atlassian e guardado em cookie
   const state = randomBytes(16).toString("hex");
 
-  const scopes = ["read:me", "read:account", "offline_access"];
+  const scopes = ["read:me", "offline_access"];
 
   const authUrl = new URL("https://auth.atlassian.com/authorize");
   authUrl.searchParams.set("audience", "api.atlassian.com");
