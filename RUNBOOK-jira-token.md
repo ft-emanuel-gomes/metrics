@@ -106,3 +106,29 @@ define `chmod 600` no `.env` e usa `pm2 save` para sobreviver a reboots.
 - `.env` está no `.gitignore` e nunca foi versionado — os tokens não vazaram pelo git.
 - Não cole tokens em chat, tickets ou logs. Trate como credencial de produção.
 - Agende rotação periódica do token (ex.: a cada 90 dias) e do `JWT_SECRET`.
+
+---
+
+## 4. Apps OAuth: Produção x Dev (NÃO misturar)
+
+A Atlassian aceita **uma única callback URL por app OAuth**. Por isso existem dois apps:
+
+| Ambiente | App no developer console | Callback cadastrada | Client ID (termina em) |
+|---|---|---|---|
+| Produção | "Métricas MB" | `https://d3ous1nh7xo4k4.cloudfront.net/api/auth/callback` | `...BLdSsJ` |
+| Dev (local) | "Métricas MB (dev)" | `http://localhost:3000/api/auth/callback` | `...5sjqBH` |
+
+Ambos precisam do scope `read:me` (User identity API).
+
+### Onde cada um vive
+- As credenciais ficam **somente no `.env` de cada ambiente**. O `.env` está no `.gitignore` e nunca vai para o git.
+- Merge, `git pull` e build **não alteram** o `.env`. Um deploy de código não troca o auth de produção.
+- Nunca copie o `.env` local para a EC2 (nem o contrário).
+
+### Checagem obrigatória antes/depois de cada deploy em produção
+```bash
+# na EC2
+grep '^ATLASSIAN_CLIENT_ID=' ~/metrics/.env | cut -d= -f2 | tail -c 7      # deve ser BLdSsJ
+grep '^ATLASSIAN_REDIRECT_URI=' ~/metrics/.env                              # deve ser o domínio do CloudFront
+```
+Se aparecer `5sjqBH` ou `localhost`, o `.env` de produção foi sobrescrito com o de dev: restaure antes de reiniciar o PM2.

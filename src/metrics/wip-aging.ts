@@ -1,5 +1,58 @@
 import { StatusTransition } from "@/services/jira-changelog";
 import { calendarDaysBetween } from "@/lib/utils";
+import type { KpiItem } from "@/adapters/types";
+
+/**
+ * Meta do WIP Aging: nenhum item em andamento pode passar de 10 dias corridos.
+ * Regra de negócio: se o item mais antigo tiver MAIS de 10 dias, o indicador não fica verde.
+ */
+export const WIP_AGING_LIMIT_DAYS = 10;
+
+/** Rótulo único do KPI de WIP Aging (usado como chave do tooltip no dashboard). */
+export const WIP_AGING_KPI_LABEL = "WIP Aging";
+
+export interface WipAgingSummary {
+  /** Idade (dias corridos) do item em andamento mais antigo. 0 se não houver WIP. */
+  oldestDays: number;
+  /** Quantidade de itens em andamento com idade acima da meta. */
+  overLimitCount: number;
+  totalWip: number;
+}
+
+/**
+ * Resume o WIP Aging em dias (sem percentuais): idade do item mais antigo e
+ * quantos itens estão acima de WIP_AGING_LIMIT_DAYS.
+ */
+export function summarizeWipAging(
+  wip: { totalWip: number; issues?: { agingDays: number }[] } | undefined
+): WipAgingSummary {
+  const ages = (wip?.issues ?? []).map((i) => i.agingDays);
+  return {
+    oldestDays: ages.length > 0 ? Math.max(...ages) : 0,
+    overLimitCount: ages.filter((d) => d > WIP_AGING_LIMIT_DAYS).length,
+    totalWip: wip?.totalWip ?? ages.length,
+  };
+}
+
+/**
+ * KPI de WIP Aging em dias. Valor = idade do item mais antigo; delta = itens acima da meta.
+ * Status: "good" somente se o item mais antigo tiver até WIP_AGING_LIMIT_DAYS.
+ */
+export function buildWipAgingKpi(
+  wip: { totalWip: number; issues?: { agingDays: number }[] } | undefined
+): KpiItem {
+  const s = summarizeWipAging(wip);
+  const ok = s.oldestDays <= WIP_AGING_LIMIT_DAYS;
+  return {
+    label: WIP_AGING_KPI_LABEL,
+    value: `${s.oldestDays}d`,
+    numericValue: s.oldestDays,
+    status: ok ? "good" : "danger",
+    delta: `${s.overLimitCount}/${s.totalWip} itens > ${WIP_AGING_LIMIT_DAYS}d`,
+    deltaDirection: ok ? "flat" : "up",
+    previousValue: `Total WIP: ${s.totalWip}`,
+  };
+}
 
 /**
  * Bucket de aging para WIP.
@@ -35,11 +88,13 @@ export interface WipAgingResult {
 
 /**
  * Definição dos buckets de aging.
+ * maxDays é EXCLUSIVO e igual ao minDays do bucket seguinte, para que as faixas sejam
+ * contíguas: 0–6 | 7–14 | 15–30 | 31+. (Antes, 14 e 30 dias não caíam em nenhuma faixa.)
  */
 const AGING_BUCKETS_DEF = [
   { label: "< 7d", minDays: 0, maxDays: 7, color: "bg-emerald-500" },
-  { label: "7-14d", minDays: 7, maxDays: 14, color: "bg-amber-400" },
-  { label: "15-30d", minDays: 15, maxDays: 30, color: "bg-orange-500" },
+  { label: "7-14d", minDays: 7, maxDays: 15, color: "bg-amber-400" },
+  { label: "15-30d", minDays: 15, maxDays: 31, color: "bg-orange-500" },
   { label: "> 30d", minDays: 31, maxDays: null, color: "bg-red-500" },
 ];
 

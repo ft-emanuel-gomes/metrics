@@ -16,7 +16,7 @@ import { calculateSpillover } from "@/metrics/spillover";
 import { calculateOccupation } from "@/metrics/occupation";
 import { calculateR2Progress } from "@/metrics/r2-progress";
 import { calculateForecast } from "@/metrics/forecast";
-import { calculateWipAging } from "@/metrics/wip-aging";
+import { calculateWipAging, buildWipAgingKpi, summarizeWipAging, WIP_AGING_LIMIT_DAYS, type WipAgingResult } from "@/metrics/wip-aging";
 import { calculateP50, calculateP85, calculateP95 } from "@/metrics/percentile";
 import { getSprintCapacity, getSprintBusinessDays } from "./capacity-store";
 import type {
@@ -234,30 +234,18 @@ export function buildDashboardFromRaw(
 
 function buildKpis(
   periodMetrics: PeriodMetrics[],
-  wipAging: { totalWip: number; buckets: { label: string; minDays: number; count: number; percentage: number }[] } | undefined,
+  wipAging: WipAgingResult | undefined,
   methodology: "sprint" | "kanban"
 ): KpiSummary {
   const current = periodMetrics[periodMetrics.length - 1];
   const previous = periodMetrics.length > 1 ? periodMetrics[periodMetrics.length - 2] : null;
 
-  const criticalWip = wipAging
-    ? wipAging.buckets.filter((b) => b.minDays >= 15).reduce((sum, b) => sum + b.count, 0)
-    : 0;
-  const criticalPct = wipAging && wipAging.totalWip > 0
-    ? Math.round((criticalWip / wipAging.totalWip) * 100)
-    : 0;
+  // WIP Aging em dias: idade do item mais antigo (ver buildWipAgingKpi)
+  const wipKpi = buildWipAgingKpi(wipAging);
 
   const spilloverOrWip: KpiItem = methodology === "sprint"
     ? buildKpiItem("Transbordo", current?.spillover?.percentage ?? 0, previous?.spillover?.percentage ?? 0, "%", previous?.period.shortName ?? "", "lower")
-    : {
-        label: "WIP Aging (>10d)",
-        value: `${criticalPct}%`,
-        numericValue: criticalPct,
-        status: criticalPct > 50 ? "danger" : criticalPct > 30 ? "warn" : "good",
-        delta: `${criticalWip}/${wipAging?.totalWip ?? 0} itens`,
-        deltaDirection: criticalPct > 50 ? "up" : "flat",
-        previousValue: `Total WIP: ${wipAging?.totalWip ?? 0}`,
-      };
+    : wipKpi;
 
   return {
     cycleTime: buildKpiItem("Cycle Time P85", current?.cycleTime.p85 ?? 0, previous?.cycleTime.p85 ?? 0, "d", previous?.period.shortName ?? "", "lower"),
@@ -265,15 +253,7 @@ function buildKpis(
     flowEfficiency: buildKpiItem("Eficiência de Fluxo", current?.flowEfficiency.efficiency ?? 0, previous?.flowEfficiency.efficiency ?? 0, "%", previous?.period.shortName ?? "", "higher"),
     spilloverOrWip,
     occupation: buildKpiItem("Ocupação", current?.occupation.percentage ?? 0, previous?.occupation.percentage ?? 0, "%", previous?.period.shortName ?? "", "info"),
-    wipAging: wipAging ? {
-      label: "WIP Aging (>10d)",
-      value: `${criticalPct}%`,
-      numericValue: criticalPct,
-      status: criticalPct > 50 ? "danger" : criticalPct > 30 ? "warn" : "good",
-      delta: `${criticalWip}/${wipAging.totalWip} itens`,
-      deltaDirection: criticalPct > 50 ? "up" : "flat",
-      previousValue: `Total WIP: ${wipAging.totalWip}`,
-    } : undefined,
+    wipAging: wipAging ? wipKpi : undefined,
   };
 }
 
@@ -350,20 +330,20 @@ function buildBurndown(periodMetrics: PeriodMetrics[], r2Progress: { epics: { to
 function generateInsights(
   periodMetrics: PeriodMetrics[],
   r2Progress: { features: { total: number; done: number } },
-  wipAging?: { totalWip: number; buckets: { minDays: number; count: number }[] }
+  wipAging?: WipAgingResult
 ): InsightItem[] {
   const insights: InsightItem[] = [];
   const current = periodMetrics[periodMetrics.length - 1];
 
   if (wipAging) {
-    const critical = wipAging.buckets.filter((b) => b.minDays >= 15).reduce((s, b) => s + b.count, 0);
-    if (critical > wipAging.totalWip * 0.4) {
-      insights.push({ title: "WIP com aging crítico", text: `${critical} de ${wipAging.totalWip} itens estão há mais de 10 dias. Priorizar conclusão.`, severity: "red" });
+    const wip = summarizeWipAging(wipAging);
+    if (wip.overLimitCount > wip.totalWip * 0.4) {
+      insights.push({ title: "WIP com aging crítico", text: `${wip.overLimitCount} de ${wip.totalWip} itens estão há mais de ${WIP_AGING_LIMIT_DAYS} dias; o mais antigo está há ${wip.oldestDays} dias. Priorizar conclusão.`, severity: "red" });
     }
   }
 
   if (current && current.flowEfficiency.efficiency < 50) {
-    insights.push({ title: "Eficiência abaixo da meta", text: `Eficiência em ${current.flowEfficiency.efficiency}% (meta: 60%). Cards passam mais tempo em filas.`, severity: "yellow" });
+    insights.push({ title: "Eficiência abaixo da meta", text: `Eficiência em ${current.flowEfficiency.efficiency}% (meta: 70%). Cards passam mais tempo em filas.`, severity: "yellow" });
   }
 
   if (r2Progress.features.total > 0 && r2Progress.features.done / r2Progress.features.total < 0.5) {

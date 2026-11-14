@@ -4,11 +4,9 @@ import { useState } from "react";
 
 const METAS = [
   { metric: "Cycle Time P85", target: "≤ 15 dias", rule: "Menor ou igual a 15 dias" },
-  { metric: "Transbordo", target: "≤ 20%", rule: "Menor ou igual a 20%" },
-  { metric: "Eficiência de Fluxo", target: "≥ 60%", rule: "Maior ou igual a 60%" },
+  { metric: "Eficiência de Fluxo", target: "≥ 70%", rule: "Maior ou igual a 70%" },
   { metric: "Ocupação", target: "≥ 80%", rule: "Maior ou igual a 80%" },
-  { metric: "WIP Aging (>10d)", target: "≤ 10 dias", rule: "Menor ou igual a 10 dias" },
-  { metric: "Bugs", target: "≤ 1 item", rule: "Menor ou igual a 1 bug concluído no período" },
+  { metric: "WIP Aging", target: "≤ 10 dias", rule: "Item mais antigo em andamento com até 10 dias. Acima disso, não fica verde" },
 ];
 
 const TRAFFIC_LIGHT_RULES = [

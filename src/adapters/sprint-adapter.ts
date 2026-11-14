@@ -24,7 +24,7 @@ import { calculateSpillover } from "@/metrics/spillover";
 import { calculateOccupation } from "@/metrics/occupation";
 import { calculateR2Progress } from "@/metrics/r2-progress";
 import { calculateForecast } from "@/metrics/forecast";
-import { calculateWipAging } from "@/metrics/wip-aging";
+import { calculateWipAging, buildWipAgingKpi, type WipAgingResult } from "@/metrics/wip-aging";
 import { calculateP50, calculateP85, calculateP95 } from "@/metrics/percentile";
 import { formatShortDate } from "@/lib/utils";
 import type {
@@ -403,17 +403,9 @@ function sprintsToPeriods(sprints: SprintData[]): Period[] {
   return sprints.map(sprintToPeriod);
 }
 
-function buildKpis(periodMetrics: PeriodMetrics[], wipAging: { totalWip: number; buckets: { label: string; minDays: number; count: number; percentage: number }[] }): KpiSummary {
+function buildKpis(periodMetrics: PeriodMetrics[], wipAging: WipAgingResult): KpiSummary {
   const current = periodMetrics[periodMetrics.length - 1];
   const previous = periodMetrics.length > 1 ? periodMetrics[periodMetrics.length - 2] : null;
-
-  // WIP Aging KPI: % de itens com > 10 dias
-  const criticalWip = wipAging.buckets
-    .filter((b) => b.minDays >= 15)
-    .reduce((sum, b) => sum + b.count, 0);
-  const criticalPct = wipAging.totalWip > 0
-    ? Math.round((criticalWip / wipAging.totalWip) * 100)
-    : 0;
 
   return {
     cycleTime: buildKpiItem(
@@ -456,15 +448,8 @@ function buildKpis(periodMetrics: PeriodMetrics[], wipAging: { totalWip: number;
       previous?.period.shortName ?? "",
       "info"
     ),
-    wipAging: {
-      label: "WIP Aging (>10d)",
-      value: `${criticalPct}%`,
-      numericValue: criticalPct,
-      status: criticalPct > 50 ? "danger" : criticalPct > 30 ? "warn" : "good",
-      delta: `${criticalWip}/${wipAging.totalWip} itens`,
-      deltaDirection: criticalPct > 50 ? "up" : "flat",
-      previousValue: `Total WIP: ${wipAging.totalWip}`,
-    },
+    // WIP Aging em dias: idade do item mais antigo (ver buildWipAgingKpi)
+    wipAging: buildWipAgingKpi(wipAging),
   };
 }
 

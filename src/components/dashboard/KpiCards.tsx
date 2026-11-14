@@ -14,7 +14,7 @@ const METRIC_TOOLTIPS: Record<string, string> = {
   "Vazão": "Métrica que mede quantos itens foram concluídos em um período de tempo específico pelo time. A vazão nos ajuda a entender a capacidade real do time, baseada em histórico, e serve como base para previsibilidade.",
   "Eficiência de Fluxo": "Métrica que mede a proporção entre o tempo ativo de trabalho (valor agregado) e o tempo total de permanência do item no fluxo (Cycle Time). Nos ajuda a identificar tempos de espera excessivos, gargalos e desperdícios ao longo dos status.",
   "Transbordo": "Percentual de itens comprometidos no início da sprint que não foram concluídos dentro do período. Indica se o time está comprometendo acima da sua capacidade real.",
-  "WIP Aging (>10d)": "Percentual de itens atualmente no fluxo de trabalho (To Do a Done) que estão há mais de 10 dias sem conclusão. Dados realtime — reflete o estado atual do board.",
+  "WIP Aging": "Idade, em dias corridos, do item mais antigo atualmente no fluxo de trabalho (To Do a Done), e quantos itens passam de 10 dias. Meta: nenhum item acima de 10 dias. Dados realtime — reflete o estado atual do board.",
   "Ocupação": "Percentual da capacidade do time que foi alocada via Original Estimate das issues. Capacidade = pessoas × 6h/dia × dias úteis da sprint.",
 };
 
@@ -83,11 +83,11 @@ export default function KpiCards({ kpis, squad, availableSprints, isDesignMode }
         kpis.cycleTime,
         kpis.throughput,
         kpis.wipAging || {
-          label: "WIP Aging (>10d)",
-          value: "0%",
+          label: "WIP Aging",
+          value: "0d",
           numericValue: 0,
           status: "good" as const,
-          delta: "0/0 itens",
+          delta: "0/0 itens > 10d",
           deltaDirection: "flat" as const,
           previousValue: "Total WIP: 0",
         },
