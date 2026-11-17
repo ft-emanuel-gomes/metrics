@@ -12,7 +12,7 @@ import { fetchProjectVersions, findActiveRelease } from "@/services/jira-version
 import { calculateCycleTimeP85, generateCycleTimeNote } from "@/metrics/cycle-time";
 import { calculateThroughput } from "@/metrics/throughput";
 import { calculatePeriodFlowEfficiency } from "@/metrics/flow-efficiency";
-import { calculateWipAging } from "@/metrics/wip-aging";
+import { calculateWipAging, buildWipAgingKpi, summarizeWipAging, WIP_AGING_LIMIT_DAYS, type WipAgingResult } from "@/metrics/wip-aging";
 import { calculateOccupation } from "@/metrics/occupation";
 import { calculateR2Progress } from "@/metrics/r2-progress";
 import { calculateForecast } from "@/metrics/forecast";
@@ -295,18 +295,13 @@ export async function fetchKanbanDashboard(
 
 function buildKanbanKpis(
   periodMetrics: PeriodMetrics[],
-  wipAging: { totalWip: number; buckets: { label: string; minDays: number; count: number; percentage: number }[] }
+  wipAging: WipAgingResult
 ): KpiSummary {
   const current = periodMetrics[periodMetrics.length - 1];
   const previous = periodMetrics.length > 1 ? periodMetrics[periodMetrics.length - 2] : null;
 
-  // WIP Aging KPI: % de itens com > 10 dias
-  const criticalWip = wipAging.buckets
-    .filter((b) => b.minDays >= 15)
-    .reduce((sum, b) => sum + b.count, 0);
-  const criticalPct = wipAging.totalWip > 0
-    ? Math.round((criticalWip / wipAging.totalWip) * 100)
-    : 0;
+  // WIP Aging em dias: idade do item mais antigo (ver buildWipAgingKpi)
+  const wipKpi = buildWipAgingKpi(wipAging);
 
   return {
     cycleTime: buildKpiItem(
@@ -333,15 +328,7 @@ function buildKanbanKpis(
       previous?.period.shortName ?? "",
       "higher"
     ),
-    spilloverOrWip: {
-      label: "WIP Aging (>10d)",
-      value: `${criticalPct}%`,
-      numericValue: criticalPct,
-      status: criticalPct > 50 ? "danger" : criticalPct > 30 ? "warn" : "good",
-      delta: `${criticalWip}/${wipAging.totalWip} itens`,
-      deltaDirection: criticalPct > 50 ? "up" : "flat",
-      previousValue: `Total WIP: ${wipAging.totalWip}`,
-    },
+    spilloverOrWip: wipKpi,
     occupation: buildKpiItem(
       "Ocupação",
       current?.occupation.percentage ?? 0,
@@ -350,15 +337,7 @@ function buildKanbanKpis(
       previous?.period.shortName ?? "",
       "info"
     ),
-    wipAging: {
-      label: "WIP Aging (>10d)",
-      value: `${criticalPct}%`,
-      numericValue: criticalPct,
-      status: criticalPct > 50 ? "danger" : criticalPct > 30 ? "warn" : "good",
-      delta: `${criticalWip}/${wipAging.totalWip} itens`,
-      deltaDirection: criticalPct > 50 ? "up" : "flat",
-      previousValue: `Total WIP: ${wipAging.totalWip}`,
-    },
+    wipAging: wipKpi,
   };
 }
 
@@ -505,19 +484,18 @@ function buildRow(name: string, v1: number, v2: number, unit: string, pref: "hig
 
 function generateKanbanInsights(
   periodMetrics: PeriodMetrics[],
-  wipAging: { totalWip: number; buckets: { label: string; count: number; percentage: number; minDays: number }[] },
+  wipAging: WipAgingResult,
   r2Progress: { features: { total: number; done: number }; releaseName: string }
 ): InsightItem[] {
   const insights: InsightItem[] = [];
   const current = periodMetrics[periodMetrics.length - 1];
 
-  // WIP Aging crítico
-  const criticalBuckets = wipAging.buckets.filter((b) => b.minDays >= 15);
-  const criticalCount = criticalBuckets.reduce((s, b) => s + b.count, 0);
-  if (criticalCount > wipAging.totalWip * 0.4) {
+  // WIP Aging crítico (itens acima da meta em dias)
+  const wip = summarizeWipAging(wipAging);
+  if (wip.overLimitCount > wip.totalWip * 0.4) {
     insights.push({
       title: "WIP com aging crítico",
-      text: `${criticalCount} de ${wipAging.totalWip} itens em andamento estão há mais de 10 dias. Priorizar conclusão e limitar entrada de novos itens.`,
+      text: `${wip.overLimitCount} de ${wip.totalWip} itens em andamento estão há mais de ${WIP_AGING_LIMIT_DAYS} dias; o mais antigo está há ${wip.oldestDays} dias. Priorizar conclusão e limitar entrada de novos itens.`,
       severity: "red",
     });
   }

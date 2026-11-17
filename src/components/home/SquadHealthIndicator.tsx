@@ -4,6 +4,10 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { SquadConfig } from "@/config/squads";
 
+// Meta do WIP Aging (dias corridos). Mesmo valor de WIP_AGING_LIMIT_DAYS em src/metrics/wip-aging.ts;
+// não importado aqui porque aquele módulo depende de código server-side.
+const WIP_AGING_LIMIT_DAYS = 10;
+
 interface SquadHealthIndicatorProps {
   squad: SquadConfig;
 }
@@ -26,20 +30,21 @@ const BORDER_COLORS: Record<HealthStatus, string> = {
 /**
  * Avalia cada metrica contra sua meta e calcula o health geral.
  *
- * Metas:
+ * Metas (Transbordo e Bugs NAO compoem o sinaleiro da home):
  *   Cycle Time <= 15d
- *   Transbordo <= 20%
- *   Eficiencia >= 60%
+ *   Eficiencia >= 70%
  *   Ocupacao >= 80%
- *   WIP Aging <= 7 itens criticos
- *   Bugs <= 1 item
+ *   WIP Aging: item mais antigo <= 10 dias (acima disso nunca fica verde)
  *
  * Health:
  *   Verde: ate 1 metrica abaixo da meta
  *   Amarelo: ate 2 metricas abaixo da meta
  *   Vermelho: 3+ metricas abaixo da meta
  */
-function evaluateMetrics(kpis: Record<string, { numericValue?: number; label?: string }>, bugCount: number = 0): {
+function evaluateMetrics(
+  kpis: Record<string, { numericValue?: number; label?: string }>,
+  wipAgingDays: number[]
+): {
   health: HealthStatus;
   metrics: MetricHealth[];
 } {
@@ -50,18 +55,9 @@ function evaluateMetrics(kpis: Record<string, { numericValue?: number; label?: s
   const ctOk = ct <= 15;
   metrics.push({ label: "Cycle Time P85", value: `${ct}d`, status: ctOk ? "green" : "red" });
 
-  // Transbordo (squads sprint only)
-  const spillLabel = kpis.spilloverOrWip?.label || "Transbordo";
-  const spillVal = kpis.spilloverOrWip?.numericValue ?? 0;
-  const isWipLabel = spillLabel.includes("WIP");
-  if (!isWipLabel) {
-    const spillOk = spillVal <= 20;
-    metrics.push({ label: "Transbordo", value: `${spillVal}%`, status: spillOk ? "green" : "red" });
-  }
-
-  // Eficiência de Fluxo
+  // Eficiência de Fluxo (meta: >= 70%)
   const eff = kpis.flowEfficiency?.numericValue ?? 0;
-  const effOk = eff >= 60;
+  const effOk = eff >= 70;
   metrics.push({ label: "Eficiência de Fluxo", value: `${eff}%`, status: effOk ? "green" : "red" });
 
   // Ocupação
@@ -69,14 +65,16 @@ function evaluateMetrics(kpis: Record<string, { numericValue?: number; label?: s
   const occOk = occ >= 80;
   metrics.push({ label: "Ocupação", value: `${occ}%`, status: occOk ? "green" : "red" });
 
-  // WIP Aging (>10d)
-  const wip = kpis.wipAging?.numericValue ?? (isWipLabel ? spillVal : 0);
-  const wipOk = wip <= 7;
-  metrics.push({ label: "WIP Aging (>10d)", value: `${wip}%`, status: wipOk ? "green" : "red" });
-
-  // Bugs (meta: ≤ 1 item)
-  const bugsOk = bugCount <= 1;
-  metrics.push({ label: "Bugs", value: `${bugCount} itens`, status: bugsOk ? "green" : "red" });
+  // WIP Aging — idade real (dias corridos) do item mais antigo em andamento, e quantos passam da meta.
+  // Sem itens em andamento = 0 dias.
+  const oldest = wipAgingDays.length > 0 ? Math.max(...wipAgingDays) : 0;
+  const overLimit = wipAgingDays.filter((d) => d > WIP_AGING_LIMIT_DAYS).length;
+  const wipOk = oldest <= WIP_AGING_LIMIT_DAYS;
+  metrics.push({
+    label: "WIP Aging",
+    value: overLimit > 0 ? `${oldest}d (${overLimit} > ${WIP_AGING_LIMIT_DAYS}d)` : `${oldest}d`,
+    status: wipOk ? "green" : "red",
+  });
 
   const belowMeta = metrics.filter((m) => m.status === "red").length;
 
@@ -106,11 +104,11 @@ export default function SquadHealthIndicator({ squad }: SquadHealthIndicatorProp
       })
       .then((data) => {
         if (data.kpis) {
-          // Contar bugs do último período (bugsQuality)
-          const lastPeriodBugs = data.bugsQuality?.length > 0
-            ? data.bugsQuality[data.bugsQuality.length - 1]?.bugs ?? 0
-            : 0;
-          const result = evaluateMetrics(data.kpis, lastPeriodBugs);
+          // Idade (dias) de cada item em andamento — base do WIP Aging
+          const wipAgingDays: number[] = (data.wipAging?.issues ?? [])
+            .map((i: { agingDays?: number }) => i.agingDays)
+            .filter((d: number | undefined): d is number => typeof d === "number");
+          const result = evaluateMetrics(data.kpis, wipAgingDays);
           setHealth(result.health);
           setMetrics(result.metrics);
         }
