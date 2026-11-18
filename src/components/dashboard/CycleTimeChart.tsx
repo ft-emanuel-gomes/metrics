@@ -59,6 +59,7 @@ export default function CycleTimeChart({ periodMetrics, stakeholderNote }: Cycle
               cursor={{ fill: t.grid, opacity: 0.4 }}
               contentStyle={{ background: t.surface, border: `1px solid ${t.grid}`, borderRadius: 12, fontSize: 12, color: t.title }}
               labelStyle={{ color: t.title, fontWeight: 600 }}
+              itemStyle={{ color: t.title }}
               formatter={(v) => (v == null ? "—" : `${v} dias`)}
             />
             <Legend iconType="circle" wrapperStyle={{ fontSize: 11, color: t.body }} />

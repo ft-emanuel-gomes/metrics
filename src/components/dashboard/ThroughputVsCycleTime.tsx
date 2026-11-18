@@ -52,6 +52,7 @@ export default function ThroughputVsCycleTime({ periodMetrics }: { periodMetrics
             <Tooltip
               contentStyle={{ background: t.surface, border: `1px solid ${t.grid}`, borderRadius: 12, fontSize: 12, color: t.title }}
               labelStyle={{ color: t.title, fontWeight: 600 }}
+              itemStyle={{ color: t.title }}
             />
             <Legend iconType="circle" wrapperStyle={{ fontSize: 11, color: t.body }} />
             <Line isAnimationActive={false} yAxisId="v" dataKey="vazao" name="Vazão (cards)" stroke={t.series[2]} strokeWidth={2.5} dot={{ r: 3.5 }} />

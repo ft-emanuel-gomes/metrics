@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { Bar, BarChart, CartesianGrid, Cell, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { useChartTheme } from "@/lib/use-chart-theme";
 
@@ -41,6 +41,7 @@ export default function PercentilesBars({ p50, p85, p95, sampleSize }: Percentil
               cursor={{ fill: t.grid, opacity: 0.35 }}
               contentStyle={{ background: t.surface, border: `1px solid ${t.grid}`, borderRadius: 12, fontSize: 12, color: t.title }}
               labelStyle={{ color: t.title, fontWeight: 600 }}
+              itemStyle={{ color: t.title }}
               formatter={(v, _n, item) => [`${v} dias`, item.payload.label]}
             />
             <Bar isAnimationActive={false} dataKey="value" radius={[0, 6, 6, 0]} maxBarSize={24}>

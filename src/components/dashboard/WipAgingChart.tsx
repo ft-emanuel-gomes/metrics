@@ -13,7 +13,7 @@ interface WipAgingChartProps {
 }
 
 // Colunas do fluxo, na ordem em que o card percorre o quadro. Status fora da lista entram no final.
-const FLOW_COLUMNS = ["To Do", "In Progress", "Design Review", "Code Review", "Waiting for Test", "Test", "Waiting for Delivery"];
+const FLOW_COLUMNS = ["To Do", "In Progress", "Code Review", "Design Review", "Waiting for Test", "Test", "Waiting for Delivery"];
 
 const CHART_H = 316;
 const PLOT_H = 226; // altura útil aproximada (para espaçar as bolinhas)

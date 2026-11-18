@@ -44,6 +44,7 @@ export default function OccupationBars({ periodMetrics, teamSize }: OccupationBa
               cursor={{ fill: t.grid, opacity: 0.35 }}
               contentStyle={{ background: t.surface, border: `1px solid ${t.grid}`, borderRadius: 12, fontSize: 12, color: t.title }}
               labelStyle={{ color: t.title, fontWeight: 600 }}
+              itemStyle={{ color: t.title }}
               formatter={(v, _n, item) => [`${v}% (${item.payload.allocated}h de ${item.payload.capacity}h)`, "Ocupação"]}
             />
             <ReferenceLine x={100} stroke={t.title} strokeDasharray="4 4" label={{ value: "Capacidade", position: "top", fill: t.muted, fontSize: 10 }} />
