@@ -1,0 +1,176 @@
+/* ==========================================================================
+   Componentes do Design System MB — classes reutilizaveis sobre os tokens.
+   Referencia: Button, Card, Input, Badge, SegmentedControl do magnesio.
+   ========================================================================== */
+
+/* ---- Botao (pilula, radius circular) ---- */
+.ds-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ds-space-xxs);
+  height: var(--ds-size-small);
+  padding: 0 var(--ds-space-medium);
+  border: 0;
+  border-radius: var(--ds-radius-circular);
+  font-family: var(--ds-font-family-default);
+  font-weight: var(--ds-font-weight-label);
+  font-size: 14px;
+  line-height: 16px;
+  white-space: nowrap;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+.ds-btn:active:not(:disabled) { transform: scale(0.97); }
+.ds-btn:focus-visible { outline: 2px solid var(--ds-color-content-primary); outline-offset: 2px; }
+.ds-btn:disabled { cursor: not-allowed; }
+.ds-btn-large { height: var(--ds-size-medium); padding: 0 var(--ds-space-large); font-size: 16px; }
+.ds-btn-small { height: 32px; padding: 0 var(--ds-space-small); font-size: 12px; }
+
+.ds-btn-primary {
+  background: var(--ds-color-action-primary-surface);
+  color: var(--ds-color-action-primary-content);
+}
+.ds-btn-primary:hover:not(:disabled) { background: var(--ds-color-action-primary-surface-hover); }
+.ds-btn-primary:disabled {
+  background: var(--ds-color-feedback-neutral-surface);
+  color: var(--ds-color-content-disabled);
+}
+
+.ds-btn-secondary {
+  background: transparent;
+  color: var(--ds-color-content-body);
+  border: 1px solid var(--ds-color-input-border);
+}
+.ds-btn-secondary:hover:not(:disabled) {
+  border-color: var(--ds-color-input-border-hover);
+  background: var(--ds-color-action-tonal-surface-hover);
+}
+
+.ds-btn-tertiary {
+  background: var(--ds-color-action-tonal-surface);
+  color: var(--ds-color-action-tonal-content);
+}
+.ds-btn-tertiary:hover:not(:disabled) {
+  background: var(--ds-color-action-tonal-surface-hover);
+  color: var(--ds-color-content-title);
+}
+
+/* ---- Card ---- */
+.ds-card {
+  background: var(--ds-color-container-card-surface-emphasis);
+  border: 1px solid var(--ds-color-container-divider-card);
+  border-radius: var(--ds-radius-large);
+  box-shadow: var(--ds-shadow-card);
+  padding: var(--ds-space-large);
+  color: var(--ds-color-content-body);
+}
+:root[data-theme="dark"] .ds-card { border-color: var(--ds-color-brand-light-10); }
+
+/* ---- Input ---- */
+.ds-input {
+  width: 100%;
+  height: var(--ds-size-medium);
+  padding: 0 var(--ds-space-small);
+  background: var(--ds-color-input-surface);
+  border: 1px solid var(--ds-color-input-border);
+  border-radius: var(--ds-radius-small);
+  color: var(--ds-color-content-body);
+  font-family: var(--ds-font-family-default);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.1s ease, background-color 0.1s ease;
+}
+.ds-input::placeholder { color: var(--ds-color-content-caption); }
+.ds-input:hover:not(:disabled) { border-color: var(--ds-color-input-border-hover); }
+.ds-input:focus { border-color: var(--ds-color-input-border-active); }
+.ds-input:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.ds-label {
+  display: block;
+  margin-bottom: var(--ds-space-xxs);
+  padding: 0 var(--ds-space-xxxs);
+  font-weight: var(--ds-font-weight-label);
+  font-size: 12px;
+  color: var(--ds-color-content-caption);
+}
+
+/* ---- Badge (pilula pequena) ---- */
+.ds-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 20px;
+  padding: 0 var(--ds-space-xxs);
+  border-radius: var(--ds-radius-circular);
+  font-weight: var(--ds-font-weight-label);
+  font-size: 11px;
+  white-space: nowrap;
+  background: var(--ds-color-feedback-neutral-surface);
+  color: var(--ds-color-feedback-neutral-label);
+}
+.ds-badge-primary { background: var(--ds-color-feedback-primary-surface); color: var(--ds-color-feedback-primary-label); }
+.ds-badge-positive { background: var(--ds-color-feedback-positive-surface); color: var(--ds-color-feedback-positive-label); }
+.ds-badge-alert { background: var(--ds-color-feedback-alert-surface); color: var(--ds-color-feedback-alert-label); }
+.ds-badge-negative { background: var(--ds-color-feedback-negative-surface); color: var(--ds-color-feedback-negative-label); }
+
+/* ---- Alerta inline (erro) ---- */
+.ds-alert-negative {
+  padding: var(--ds-space-xxs) var(--ds-space-xs);
+  border-radius: var(--ds-radius-small);
+  background: var(--ds-color-feedback-negative-surface);
+  color: var(--ds-color-feedback-negative-label);
+  font-size: 12px;
+}
+
+/* ---- Navegacao lateral (rail) ---- */
+.ds-rail {
+  background: var(--ds-color-container-card-surface-emphasis);
+  box-shadow: 4px 0 40px var(--ds-color-brand-dark-10);
+  border-top-right-radius: var(--ds-radius-large);
+  border-bottom-right-radius: var(--ds-radius-large);
+}
+:root[data-theme="dark"] .ds-rail { background: var(--ds-color-container-popover-surface); }
+
+.ds-nav-group {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--ds-space-xxs) var(--ds-space-xs);
+  border: 0;
+  background: transparent;
+  border-radius: var(--ds-radius-circular);
+  font-weight: var(--ds-font-weight-label);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ds-color-content-subdued);
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+.ds-nav-group:hover { color: var(--ds-color-content-title); }
+.ds-nav-group[data-active="true"] { color: var(--ds-color-content-primary); }
+
+.ds-nav-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px var(--ds-space-xs);
+  border-radius: var(--ds-radius-circular);
+  font-size: 13px;
+  color: var(--ds-color-content-caption);
+  text-decoration: none;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.ds-nav-item:hover { background: var(--ds-color-action-tonal-surface-hover); color: var(--ds-color-content-title); }
+.ds-nav-item[aria-current="page"] {
+  background: var(--ds-color-feedback-primary-surface);
+  color: var(--ds-color-feedback-primary-label);
+  font-weight: var(--ds-font-weight-label);
+}
+
+/* Capacidade da Sprint: horas alocadas acima da capacidade do time (vermelho suave do DS) */
+:root, [data-theme="light"] { --capacity-over: var(--ds-color-brand-red-7); }
+[data-theme="dark"] { --capacity-over: var(--ds-color-brand-red-8); }

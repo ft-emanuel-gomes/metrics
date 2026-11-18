@@ -37,6 +37,7 @@ export async function queryWipAging(
       key: issues.key,
       summary: issues.summary,
       status: issues.status,
+      createdDate: issues.createdDate,
     })
     .from(issues)
     .where(
@@ -84,10 +85,11 @@ export async function queryWipAging(
   }
 
   // 4. Build input for the pure calculation function
-  const issuesWithTransitions = wipIssues.map((issue: { key: string; summary: string; status: string }) => ({
+  const issuesWithTransitions = wipIssues.map((issue: { key: string; summary: string; status: string; createdDate: Date }) => ({
     key: issue.key,
     summary: issue.summary,
     status: issue.status,
+    created: issue.createdDate.toISOString(),
     transitions: changelogByIssue.get(issue.key) || [],
   }));
 

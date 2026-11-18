@@ -27,7 +27,7 @@ export default function BoardSettingsModal({ settings, onSave, onClose }: BoardS
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
       <div className="w-full max-w-sm rounded-xl theme-modal p-6 shadow-2xl">
-        <h3 className="text-sm font-bold text-white mb-5">Configurações do Board</h3>
+        <h3 className="text-sm font-bold text-[color:var(--ds-color-content-title)] mb-5">Configurações do Board</h3>
 
         <div className="space-y-4">
           {/* Ocultar cards */}
@@ -59,7 +59,7 @@ export default function BoardSettingsModal({ settings, onSave, onClose }: BoardS
           {/* Máximo de votos */}
           {votingEnabled && (
             <div>
-              <label className="block text-[11px] font-semibold text-gray-300 uppercase mb-1">
+              <label className="block text-[11px] font-semibold text-[color:var(--ds-color-content-body)] uppercase mb-1">
                 Máximo de votos por usuário
               </label>
               <div className="flex items-center gap-3">
@@ -69,9 +69,9 @@ export default function BoardSettingsModal({ settings, onSave, onClose }: BoardS
                   max={50}
                   value={maxVotesPerUser}
                   onChange={(e) => setMaxVotesPerUser(Number(e.target.value))}
-                  className="w-16 rounded-md border border-white/10 bg-white/5 px-2 py-1.5 text-sm text-white text-center outline-none focus:ring-1 focus:ring-violet-500"
+                  className="w-16 rounded-md border border-[color:var(--ds-color-container-divider-card)] bg-[var(--ds-color-input-surface)] px-2 py-1.5 text-sm text-[color:var(--ds-color-content-title)] text-center outline-none focus:ring-1 focus:ring-[color:var(--ds-color-container-border-primary)]"
                 />
-                <span className="text-[10px] text-gray-500">votos</span>
+                <span className="text-[10px] text-[color:var(--ds-color-content-caption)]">votos</span>
               </div>
             </div>
           )}
@@ -79,7 +79,7 @@ export default function BoardSettingsModal({ settings, onSave, onClose }: BoardS
           {/* Escopo do limite */}
           {votingEnabled && (
             <div>
-              <label className="block text-[11px] font-semibold text-gray-300 uppercase mb-2">
+              <label className="block text-[11px] font-semibold text-[color:var(--ds-color-content-body)] uppercase mb-2">
                 Escopo do limite de votos
               </label>
               <div className="flex gap-2">
@@ -88,7 +88,7 @@ export default function BoardSettingsModal({ settings, onSave, onClose }: BoardS
                   className={`flex-1 rounded-md px-3 py-2 text-[11px] font-semibold transition ${
                     !voteScopePerColumn
                       ? "btn-primary"
-                      : "bg-white/5 text-gray-400 hover:bg-white/10"
+                      : "bg-[var(--ds-color-input-surface)] text-[color:var(--ds-color-content-caption)] hover:bg-[var(--ds-color-input-surface-hover)]"
                   }`}
                 >
                   Por Board
@@ -98,7 +98,7 @@ export default function BoardSettingsModal({ settings, onSave, onClose }: BoardS
                   className={`flex-1 rounded-md px-3 py-2 text-[11px] font-semibold transition ${
                     voteScopePerColumn
                       ? "btn-primary"
-                      : "bg-white/5 text-gray-400 hover:bg-white/10"
+                      : "bg-[var(--ds-color-input-surface)] text-[color:var(--ds-color-content-caption)] hover:bg-[var(--ds-color-input-surface-hover)]"
                   }`}
                 >
                   Por Coluna
@@ -112,7 +112,7 @@ export default function BoardSettingsModal({ settings, onSave, onClose }: BoardS
         <div className="mt-6 flex justify-end gap-2">
           <button
             onClick={onClose}
-            className="rounded-md bg-white/10 px-3 py-1.5 text-[11px] font-semibold text-gray-300 hover:bg-white/15 transition"
+            className="rounded-md bg-[var(--ds-color-input-surface)] px-3 py-1.5 text-[11px] font-semibold text-[color:var(--ds-color-content-body)] hover:bg-[var(--ds-color-input-surface-hover)] transition"
           >
             Cancelar
           </button>
@@ -143,13 +143,13 @@ function ToggleItem({
   return (
     <div className="flex items-center justify-between">
       <div>
-        <span className="block text-[11px] font-semibold text-gray-300">{label}</span>
-        <span className="block text-[9px] text-gray-500">{description}</span>
+        <span className="block text-[11px] font-semibold text-[color:var(--ds-color-content-body)]">{label}</span>
+        <span className="block text-[9px] text-[color:var(--ds-color-content-caption)]">{description}</span>
       </div>
       <button
         onClick={() => onChange(!value)}
         className={`relative w-9 h-5 rounded-full transition-colors ${
-          value ? "bg-violet-500" : "bg-gray-600"
+          value ? "bg-[var(--ds-color-action-primary-surface)]" : "bg-[var(--ds-color-content-subdued)]"
         }`}
       >
         <div

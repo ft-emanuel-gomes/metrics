@@ -20,6 +20,9 @@ export interface ForecastResult {
   epic: ForecastItemResult;
   feature: ForecastItemResult;
   story: ForecastItemResult;
+  /** Release que serve de base (ex.: "R3") e se está encerrada ou ativa. */
+  releaseName?: string;
+  basis?: "encerrada" | "ativa";
 }
 
 /**
@@ -120,7 +123,8 @@ function calculateCompletedItemCT(transitions: StatusTransition[]): number | nul
   const endDate = findLastDoneDate(transitions);
 
   if (!startDate || !endDate) return null;
-  return calendarDaysBetween(startDate, endDate);
+  // Mesma regra do Cycle Time: item concluído em horas conta como 1 dia (mínimo de 1)
+  return Math.max(1, calendarDaysBetween(startDate, endDate));
 }
 
 /**

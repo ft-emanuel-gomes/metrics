@@ -21,10 +21,10 @@ interface MetricHealth {
 }
 
 const BORDER_COLORS: Record<HealthStatus, string> = {
-  green: "border-emerald-500/60",
-  yellow: "border-amber-400/60",
-  red: "border-red-500/60",
-  loading: "border-white/10",
+  green: "border-[color:var(--ds-color-container-border-positive)]",
+  yellow: "border-[color:var(--ds-color-container-border-alert)]",
+  red: "border-[color:var(--ds-color-container-border-negative)]",
+  loading: "border-[color:var(--ds-color-container-divider-card)]",
 };
 
 /**
@@ -123,8 +123,13 @@ export default function SquadHealthIndicator({ squad }: SquadHealthIndicatorProp
   return (
     <Link
       href={`/dashboard/${squad.slug}`}
-      className={`group relative rounded-xl border-2 ${BORDER_COLORS[health]} p-4 transition`}
-      style={{ backgroundColor: "var(--bg-card)" }}
+      className={`group relative border-2 ${BORDER_COLORS[health]} transition hover:-translate-y-0.5`}
+      style={{
+        backgroundColor: "var(--ds-color-container-card-surface-emphasis)",
+        borderRadius: "var(--ds-radius-large)",
+        boxShadow: "var(--ds-shadow-card)",
+        padding: "var(--ds-space-large)",
+      }}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
@@ -132,11 +137,7 @@ export default function SquadHealthIndicator({ squad }: SquadHealthIndicatorProp
           {squad.name}
         </h2>
         <span
-          className="rounded-full px-2 py-0.5 text-[9px] font-semibold uppercase"
-          style={{
-            backgroundColor: squad.methodology === "sprint" ? "var(--accent-bg)" : "rgba(245, 158, 11, 0.1)",
-            color: squad.methodology === "sprint" ? "var(--accent)" : "#f59e0b",
-          }}
+          className={`ds-badge uppercase ${squad.methodology === "sprint" ? "ds-badge-primary" : "ds-badge-alert"}`}
         >
           {squad.methodology}
         </span>
@@ -148,9 +149,13 @@ export default function SquadHealthIndicator({ squad }: SquadHealthIndicatorProp
           {metrics.map((m) => (
             <div key={m.label} className="flex items-center gap-1.5">
               <span
-                className={`inline-block h-2 w-2 rounded-full flex-shrink-0 ${
-                  m.status === "green" ? "bg-emerald-500" : "bg-red-500"
-                }`}
+                className="inline-block h-2 w-2 rounded-full flex-shrink-0"
+                style={{
+                  backgroundColor:
+                    m.status === "green"
+                      ? "var(--ds-color-content-positive)"
+                      : "var(--ds-color-content-negative)",
+                }}
               />
               <span className="text-[11px]" style={{ color: "var(--text-primary)" }}>
                 {m.label}: <strong>{m.value}</strong>

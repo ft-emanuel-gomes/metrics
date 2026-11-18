@@ -1,11 +1,16 @@
 "use client";
-
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
+import FilterDropdown, { type FilterGroup } from "@/components/ui/FilterDropdown";
 
-interface SprintOption {
+export interface SprintOption {
   id: number;
   name: string;
+  startDate?: string;
+  /** Fim real (conclusão no Jira) ou fim cadastrado */
+  endDate?: string;
+  /** Release a que a sprint pertence (ex.: "Release 4"); sem release, fica em "Outras sprints" */
+  releaseLabel?: string;
 }
 
 interface MonthOption {
@@ -23,13 +28,32 @@ interface PeriodSelectorProps {
   currentEndDate?: string;
   availableIssueTypes?: string[];
   currentIssueTypes?: string[];
+  /** false = esconde o filtro de Sprints/Meses (ex.: Computador de Bordo, sempre a sprint vigente) */
+  showPeriod?: boolean;
 }
+
+const TZ = "America/Sao_Paulo";
 
 function simplifySprintName(name: string): string {
   const match = name.match(/Sprint\s*(\d+)/i);
   return match ? `Sprint ${match[1]}` : name;
 }
 
+function fmtDayMonth(iso?: string): string {
+  return iso ? new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", timeZone: TZ }) : "";
+}
+
+function summarize(labels: string[], total: number, noun: string): string {
+  if (labels.length === 0) return "Padrão";
+  if (total > 0 && labels.length === total) return "Todos";
+  if (labels.length <= 3) return labels.join(", ");
+  return `${labels.length} ${noun}`;
+}
+
+/**
+ * Filtros do dashboard em dropdown (padrão do DS MB): Sprints (ou Meses, em squads Kanban) e Tipos.
+ * "Limpar filtro" + "Aplicar" sem seleção volta ao padrão (3 últimas sprints / tipos padrão).
+ */
 export default function PeriodSelector({
   methodology,
   availableSprints = [],
@@ -38,140 +62,90 @@ export default function PeriodSelector({
   currentMonths = [],
   availableIssueTypes = [],
   currentIssueTypes = [],
+  showPeriod = true,
 }: PeriodSelectorProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
-  function applyFilters(sprints: number[], types: string[], months?: string[]) {
+  function apply(changes: { sprints?: number[]; months?: string[]; types?: string[] }) {
     const params = new URLSearchParams(searchParams.toString());
-
-    if (methodology === "sprint" && sprints.length > 0) {
-      params.set("sprints", sprints.join(","));
-    } else if (methodology === "sprint") {
-      params.delete("sprints");
+    if (changes.sprints) {
+      if (changes.sprints.length > 0) params.set("sprints", changes.sprints.join(","));
+      else params.delete("sprints");
     }
-
-    if (methodology === "kanban" && months && months.length > 0) {
-      params.set("months", months.join(","));
-    } else if (methodology === "kanban") {
-      params.delete("months");
+    if (changes.months) {
+      if (changes.months.length > 0) params.set("months", changes.months.join(","));
+      else params.delete("months");
     }
-
+    if (changes.types) {
+      if (changes.types.length > 0) params.set("issueType", changes.types.join(","));
+      else params.delete("issueType");
+    }
     params.delete("startDate");
     params.delete("endDate");
-
-    if (types.length > 0) {
-      params.set("issueType", types.join(","));
-    } else {
-      params.delete("issueType");
-    }
-
     startTransition(() => {
       router.push(`?${params.toString()}`);
       router.refresh();
     });
   }
 
-  function toggleSprint(id: number) {
-    const next = currentSprintIds.includes(id)
-      ? currentSprintIds.filter((s) => s !== id)
-      : [...currentSprintIds, id];
-    applyFilters(next, currentIssueTypes);
+  // Sprints agrupadas por release, na ordem em que chegam (mais recente primeiro)
+  const sprintGroups: FilterGroup[] = [];
+  for (const s of availableSprints) {
+    const label = s.releaseLabel || "Outras sprints";
+    let g = sprintGroups.find((x) => x.id === label);
+    if (!g) {
+      g = { id: label, label, options: [] };
+      sprintGroups.push(g);
+    }
+    const dates = s.startDate ? `${fmtDayMonth(s.startDate)} – ${fmtDayMonth(s.endDate)}` : undefined;
+    g.options.push({ value: String(s.id), label: simplifySprintName(s.name), hint: dates });
   }
+  const selectedSprintLabels = availableSprints.filter((s) => currentSprintIds.includes(s.id)).map((s) => simplifySprintName(s.name));
 
-  function toggleMonth(month: string) {
-    const next = currentMonths.includes(month)
-      ? currentMonths.filter((m) => m !== month)
-      : [...currentMonths, month];
-    applyFilters(currentSprintIds, currentIssueTypes, next);
-  }
+  const monthGroups: FilterGroup[] = [{ id: "months", options: availableMonths.map((m) => ({ value: m.value, label: m.label })) }];
+  const selectedMonthLabels = availableMonths.filter((m) => currentMonths.includes(m.value)).map((m) => m.label);
 
-  function toggleType(type: string) {
-    const next = currentIssueTypes.includes(type)
-      ? currentIssueTypes.filter((t) => t !== type)
-      : [...currentIssueTypes, type];
-    applyFilters(currentSprintIds, next, currentMonths);
-  }
+  const typeGroups: FilterGroup[] = [{ id: "types", label: "Todos os tipos", options: availableIssueTypes.map((t) => ({ value: t, label: t })) }];
+  const selectedTypes = currentIssueTypes.filter((t) => availableIssueTypes.includes(t));
 
   return (
-    <div className={`space-y-3 ${isPending ? "opacity-50 pointer-events-none" : ""}`}>
-      {/* Loading indicator */}
-      {isPending && (
-        <div className="flex items-center gap-2 text-[11px]" style={{ color: "var(--accent)" }}>
-          <div className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
-          Recarregando métricas...
-        </div>
+    <div className={`flex flex-wrap items-center gap-2 ${isPending ? "opacity-60" : ""}`}>
+      {!showPeriod ? null : methodology === "sprint" ? (
+        <FilterDropdown
+          label="Sprints"
+          summary={summarize(selectedSprintLabels, 0, "sprints")}
+          groups={sprintGroups}
+          selected={currentSprintIds.map(String)}
+          onApply={(values) => apply({ sprints: values.map(Number).filter(Boolean) })}
+          disabled={isPending}
+        />
+      ) : (
+        <FilterDropdown
+          label="Meses"
+          summary={summarize(selectedMonthLabels, 0, "meses")}
+          groups={monthGroups}
+          selected={currentMonths}
+          onApply={(values) => apply({ months: values })}
+          disabled={isPending}
+        />
       )}
-
-      {/* Período: Sprint Tabs ou Month Tabs — pill style com borda */}
-      <div className="flex flex-wrap items-center gap-2">
-        {methodology === "sprint" ? (
-          availableSprints.map((sprint) => {
-            const isSelected = currentSprintIds.includes(sprint.id);
-            return (
-              <button
-                key={sprint.id}
-                onClick={() => toggleSprint(sprint.id)}
-                disabled={isPending}
-                className="text-[11px] font-medium px-3 py-1 rounded-full transition"
-                style={{
-                  backgroundColor: isSelected ? "var(--accent-bg)" : "var(--pill-neutral-bg)",
-                  color: isSelected ? "var(--accent)" : "var(--text-secondary)",
-                  border: isSelected ? `1px solid var(--accent)` : "1px solid transparent",
-                }}
-              >
-                {simplifySprintName(sprint.name)}
-              </button>
-            );
-          })
-        ) : (
-          availableMonths.map((month) => {
-            const isSelected = currentMonths.includes(month.value);
-            return (
-              <button
-                key={month.value}
-                onClick={() => toggleMonth(month.value)}
-                disabled={isPending}
-                className="text-[11px] font-medium px-3 py-1 rounded-full transition"
-                style={{
-                  backgroundColor: isSelected ? "var(--accent-bg)" : "var(--pill-neutral-bg)",
-                  color: isSelected ? "var(--accent)" : "var(--text-secondary)",
-                  border: isSelected ? `1px solid var(--accent)` : "1px solid transparent",
-                }}
-              >
-                {month.label}
-              </button>
-            );
-          })
-        )}
-      </div>
-
-      {/* Issue Type filter — pill style com borda */}
       {availableIssueTypes.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[10px] font-medium uppercase" style={{ color: "var(--text-muted)" }}>
-            Tipos:
-          </span>
-          {availableIssueTypes.map((type) => {
-            const isSelected = currentIssueTypes.includes(type);
-            return (
-              <button
-                key={type}
-                onClick={() => toggleType(type)}
-                disabled={isPending}
-                className="text-[11px] font-medium px-3 py-1 rounded-full transition"
-                style={{
-                  backgroundColor: isSelected ? "var(--accent-bg)" : "var(--pill-neutral-bg)",
-                  color: isSelected ? "var(--accent)" : "var(--text-secondary)",
-                  border: isSelected ? `1px solid var(--accent)` : "1px solid transparent",
-                }}
-              >
-                {type}
-              </button>
-            );
-          })}
-        </div>
+        <FilterDropdown
+          label="Tipos"
+          summary={summarize(selectedTypes, availableIssueTypes.length, "tipos")}
+          groups={typeGroups}
+          selected={selectedTypes}
+          onApply={(values) => apply({ types: values })}
+          disabled={isPending}
+        />
+      )}
+      {isPending && (
+        <span className="flex items-center gap-2 text-[11px]" style={{ color: "var(--accent)" }}>
+          <span className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+          Recarregando métricas...
+        </span>
       )}
     </div>
   );

@@ -56,28 +56,28 @@ export default function TimerControl({ timer, squadSlug, onTimerUpdate }: TimerC
             max={99}
             value={minutes}
             onChange={(e) => setMinutes(Number(e.target.value))}
-            className="w-10 rounded bg-white/10 px-1 py-0.5 text-center text-[11px] text-white outline-none"
+            className="w-10 rounded bg-[var(--ds-color-input-surface)] px-1 py-0.5 text-center text-[11px] text-[color:var(--ds-color-content-title)] outline-none"
             placeholder="min"
           />
-          <span className="text-[10px] text-gray-500">:</span>
+          <span className="text-[10px] text-[color:var(--ds-color-content-caption)]">:</span>
           <input
             type="number"
             min={0}
             max={59}
             value={seconds}
             onChange={(e) => setSeconds(Number(e.target.value))}
-            className="w-10 rounded bg-white/10 px-1 py-0.5 text-center text-[11px] text-white outline-none"
+            className="w-10 rounded bg-[var(--ds-color-input-surface)] px-1 py-0.5 text-center text-[11px] text-[color:var(--ds-color-content-title)] outline-none"
             placeholder="seg"
           />
           <button
             onClick={handleSetDuration}
-            className="rounded bg-violet-600 px-2 py-0.5 text-[10px] font-semibold text-white hover:bg-violet-500"
+            className="rounded bg-[var(--ds-color-action-primary-surface)] px-2 py-0.5 text-[10px] font-semibold text-white hover:bg-[var(--ds-color-action-primary-surface-hover)]"
           >
             OK
           </button>
           <button
             onClick={() => setIsSettingDuration(false)}
-            className="rounded bg-white/5 px-2 py-0.5 text-[10px] text-gray-400 hover:bg-white/10"
+            className="rounded bg-[var(--ds-color-input-surface)] px-2 py-0.5 text-[10px] text-[color:var(--ds-color-content-caption)] hover:bg-[var(--ds-color-input-surface-hover)]"
           >
             ✕
           </button>
@@ -88,7 +88,7 @@ export default function TimerControl({ timer, squadSlug, onTimerUpdate }: TimerC
           {(isIdle || isPaused) && (
             <button
               onClick={() => sendAction("start")}
-              className="rounded bg-emerald-600 px-2 py-1 text-[10px] font-semibold text-white hover:bg-emerald-500 transition"
+              className="rounded bg-[var(--ds-color-brand-green-6)] px-2 py-1 text-[10px] font-semibold text-white hover:bg-[var(--ds-color-brand-green-7)] transition"
               title={isPaused ? "Retomar" : "Iniciar"}
             >
               <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
@@ -101,7 +101,7 @@ export default function TimerControl({ timer, squadSlug, onTimerUpdate }: TimerC
           {isRunning && (
             <button
               onClick={() => sendAction("pause")}
-              className="rounded bg-amber-600 px-2 py-1 text-[10px] font-semibold text-white hover:bg-amber-500 transition"
+              className="rounded bg-[var(--ds-color-brand-yellow-7)] px-2 py-1 text-[10px] font-semibold text-white hover:bg-[var(--ds-color-brand-yellow-8)] transition"
               title="Pausar"
             >
               <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
@@ -114,7 +114,7 @@ export default function TimerControl({ timer, squadSlug, onTimerUpdate }: TimerC
           {!isIdle && (
             <button
               onClick={() => sendAction("reset")}
-              className="rounded bg-white/10 px-2 py-1 text-[10px] text-gray-400 hover:bg-white/15 hover:text-white transition"
+              className="rounded bg-[var(--ds-color-input-surface)] px-2 py-1 text-[10px] text-[color:var(--ds-color-content-caption)] hover:bg-[var(--ds-color-input-surface-hover)] hover:text-[color:var(--ds-color-content-title)] transition"
               title="Resetar"
             >
               <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -126,7 +126,7 @@ export default function TimerControl({ timer, squadSlug, onTimerUpdate }: TimerC
           {/* Set duration */}
           <button
             onClick={() => setIsSettingDuration(true)}
-            className="rounded bg-white/5 px-2 py-1 text-[10px] text-gray-400 hover:bg-white/10 hover:text-white transition"
+            className="rounded bg-[var(--ds-color-input-surface)] px-2 py-1 text-[10px] text-[color:var(--ds-color-content-caption)] hover:bg-[var(--ds-color-input-surface-hover)] hover:text-[color:var(--ds-color-content-title)] transition"
             title="Definir duração"
           >
             <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

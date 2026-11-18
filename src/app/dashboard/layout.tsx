@@ -13,7 +13,7 @@ export default async function DashboardLayout({
   return (
     <div className="flex min-h-screen">
       <Sidebar allowedSquads={session.allowedSquads} isAdmin={session.isAdmin} />
-      <div className="ml-48 flex-1 min-w-0">{children}</div>
+      <div className="print-full ml-48 flex-1 min-w-0">{children}</div>
     </div>
   );
 }

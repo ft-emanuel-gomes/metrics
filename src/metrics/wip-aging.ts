@@ -1,5 +1,6 @@
 import { StatusTransition } from "@/services/jira-changelog";
 import { calendarDaysBetween } from "@/lib/utils";
+import { CYCLE_TIME_START_STATUSES } from "@/config/status-mapping";
 import type { KpiItem } from "@/adapters/types";
 
 /**
@@ -73,7 +74,12 @@ export interface WipIssueAging {
   key: string;
   summary: string;
   status: string;
+  /** Idade no fluxo como um todo (dias corridos desde a entrada no fluxo). */
   agingDays: number;
+  /** Quando o card entrou no fluxo (início da contagem do aging). */
+  flowStartDate: string;
+  /** Dias na coluna atual (informativo; NÃO é o aging). */
+  daysInCurrentStatus: number;
   lastTransitionDate: string;
 }
 
@@ -99,25 +105,40 @@ const AGING_BUCKETS_DEF = [
 ];
 
 /**
- * Calcula o aging de uma issue em WIP.
- * Aging = dias corridos desde a última transição de status para o status atual.
+ * Data em que o card entrou no fluxo (início da contagem do aging).
+ * Regra de negócio: o aging considera o card no fluxo COMO UM TODO, não só a coluna atual.
+ * Ex.: 5 dias em To Do + 10 dias em Progresso = 15 dias de WIP.
+ *
+ * - Início = PRIMEIRA transição para um status de início (To Do / A Fazer / Pendente / In Progress...),
+ *   a mesma regra do Cycle Time.
+ * - Cards que nasceram já em To Do não têm transição "para To Do": nesse caso o início é a data de criação.
+ * - Sem transições e sem data de criação: retorna null (o chamador usa a última transição como fallback).
+ */
+export function findFlowStart(transitions: StatusTransition[], created?: string): string | null {
+  const first = transitions.find((t) => CYCLE_TIME_START_STATUSES.has(t.toStatus));
+  const bornInStart = transitions.length > 0 && CYCLE_TIME_START_STATUSES.has(transitions[0].fromStatus);
+  if (created && (bornInStart || !first)) return created;
+  return first ? first.timestamp : null;
+}
+
+/**
+ * Calcula o aging de uma issue em WIP: dias corridos desde a entrada no fluxo (ver findFlowStart).
  *
  * @param transitions - Changelog da issue (ordenado cronologicamente)
  * @param referenceDate - Data de referência (geralmente "agora")
+ * @param created - Data de criação da issue (ISO 8601), quando disponível
  */
 export function calculateIssueAging(
   transitions: StatusTransition[],
-  referenceDate: Date
+  referenceDate: Date,
+  created?: string
 ): number {
+  const start = findFlowStart(transitions, created);
+  if (start) return Math.max(0, calendarDaysBetween(new Date(start), referenceDate));
+  // Fallback (dado antigo sem criação e sem transição de início): tempo no status atual
   if (transitions.length === 0) return 0;
-
-  // Última transição = quando entrou no status atual
-  const lastTransition = transitions[transitions.length - 1];
-  const lastDate = new Date(lastTransition.timestamp);
-
-  return calendarDaysBetween(lastDate, referenceDate);
+  return Math.max(0, calendarDaysBetween(new Date(transitions[transitions.length - 1].timestamp), referenceDate));
 }
-
 /**
  * Calcula WIP Aging para squads Kanban.
  * Agrupa issues em buckets de aging e calcula percentuais.
@@ -126,7 +147,7 @@ export function calculateIssueAging(
  * @param referenceDate - Data de referência (default: agora)
  */
 export function calculateWipAging(
-  issues: { key: string; summary: string; status: string; transitions: StatusTransition[] }[],
+  issues: { key: string; summary: string; status: string; created?: string; transitions: StatusTransition[] }[],
   referenceDate: Date = new Date()
 ): WipAgingResult {
   if (issues.length === 0) {
@@ -143,7 +164,8 @@ export function calculateWipAging(
 
   // Calcular aging de cada issue
   const issuesWithAging: WipIssueAging[] = issues.map((issue) => {
-    const agingDays = calculateIssueAging(issue.transitions, referenceDate);
+    const agingDays = calculateIssueAging(issue.transitions, referenceDate, issue.created);
+    const flowStart = findFlowStart(issue.transitions, issue.created);
     const lastTransition = issue.transitions[issue.transitions.length - 1];
 
     return {
@@ -151,6 +173,8 @@ export function calculateWipAging(
       summary: issue.summary,
       status: issue.status,
       agingDays,
+      flowStartDate: flowStart || lastTransition?.timestamp || "",
+      daysInCurrentStatus: lastTransition ? Math.max(0, calendarDaysBetween(new Date(lastTransition.timestamp), referenceDate)) : agingDays,
       lastTransitionDate: lastTransition?.timestamp || "",
     };
   });

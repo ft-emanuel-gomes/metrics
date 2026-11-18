@@ -1,4 +1,4 @@
-import { businessDaysBetween } from "@/lib/utils";
+import { businessDaysListBrt } from "@/lib/utils";
 import { SubtaskWithEstimate } from "@/services/jira-search";
 
 /**
@@ -101,9 +101,8 @@ export function calculateOccupation(
   const totalSeconds = resolveOccupationEstimates(standardEstimates, subtasksWithParent);
   const allocatedHours = Math.round(totalSeconds / 3600);
 
-  const start = new Date(startDate);
-  const end = new Date(endDate);
-  const businessDays = customBusinessDays || businessDaysBetween(start, end);
+  // Dias úteis entre as datas do Jira, no fuso de Brasília (mesma contagem da Capacidade da Sprint)
+  const businessDays = customBusinessDays || businessDaysListBrt(startDate, endDate).length;
   const capacityHours = teamSize * hoursPerDay * businessDays;
 
   const percentage =

@@ -35,16 +35,11 @@ export default function SyncButton() {
       <button
         onClick={handleSync}
         disabled={status === "syncing"}
-        className={`flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold transition ${
-          status === "syncing"
-            ? "cursor-wait"
-            : "hover:opacity-80"
-        }`}
-        style={{ backgroundColor: "var(--accent-bg)", color: "var(--accent)" }}
+        className={`ds-btn ds-btn-primary ds-btn-small ${status === "syncing" ? "cursor-wait" : ""}`}
       >
         {status === "syncing" ? (
           <>
-            <span className="h-3 w-3 animate-spin rounded-full border-2 border-indigo-400 border-t-transparent" />
+            <span className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
             Sincronizando...
           </>
         ) : (
@@ -58,7 +53,10 @@ export default function SyncButton() {
       </button>
 
       {message && (
-        <span className={`text-[10px] ${status === "done" ? "text-emerald-400" : "text-red-400"}`}>
+        <span
+          className="text-[11px]"
+          style={{ color: status === "done" ? "var(--ds-color-content-positive)" : "var(--ds-color-content-negative)" }}
+        >
           {message}
         </span>
       )}

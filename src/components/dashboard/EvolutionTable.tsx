@@ -6,9 +6,9 @@ interface EvolutionTableProps {
 }
 
 const TREND_STYLES = {
-  up: "text-emerald-400",
-  down: "text-red-400",
-  flat: "text-amber-400",
+  up: "text-[color:var(--ds-color-content-positive)]",
+  down: "text-[color:var(--ds-color-content-negative)]",
+  flat: "text-[color:var(--ds-color-content-alert)]",
 };
 
 const TREND_LABELS = {
@@ -27,7 +27,7 @@ export default function EvolutionTable({ evolution, periods }: EvolutionTablePro
       <div className="overflow-x-auto">
         <table className="w-full text-[10px]">
           <thead>
-            <tr className="bg-indigo-500/10 text-indigo-300">
+            <tr className="bg-[color-mix(in_srgb,var(--ds-color-content-primary)_12%,transparent)] text-[color:var(--ds-color-content-primary)]">
               <th className="px-2 py-1.5 text-left font-semibold">Métrica</th>
               {periods.map((p) => (
                 <th key={p.shortName} className="px-2 py-1.5 text-center font-semibold">
@@ -39,10 +39,10 @@ export default function EvolutionTable({ evolution, periods }: EvolutionTablePro
           </thead>
           <tbody>
             {evolution.map((row) => (
-              <tr key={row.metric} className="border-b border-white/[0.04]">
-                <td className="px-2 py-1.5 text-gray-300">{row.metric}</td>
+              <tr key={row.metric} className="border-b border-[color:var(--ds-color-container-divider-card)]">
+                <td className="px-2 py-1.5 text-[color:var(--ds-color-content-body)]">{row.metric}</td>
                 {row.values.map((val, i) => (
-                  <td key={i} className="px-2 py-1.5 text-center text-gray-300">
+                  <td key={i} className="px-2 py-1.5 text-center text-[color:var(--ds-color-content-body)]">
                     {val}
                   </td>
                 ))}

@@ -29,7 +29,7 @@ export interface CycleTimePeriodResult {
  * - Ponto de partida: PRIMEIRA transição PARA "To Do" / "Pendente" / "A Fazer"
  * - Ponto de chegada: ÚLTIMA transição PARA "Concluído" / "Done"
  * - Unidade: dias corridos (calendário)
- * - CT = 0 é válido (concluído no mesmo dia que entrou em To Do)
+ * - Mínimo de 1 dia: card concluído em horas (mesmo dia, 1, 2 ou 3 horas) conta como 1 dia, nunca 0
  * - Retorna null se não encontrar transições válidas
  */
 export function calculateIssueCycleTime(
@@ -66,7 +66,8 @@ export function calculateIssueCycleTime(
 
   return {
     key: issueKey,
-    days: Math.max(0, days), // CT nunca negativo
+    // Regra de negócio: mínimo de 1 dia (concluído em horas = 1 dia), o que também evita CT negativo
+    days: Math.max(1, days),
     startDate,
     endDate,
   };
@@ -76,7 +77,7 @@ export function calculateIssueCycleTime(
  * Calcula o P85 do Cycle Time para um conjunto de issues com seus changelogs.
  *
  * Regras:
- * - Inclui CT = 0 no cálculo
+ * - Inclui no cálculo os cards concluídos em horas (contam como 1 dia)
  * - Exclui issues sem transições válidas (retorno null de calculateIssueCycleTime)
  * - P85 calculado com PERCENTILE.INC + CEILING
  */

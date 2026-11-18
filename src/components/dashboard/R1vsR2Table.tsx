@@ -15,7 +15,7 @@ export default function R1vsR2Table({ rows }: R1vsR2TableProps) {
       <div className="overflow-x-auto">
         <table className="w-full text-[10px]">
           <thead>
-            <tr className="bg-indigo-500/10 text-indigo-300">
+            <tr className="bg-[color-mix(in_srgb,var(--ds-color-content-primary)_12%,transparent)] text-[color:var(--ds-color-content-primary)]">
               <th className="px-2 py-1.5 text-left font-semibold">Métrica</th>
               <th className="px-2 py-1.5 text-center font-semibold">R1</th>
               <th className="px-2 py-1.5 text-center font-semibold">R2</th>
@@ -24,13 +24,13 @@ export default function R1vsR2Table({ rows }: R1vsR2TableProps) {
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={row.name} className="border-b border-white/[0.04]">
-                <td className="px-2 py-1.5 text-gray-300">{row.name}</td>
-                <td className="px-2 py-1.5 text-center text-gray-300">{row.r1Value}</td>
-                <td className="px-2 py-1.5 text-center text-gray-300">{row.r2Value}</td>
+              <tr key={row.name} className="border-b border-[color:var(--ds-color-container-divider-card)]">
+                <td className="px-2 py-1.5 text-[color:var(--ds-color-content-body)]">{row.name}</td>
+                <td className="px-2 py-1.5 text-center text-[color:var(--ds-color-content-body)]">{row.r1Value}</td>
+                <td className="px-2 py-1.5 text-center text-[color:var(--ds-color-content-body)]">{row.r2Value}</td>
                 <td
                   className={`px-2 py-1.5 text-center font-semibold ${
-                    row.isPositive ? "text-emerald-400" : "text-red-400"
+                    row.isPositive ? "text-[color:var(--ds-color-content-positive)]" : "text-[color:var(--ds-color-content-negative)]"
                   }`}
                 >
                   {row.variation}

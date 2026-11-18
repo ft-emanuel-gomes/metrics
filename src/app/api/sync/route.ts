@@ -12,6 +12,7 @@ import {
 } from "@/services/jira-search";
 import { fetchChangelogsBatch } from "@/services/jira-changelog";
 import { fetchProjectVersions, findActiveRelease } from "@/services/jira-versions";
+import { buildReleaseCalendarFields } from "@/services/release-calendar-sync";
 import {
   saveRawPeriod,
   saveRawSprints,
@@ -248,6 +249,7 @@ async function syncWip(squad: SquadConfig): Promise<void> {
       key: i.key,
       summary: i.summary,
       status: i.status,
+      created: i.created,
       transitions: wipChangelogs.get(i.key) || [],
     })),
     fetchedAt: new Date().toISOString(),
@@ -283,6 +285,7 @@ async function syncR2(squad: SquadConfig): Promise<void> {
     })),
     releaseName,
     releaseDeadline,
+    ...(await buildReleaseCalendarFields(squad, activeRelease)),
   };
 
   await saveRawR2(squad.slug, r2Data);

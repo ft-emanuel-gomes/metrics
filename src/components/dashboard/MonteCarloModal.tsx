@@ -143,10 +143,10 @@ export default function MonteCarloModal({
       >
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-bold text-white">
+          <h2 className="text-sm font-bold text-[color:var(--ds-color-content-title)]">
             Monte Carlo — Previsão de Entrega
           </h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-white text-lg">✕</button>
+          <button onClick={onClose} className="text-[color:var(--ds-color-content-caption)] hover:text-[color:var(--ds-color-content-title)] text-lg">✕</button>
         </div>
 
         {/* Filtro de Sprints */}
@@ -208,7 +208,7 @@ export default function MonteCarloModal({
               min={1}
               value={itemCount}
               onChange={(e) => setItemCount(Number(e.target.value))}
-              className="w-full rounded-lg border border-white/10 bg-white/5 px-2.5 py-2 text-sm text-white outline-none focus:border-indigo-500/50"
+              className="w-full rounded-lg border border-[color:var(--ds-color-container-divider-card)] bg-[var(--ds-color-input-surface)] px-2.5 py-2 text-sm text-[color:var(--ds-color-content-title)] outline-none focus:border-[color:var(--ds-color-content-primary)]"
             />
           </div>
           <div>
@@ -220,7 +220,7 @@ export default function MonteCarloModal({
               min={1}
               value={teamSize}
               onChange={(e) => setTeamSize(Number(e.target.value))}
-              className="w-full rounded-lg border border-white/10 bg-white/5 px-2.5 py-2 text-sm text-white outline-none focus:border-indigo-500/50"
+              className="w-full rounded-lg border border-[color:var(--ds-color-container-divider-card)] bg-[var(--ds-color-input-surface)] px-2.5 py-2 text-sm text-[color:var(--ds-color-content-title)] outline-none focus:border-[color:var(--ds-color-content-primary)]"
             />
           </div>
           <div>
@@ -231,14 +231,14 @@ export default function MonteCarloModal({
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full rounded-lg border border-white/10 bg-white/5 px-2.5 py-2 text-sm text-white outline-none focus:border-indigo-500/50"
+              className="w-full rounded-lg border border-[color:var(--ds-color-container-divider-card)] bg-[var(--ds-color-input-surface)] px-2.5 py-2 text-sm text-[color:var(--ds-color-content-title)] outline-none focus:border-[color:var(--ds-color-content-primary)]"
             />
           </div>
         </div>
 
         {/* Erro */}
         {errorMsg && (
-          <div className="mb-3 rounded-lg bg-red-500/10 border border-red-500/20 px-3 py-2 text-[11px] text-red-400">
+          <div className="mb-3 rounded-lg bg-[color-mix(in_srgb,var(--ds-color-content-negative)_12%,transparent)] border border-[color-mix(in_srgb,var(--ds-color-content-negative)_30%,transparent)] px-3 py-2 text-[11px] text-[color:var(--ds-color-content-negative)]">
             {errorMsg}
           </div>
         )}
@@ -261,32 +261,32 @@ export default function MonteCarloModal({
 
         {/* Resultados */}
         {result && (
-          <div className="mt-5 rounded-lg border border-white/10 bg-white/5 p-4">
-            <h3 className="text-xs font-bold text-white mb-3">Resultado da Simulação</h3>
+          <div className="mt-5 rounded-lg border border-[color:var(--ds-color-container-divider-card)] bg-[var(--ds-color-input-surface)] p-4">
+            <h3 className="text-xs font-bold text-[color:var(--ds-color-content-title)] mb-3">Resultado da Simulação</h3>
 
             {/* Metadados */}
-            <div className="flex gap-4 mb-4 text-[10px] text-gray-400">
-              <span>Vazão diária: <strong className="text-white">{result.avgDailyThroughput}</strong> itens/dia</span>
-              <span>Ajuste: <strong className="text-white">{Math.round((result.capacityAdjustment - 1) * 100)}%</strong></span>
-              <span>Itens no período: <strong className="text-white">{result.totalItemsInPeriod}</strong></span>
+            <div className="flex gap-4 mb-4 text-[10px] text-[color:var(--ds-color-content-caption)]">
+              <span>Vazão diária: <strong className="text-[color:var(--ds-color-content-title)]">{result.avgDailyThroughput}</strong> itens/dia</span>
+              <span>Ajuste: <strong className="text-[color:var(--ds-color-content-title)]">{Math.round((result.capacityAdjustment - 1) * 100)}%</strong></span>
+              <span>Itens no período: <strong className="text-[color:var(--ds-color-content-title)]">{result.totalItemsInPeriod}</strong></span>
             </div>
 
             {/* Previsões */}
             <div className="space-y-2">
-              <div className="flex items-center justify-between rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-3 py-2">
-                <span className="text-xs text-emerald-300 font-semibold">50% de probabilidade</span>
-                <span className="text-sm font-bold text-white">{formatDate(result.dateP50)}</span>
-                <span className="text-[10px] text-gray-400">{result.daysP50} dias úteis ({Math.ceil(result.daysP50 / 10)} sprints)</span>
+              <div className="flex items-center justify-between rounded-lg bg-[color-mix(in_srgb,var(--ds-color-content-positive)_12%,transparent)] border border-[color-mix(in_srgb,var(--ds-color-content-positive)_30%,transparent)] px-3 py-2">
+                <span className="text-xs text-[color:var(--ds-color-content-positive)] font-semibold">50% de probabilidade</span>
+                <span className="text-sm font-bold text-[color:var(--ds-color-content-title)]">{formatDate(result.dateP50)}</span>
+                <span className="text-[10px] text-[color:var(--ds-color-content-caption)]">{result.daysP50} dias úteis ({Math.ceil(result.daysP50 / 10)} sprints)</span>
               </div>
-              <div className="flex items-center justify-between rounded-lg bg-amber-500/10 border border-amber-500/20 px-3 py-2">
-                <span className="text-xs text-amber-300 font-semibold">75% de probabilidade</span>
-                <span className="text-sm font-bold text-white">{formatDate(result.dateP75)}</span>
-                <span className="text-[10px] text-gray-400">{result.daysP75} dias úteis ({Math.ceil(result.daysP75 / 10)} sprints)</span>
+              <div className="flex items-center justify-between rounded-lg bg-[color-mix(in_srgb,var(--ds-color-content-alert)_12%,transparent)] border border-[color-mix(in_srgb,var(--ds-color-content-alert)_30%,transparent)] px-3 py-2">
+                <span className="text-xs text-[color:var(--ds-color-content-alert)] font-semibold">75% de probabilidade</span>
+                <span className="text-sm font-bold text-[color:var(--ds-color-content-title)]">{formatDate(result.dateP75)}</span>
+                <span className="text-[10px] text-[color:var(--ds-color-content-caption)]">{result.daysP75} dias úteis ({Math.ceil(result.daysP75 / 10)} sprints)</span>
               </div>
-              <div className="flex items-center justify-between rounded-lg bg-indigo-500/10 border border-indigo-500/20 px-3 py-2">
-                <span className="text-xs text-indigo-300 font-semibold">85% de probabilidade</span>
-                <span className="text-sm font-bold text-white">{formatDate(result.dateP85)}</span>
-                <span className="text-[10px] text-gray-400">{result.daysP85} dias úteis ({Math.ceil(result.daysP85 / 10)} sprints)</span>
+              <div className="flex items-center justify-between rounded-lg bg-[color-mix(in_srgb,var(--ds-color-content-primary)_12%,transparent)] border border-[color-mix(in_srgb,var(--ds-color-content-primary)_30%,transparent)] px-3 py-2">
+                <span className="text-xs text-[color:var(--ds-color-content-primary)] font-semibold">85% de probabilidade</span>
+                <span className="text-sm font-bold text-[color:var(--ds-color-content-title)]">{formatDate(result.dateP85)}</span>
+                <span className="text-[10px] text-[color:var(--ds-color-content-caption)]">{result.daysP85} dias úteis ({Math.ceil(result.daysP85 / 10)} sprints)</span>
               </div>
             </div>
           </div>

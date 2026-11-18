@@ -37,11 +37,11 @@ export default function TimerDisplay({ timer }: TimerDisplayProps) {
   const seconds = Math.abs(remaining) % 60;
   const display = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 
-  let colorClass = "text-gray-400";
-  if (isRunning && remaining <= 30) colorClass = "text-red-400 animate-pulse";
-  else if (isRunning) colorClass = "text-emerald-400";
-  else if (isPaused) colorClass = "text-amber-400";
-  else if (isFinished) colorClass = "text-red-500";
+  let colorClass = "text-[color:var(--ds-color-content-caption)]";
+  if (isRunning && remaining <= 30) colorClass = "text-[color:var(--ds-color-content-negative)] animate-pulse";
+  else if (isRunning) colorClass = "text-[color:var(--ds-color-content-positive)]";
+  else if (isPaused) colorClass = "text-[color:var(--ds-color-content-alert)]";
+  else if (isFinished) colorClass = "text-[color:var(--ds-color-content-negative)]";
 
   if (isIdle && timer.durationSeconds === 0) return null;
 
@@ -57,10 +57,10 @@ export default function TimerDisplay({ timer }: TimerDisplayProps) {
       </span>
 
       {isPaused && (
-        <span className="text-[9px] uppercase font-semibold text-amber-400">Pausado</span>
+        <span className="text-[9px] uppercase font-semibold text-[color:var(--ds-color-content-alert)]">Pausado</span>
       )}
       {isFinished && (
-        <span className="text-[9px] uppercase font-semibold text-red-500">Encerrado</span>
+        <span className="text-[9px] uppercase font-semibold text-[color:var(--ds-color-content-negative)]">Encerrado</span>
       )}
     </div>
   );

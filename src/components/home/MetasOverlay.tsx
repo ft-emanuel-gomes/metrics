@@ -22,7 +22,7 @@ export default function MetasOverlay() {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white transition"
+        className="ds-btn ds-btn-tertiary ds-btn-small"
         title="Metas e Sinaleiros"
       >
         <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

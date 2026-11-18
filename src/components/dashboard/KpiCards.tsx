@@ -98,8 +98,7 @@ export default function KpiCards({ kpis, squad, availableSprints, isDesignMode }
         kpis.flowEfficiency,
         kpis.spilloverOrWip,
         kpis.occupation,
-        // WIP Aging extra somente se diferente do spilloverOrWip (Sprint squads)
-        ...(kpis.wipAging && kpis.wipAging.label !== kpis.spilloverOrWip.label ? [kpis.wipAging] : []),
+        // WIP Aging fica só no Computador de Bordo (tempo real), não nos big numbers da Visão Geral
       ];
 
   const colCount = isDesignMode

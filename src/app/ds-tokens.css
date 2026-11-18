@@ -1,0 +1,247 @@
+/* ==========================================================================
+   Design System MB ("magnesio") — tokens
+   Fonte: relatório semanal PNP (squads 2.html), marca montebravo.
+   Camadas: 1) paleta da marca  2) semânticos light/dark  3) escala/forma/tipo.
+   Os componentes devem consumir os semânticos (--ds-color-*), nunca a paleta.
+   ========================================================================== */
+
+:root {
+  /* Laranja do tipo Spike (nao existe na paleta DS; alinhado ao icone do Jira) */
+  --ds-color-chart-orange: #f2812b;
+  /* ---- 1. Paleta da marca ---- */
+  --ds-color-brand-light-100: #ffffff;
+  --ds-color-brand-light-90: #ffffffe5;
+  --ds-color-brand-light-80: #ffffffcc;
+  --ds-color-brand-light-60: #ffffff99;
+  --ds-color-brand-light-30: #ffffff4d;
+  --ds-color-brand-light-20: #ffffff33;
+  --ds-color-brand-light-10: #ffffff1a;
+  --ds-color-brand-light-5: #ffffff0d;
+  --ds-color-brand-light-2: #ffffff05;
+  --ds-color-brand-dark-100: #000000;
+  --ds-color-brand-dark-60: #00000099;
+  --ds-color-brand-dark-30: #0000004d;
+  --ds-color-brand-dark-10: #0000001a;
+  --ds-color-brand-dark-5: #0000000d;
+
+  --ds-color-brand-neutral-1: #242424;
+  --ds-color-brand-neutral-2: #363636;
+  --ds-color-brand-neutral-3: #494949;
+  --ds-color-brand-neutral-4: #5c5c5c;
+  --ds-color-brand-neutral-5: #6f6f6f;
+  --ds-color-brand-neutral-6: #828282;
+  --ds-color-brand-neutral-7: #949494;
+  --ds-color-brand-neutral-8: #a7a7a7;
+  --ds-color-brand-neutral-9: #bababa;
+  --ds-color-brand-neutral-10: #cdcdcd;
+  --ds-color-brand-neutral-11: #dfdfdf;
+  --ds-color-brand-neutral-12: #f2f2f2;
+
+  --ds-color-brand-green-1: #001d08;
+  --ds-color-brand-green-2: #002107;
+  --ds-color-brand-green-3: #002c09;
+  --ds-color-brand-green-4: #013f09;
+  --ds-color-brand-green-5: #015a03;
+  --ds-color-brand-green-6: #1b7d00;
+  --ds-color-brand-green-7: #3ba306;
+  --ds-color-brand-green-8: #70c34b;
+  --ds-color-brand-green-9: #a3d988;
+  --ds-color-brand-green-10: #c6e9b0;
+  --ds-color-brand-green-11: #daf2c8;
+  --ds-color-brand-green-12: #e4f6d3;
+
+  --ds-color-brand-yellow-1: #201300;
+  --ds-color-brand-yellow-2: #241700;
+  --ds-color-brand-yellow-3: #302000;
+  --ds-color-brand-yellow-4: #432f00;
+  --ds-color-brand-yellow-5: #5f4501;
+  --ds-color-brand-yellow-6: #836103;
+  --ds-color-brand-yellow-7: #ac8204;
+  --ds-color-brand-yellow-8: #d4a305;
+  --ds-color-brand-yellow-9: #f4bf1d;
+  --ds-color-brand-yellow-10: #ffd772;
+  --ds-color-brand-yellow-11: #ffe7a9;
+  --ds-color-brand-yellow-12: #ffedbf;
+
+  --ds-color-brand-red-1: #2f0500;
+  --ds-color-brand-red-2: #360600;
+  --ds-color-brand-red-3: #460800;
+  --ds-color-brand-red-4: #610c00;
+  --ds-color-brand-red-5: #8a1100;
+  --ds-color-brand-red-6: #c11401;
+  --ds-color-brand-red-7: #f23a2b;
+  --ds-color-brand-red-8: #ff7f70;
+  --ds-color-brand-red-9: #ffb0a5;
+  --ds-color-brand-red-10: #ffcec8;
+  --ds-color-brand-red-11: #ffe1dd;
+  --ds-color-brand-red-12: #ffe9e6;
+
+  --ds-color-brand-purple-1: #170640;
+  --ds-color-brand-purple-2: #1a0847;
+  --ds-color-brand-purple-3: #230f59;
+  --ds-color-brand-purple-4: #321a78;
+  --ds-color-brand-purple-5: #482aa4;
+  --ds-color-brand-purple-6: #6540df;
+  --ds-color-brand-purple-7: #846dfe;
+  --ds-color-brand-purple-8: #a39cff;
+  --ds-color-brand-purple-9: #c1bfff;
+  --ds-color-brand-purple-10: #d8d7ff;
+  --ds-color-brand-purple-11: #e6e6ff;
+  --ds-color-brand-purple-12: #ecedff;
+
+  --ds-color-brand-blue-1: #001828;
+  --ds-color-brand-blue-2: #001c2f;
+  --ds-color-brand-blue-3: #00253e;
+  --ds-color-brand-blue-4: #003558;
+  --ds-color-brand-blue-5: #014c80;
+  --ds-color-brand-blue-6: #006ab4;
+  --ds-color-brand-blue-7: #038bf2;
+  --ds-color-brand-blue-8: #68afff;
+  --ds-color-brand-blue-9: #a1caff;
+  --ds-color-brand-blue-10: #c6deff;
+  --ds-color-brand-blue-11: #dceaff;
+  --ds-color-brand-blue-12: #e5efff;
+
+  /* Cor primária da marca montebravo = purple */
+  --ds-color-primary-1: var(--ds-color-brand-purple-1);
+  --ds-color-primary-2: var(--ds-color-brand-purple-2);
+  --ds-color-primary-3: var(--ds-color-brand-purple-3);
+  --ds-color-primary-4: var(--ds-color-brand-purple-4);
+  --ds-color-primary-5: var(--ds-color-brand-purple-5);
+  --ds-color-primary-6: var(--ds-color-brand-purple-6);
+  --ds-color-primary-7: var(--ds-color-brand-purple-7);
+  --ds-color-primary-8: var(--ds-color-brand-purple-8);
+  --ds-color-primary-9: var(--ds-color-brand-purple-9);
+  --ds-color-primary-10: var(--ds-color-brand-purple-10);
+  --ds-color-primary-11: var(--ds-color-brand-purple-11);
+  --ds-color-primary-12: var(--ds-color-brand-purple-12);
+
+  /* ---- 3. Tipografia, escala e forma ---- */
+  --ds-font-family-default: var(--font-sora), "Sora", system-ui, sans-serif;
+  --ds-font-weight-headline: 450;
+  --ds-font-weight-text: 400;
+  --ds-font-weight-label: 500;
+
+  --ds-space-xxxs: 4px;
+  --ds-space-xxs: 8px;
+  --ds-space-xs: 12px;
+  --ds-space-small: 16px;
+  --ds-space-medium: 20px;
+  --ds-space-large: 24px;
+  --ds-space-xl: 28px;
+  --ds-space-xxl: 32px;
+  --ds-space-xxxl: 40px;
+
+  --ds-radius-small: 12px;
+  --ds-radius-medium: 16px;
+  --ds-radius-large: 24px;
+  --ds-radius-circular: 240px;
+
+  --ds-size-small: 40px;
+  --ds-size-medium: 48px;
+  --ds-size-large: 56px;
+}
+
+/* ---- 2. Semânticos: apontam para os tokens oficiais do Bravo (bravo-tokens.css).
+        O Bravo troca os valores via [data-mb-scheme] (claro/escuro); layout.tsx
+        mantém data-mb-scheme sincronizado com data-theme. ---- */
+:root {
+  --ds-color-page-surface: var(--color-page-surface);
+  --ds-color-page-backdrop: var(--color-page-backdrop);
+
+  --ds-color-content-title: var(--color-content-title);
+  --ds-color-content-body: var(--color-content-body);
+  --ds-color-content-caption: var(--color-content-caption);
+  --ds-color-content-subdued: var(--color-content-subdued);
+  --ds-color-content-highlight: var(--color-content-highlight);
+  --ds-color-content-positive: var(--color-content-positive);
+  --ds-color-content-negative: var(--color-content-negative);
+  --ds-color-content-alert: var(--color-content-alert);
+  --ds-color-content-primary: var(--color-content-accent);
+  --ds-color-content-disabled: var(--color-content-disabled);
+
+  --ds-color-container-card-surface-default: var(--color-container-card-default-enabled);
+  --ds-color-container-card-surface-emphasis: var(--color-container-card-emphasis-enabled);
+  --ds-color-container-popover-surface: var(--color-container-card-emphasis-enabled);
+  --ds-color-container-dialog-surface: var(--color-container-dialog-surface);
+  --ds-color-container-divider-section: var(--color-container-divider-section);
+  --ds-color-container-divider-card: var(--color-container-divider-card-default);
+  --ds-color-container-border-primary: var(--color-container-border-accent);
+  --ds-color-container-border-positive: var(--color-container-border-positive);
+  --ds-color-container-border-negative: var(--color-container-border-negative);
+  --ds-color-container-border-alert: var(--color-container-border-alert);
+
+  --ds-color-input-surface: var(--color-input-field-surface-enabled);
+  --ds-color-input-surface-hover: var(--color-input-field-surface-hover);
+  --ds-color-input-border: var(--color-input-field-border-enabled);
+  --ds-color-input-border-hover: var(--color-input-field-border-hover);
+  --ds-color-input-border-active: var(--color-input-field-border-active);
+
+  --ds-color-action-primary-surface: var(--color-action-primary-accent-surface-enabled);
+  --ds-color-action-primary-surface-hover: var(--color-action-primary-accent-surface-hover);
+  --ds-color-action-primary-content: var(--color-action-primary-accent-content-enabled);
+  --ds-color-action-tonal-surface: var(--color-action-secondary-default-surface-enabled);
+  --ds-color-action-tonal-surface-hover: var(--color-action-secondary-default-surface-hover);
+  --ds-color-action-tonal-content: var(--color-action-secondary-default-content-enabled);
+
+  --ds-color-feedback-neutral-surface: var(--color-feedback-neutral-default-surface-enabled);
+  --ds-color-feedback-neutral-label: var(--color-feedback-neutral-default-label-enabled);
+  --ds-color-feedback-neutral-emphasis-surface: var(--color-feedback-neutral-emphasis-surface-enabled);
+  --ds-color-feedback-neutral-emphasis-label: var(--color-feedback-neutral-emphasis-label-enabled);
+  --ds-color-feedback-primary-surface: var(--color-feedback-primary-default-surface-enabled);
+  --ds-color-feedback-primary-label: var(--color-feedback-primary-default-label-enabled);
+  --ds-color-feedback-positive-surface: var(--color-feedback-positive-default-surface-enabled);
+  --ds-color-feedback-positive-label: var(--color-feedback-positive-default-label-enabled);
+  --ds-color-feedback-alert-surface: var(--color-feedback-alert-default-surface-enabled);
+  --ds-color-feedback-alert-label: var(--color-feedback-alert-default-label-enabled);
+  --ds-color-feedback-negative-surface: var(--color-feedback-negative-default-surface-enabled);
+  --ds-color-feedback-negative-label: var(--color-feedback-negative-default-label-enabled);
+
+  --ds-color-nav-progress-surface: var(--color-navigation-progress-surface);
+  --ds-shadow-card: 0 0 10px var(--ds-color-brand-dark-5);
+  --ds-shadow-overlay: 0 8px 40px var(--ds-color-brand-dark-10);
+}
+
+/* Séries de gráfico (sem equivalente categórico no Bravo): rampa da paleta, por esquema */
+:root,
+[data-theme="light"] {
+  --ds-color-chart-1: var(--ds-color-primary-6);
+  --ds-color-chart-2: var(--ds-color-brand-yellow-7);
+  --ds-color-chart-3: var(--ds-color-brand-green-6);
+  --ds-color-chart-4: var(--ds-color-brand-blue-6);
+  --ds-color-chart-5: var(--ds-color-brand-red-6);
+}
+[data-theme="dark"] {
+  --ds-color-chart-1: var(--ds-color-primary-8);
+  --ds-color-chart-2: var(--ds-color-brand-yellow-9);
+  --ds-color-chart-3: var(--ds-color-brand-green-8);
+  --ds-color-chart-4: var(--ds-color-brand-blue-8);
+  --ds-color-chart-5: var(--ds-color-brand-red-8);
+}
+/* ---- Ponte: variáveis legadas do app apontam para os tokens do DS.
+        Toda a UI existente passa a seguir o DS sem tocar nos componentes. ---- */
+:root,
+[data-theme="light"],
+[data-theme="dark"] {
+  --bg-primary: var(--ds-color-page-surface);
+  --bg-secondary: var(--ds-color-input-surface);
+  --bg-card: var(--ds-color-container-popover-surface);
+  --bg-hover: var(--ds-color-input-surface-hover);
+  --border-primary: var(--ds-color-container-divider-card);
+  --border-hover: var(--ds-color-input-border-hover);
+  --text-primary: var(--ds-color-content-title);
+  --text-secondary: var(--ds-color-content-body);
+  --text-muted: var(--ds-color-content-subdued);
+  --accent: var(--ds-color-content-primary);
+  --accent-bg: color-mix(in srgb, var(--ds-color-content-primary) 14%, transparent);
+  --ring-bg: var(--ds-color-nav-progress-surface);
+  --pill-up-bg: var(--ds-color-feedback-positive-surface);
+  --pill-up-text: var(--ds-color-feedback-positive-label);
+  --pill-down-bg: var(--ds-color-feedback-negative-surface);
+  --pill-down-text: var(--ds-color-feedback-negative-label);
+  --pill-neutral-bg: var(--ds-color-feedback-neutral-surface);
+  --pill-neutral-text: var(--ds-color-feedback-neutral-label);
+  --tab-active-bg: var(--ds-color-feedback-neutral-emphasis-surface);
+  --tab-active-text: var(--ds-color-feedback-neutral-emphasis-label);
+  --tab-inactive-text: var(--ds-color-content-caption);
+}

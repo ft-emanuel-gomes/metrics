@@ -5,10 +5,10 @@ interface InsightsGridProps {
 }
 
 const SEVERITY_STYLES: Record<InsightItem["severity"], string> = {
-  green: "border-emerald-400",
-  yellow: "border-amber-400",
-  red: "border-red-400",
-  blue: "border-indigo-400",
+  green: "border-[color:var(--ds-color-container-border-positive)]",
+  yellow: "border-[color:var(--ds-color-container-border-alert)]",
+  red: "border-[color:var(--ds-color-container-border-negative)]",
+  blue: "border-[color:var(--ds-color-container-border-primary)]",
 };
 
 export default function InsightsGrid({ insights }: InsightsGridProps) {

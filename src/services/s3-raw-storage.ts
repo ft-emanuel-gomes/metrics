@@ -9,6 +9,7 @@
  *   raw/{slug}/meta.json             — metadados (última sync, release info)
  */
 
+import type { ReleaseSprint } from "@/lib/release-calendar";
 import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import type { SprintData } from "@/services/jira-sprints";
 import type { JiraIssueWithChangelog, SubtaskWithEstimate, JiraIssue } from "@/services/jira-search";
@@ -46,12 +47,21 @@ export interface RawWipData {
     summary: string;
     status: string;
     issueType?: string;
+    /** Data de criação (ISO 8601): início do aging para cards que nasceram em To Do. */
+    created?: string;
     transitions: StatusTransition[];
   }[];
   fetchedAt: string;
 }
 
 /** R2 Progress raw — épicos e features com changelogs */
+/** Base do Forecast: itens da última release encerrada (null = não há release encerrada com itens da squad). */
+export interface RawForecastBasis {
+  releaseName: string;
+  releaseDate: string;
+  items: { key: string; issueType: string; status: string; transitions: StatusTransition[] }[];
+}
+
 export interface RawR2Data {
   epics: JiraIssue[];
   features: JiraIssue[];
@@ -63,6 +73,12 @@ export interface RawR2Data {
   }[];
   releaseName: string;
   releaseDeadline: string;
+  /** startDate da version da release ativa (YYYY-MM-DD) */
+  releaseStartDate?: string;
+  /** Sprints do board dentro da janela da release (Calendário da Release). undefined = ainda não sincronizado */
+  releaseSprints?: ReleaseSprint[];
+  /** undefined = ainda não calculado; null = sem release encerrada */
+  forecastBasis?: RawForecastBasis | null;
 }
 
 /** Metadados da squad sincronizada */

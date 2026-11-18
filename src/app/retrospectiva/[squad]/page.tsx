@@ -32,8 +32,8 @@ export default async function RetroSquadPage({ params }: PageProps) {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-white">{squad.name}</h1>
-            <p className="text-sm text-gray-400 mt-1">Boards de retrospectiva</p>
+            <h1 className="text-2xl font-bold text-[color:var(--ds-color-content-title)]">{squad.name}</h1>
+            <p className="text-sm text-[color:var(--ds-color-content-caption)] mt-1">Boards de retrospectiva</p>
           </div>
           <div className="flex items-center gap-3">
             {session.isAdmin && (
@@ -41,7 +41,7 @@ export default async function RetroSquadPage({ params }: PageProps) {
             )}
             <Link
               href="/retrospectiva"
-              className="rounded-lg bg-white/5 px-4 py-2 text-xs font-semibold text-gray-300 hover:bg-white/10 transition"
+              className="rounded-lg bg-[var(--ds-color-input-surface)] px-4 py-2 text-xs font-semibold text-[color:var(--ds-color-content-body)] hover:bg-[var(--ds-color-input-surface-hover)] transition"
             >
               Voltar
             </Link>
@@ -54,17 +54,17 @@ export default async function RetroSquadPage({ params }: PageProps) {
             <Link
               key={board.id}
               href={`/retrospectiva/${squadSlug}/${board.id}`}
-              className="group flex items-center justify-between rounded-xl border border-white/10 bg-white/5 p-5 hover:border-violet-500/40 hover:bg-violet-500/5 transition"
+              className="group flex items-center justify-between rounded-xl border border-[color:var(--ds-color-container-divider-card)] bg-[var(--ds-color-input-surface)] p-5 hover:border-[color-mix(in_srgb,var(--ds-color-content-primary)_40%,transparent)] hover:bg-[color-mix(in_srgb,var(--ds-color-content-primary)_5%,transparent)] transition"
             >
               <div>
                 <div className="flex items-center gap-3">
-                  <span className="text-sm font-bold text-white group-hover:text-violet-300 transition">
+                  <span className="text-sm font-bold text-[color:var(--ds-color-content-title)] group-hover:text-[color:var(--ds-color-content-primary)] transition">
                     {formatDate(board.updatedAt)}
                   </span>
-                  <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] text-gray-400">
+                  <span className="rounded-full bg-[var(--ds-color-input-surface)] px-2 py-0.5 text-[10px] text-[color:var(--ds-color-content-caption)]">
                     {board.totalCards} cards
                   </span>
-                  <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] text-gray-400">
+                  <span className="rounded-full bg-[var(--ds-color-input-surface)] px-2 py-0.5 text-[10px] text-[color:var(--ds-color-content-caption)]">
                     {board.columnCount} colunas
                   </span>
                 </div>
@@ -72,7 +72,7 @@ export default async function RetroSquadPage({ params }: PageProps) {
                 {/* Preview das colunas */}
                 <div className="mt-2 flex gap-2">
                   {board.columns.map((col, idx) => (
-                    <span key={idx} className="text-[9px] text-gray-500">
+                    <span key={idx} className="text-[9px] text-[color:var(--ds-color-content-caption)]">
                       {col.title} ({col.cardCount})
                     </span>
                   ))}
@@ -80,7 +80,7 @@ export default async function RetroSquadPage({ params }: PageProps) {
               </div>
 
               {/* Arrow */}
-              <div className="text-gray-600 group-hover:text-violet-400 transition">
+              <div className="text-[color:var(--ds-color-content-subdued)] group-hover:text-[color:var(--ds-color-content-primary)] transition">
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                 </svg>
@@ -90,9 +90,9 @@ export default async function RetroSquadPage({ params }: PageProps) {
 
           {boards.length === 0 && (
             <div className="text-center py-16">
-              <p className="text-sm text-gray-500 mb-4">Nenhuma retrospectiva realizada ainda.</p>
+              <p className="text-sm text-[color:var(--ds-color-content-caption)] mb-4">Nenhuma retrospectiva realizada ainda.</p>
               {session.isAdmin && (
-                <p className="text-[11px] text-gray-600">
+                <p className="text-[11px] text-[color:var(--ds-color-content-subdued)]">
                   Clique em &quot;Nova Retrospectiva&quot; para iniciar.
                 </p>
               )}

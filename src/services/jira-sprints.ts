@@ -95,6 +95,46 @@ export async function fetchClosedSprints(
 }
 
 /**
+ * Busca TODAS as sprints do board (closed, active e future) que tenham datas.
+ * Usado pelo Calendário da Release. Cacheado junto com os demais dados de sprint.
+ */
+export async function fetchAllSprints(boardId: number, options: { fresh?: boolean } = {}): Promise<SprintData[]> {
+  const cache = getCacheManager();
+  const cacheKey = `sprints-all:${boardId}`;
+  // fresh = ignora o cache (o calendário precisa do estado atual da sprint no Jira)
+  const cached = options.fresh ? undefined : cache.get<SprintData[]>(cacheKey);
+  if (cached) return cached;
+
+  const client = getJiraClient();
+  const all: SprintData[] = [];
+  let startAt = 0;
+  let isLast = false;
+
+  do {
+    const response = await client.get<JiraSprintsResponse>(
+      `/rest/agile/1.0/board/${boardId}/sprint`,
+      { state: "active,closed,future", startAt, maxResults: 50 }
+    );
+    isLast = response.isLast;
+    for (const raw of response.values) {
+      if (!raw.startDate || !raw.endDate) continue;
+      all.push({
+        id: raw.id,
+        name: raw.name,
+        state: raw.state as SprintData["state"],
+        startDate: raw.startDate,
+        endDate: raw.endDate,
+        completeDate: raw.completeDate,
+      });
+    }
+    startAt += 50;
+  } while (!isLast);
+
+  cache.set(cacheKey, all, CACHE_TTLS.sprints);
+  return all;
+}
+
+/**
  * Busca a sprint ativa de um board.
  * Retorna null se nenhuma sprint ativa.
  */

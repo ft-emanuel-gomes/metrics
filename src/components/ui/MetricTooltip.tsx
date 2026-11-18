@@ -35,7 +35,7 @@ export default function MetricTooltip({ text }: MetricTooltipProps) {
         onMouseEnter={handleEnter}
         onMouseLeave={() => setIsOpen(false)}
         onClick={() => setIsOpen(!isOpen)}
-        className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-indigo-500/20 text-indigo-300 text-[8px] font-bold hover:bg-indigo-500/30 transition cursor-help ml-1.5 align-middle"
+        className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-[color-mix(in_srgb,var(--ds-color-content-primary)_20%,transparent)] text-[color:var(--ds-color-content-primary)] text-[8px] font-bold hover:bg-[color-mix(in_srgb,var(--ds-color-content-primary)_30%,transparent)] transition cursor-help ml-1.5 align-middle"
       >
         ?
       </button>
