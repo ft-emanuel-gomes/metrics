@@ -1,8 +1,6 @@
-"use client";
-
-import dynamic from "next/dynamic";
-
-const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
+﻿"use client";
+import { Bar, BarChart, CartesianGrid, Cell, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { useChartTheme } from "@/lib/use-chart-theme";
 
 interface PercentilesProps {
   p50: number | null;
@@ -11,44 +9,57 @@ interface PercentilesProps {
   sampleSize: number;
 }
 
-export default function PercentilesBars({ p50, p85, p95 }: PercentilesProps) {
-  const options: ApexCharts.ApexOptions = {
-    chart: { type: "bar", toolbar: { show: false }, background: "transparent" },
-    plotOptions: {
-      bar: { horizontal: true, borderRadius: 4, barHeight: "55%", distributed: true },
-    },
-    colors: ["#34d399", "#fbbf24", "#f87171"],
-    dataLabels: {
-      enabled: true,
-      style: { fontSize: "10px", fontWeight: 700, colors: ["#fff"] },
-      formatter: (val: number) => `${val}d`,
-    },
-    xaxis: {
-      categories: ["P50", "P85", "P95"],
-      labels: { style: { colors: "#94a3b8", fontSize: "10px" } },
-    },
-    yaxis: {
-      labels: { style: { colors: "#64748b", fontSize: "9px" } },
-    },
-    grid: { borderColor: "rgba(255,255,255,0.04)" },
-    legend: { show: false },
-    tooltip: { theme: "dark", y: { formatter: (v: number) => `${v} dias` } },
-    theme: { mode: "dark" },
-  };
-
-  const series = [{ name: "Dias", data: [p50 ?? 0, p85 ?? 0, p95 ?? 0] }];
+/**
+ * Confiança de Entrega: percentis combinados do Cycle Time.
+ * Uma só cor (primária MB) com intensidade crescente; o P85 é o compromisso de prazo.
+ */
+export default function PercentilesBars({ p50, p85, p95, sampleSize }: PercentilesProps) {
+  const t = useChartTheme();
+  const data = [
+    { name: "P50", label: "Típico", value: p50 ?? 0, opacity: 0.45, text: "50% das entregas" },
+    { name: "P85", label: "Compromisso", value: p85 ?? 0, opacity: 1, text: "85% das entregas" },
+    { name: "P95", label: "Pior caso", value: p95 ?? 0, opacity: 0.7, text: "95% das entregas" },
+  ];
 
   return (
     <div className="theme-section">
-      <h3 className="mb-3 text-[11px] font-bold uppercase tracking-wide t-secondary">
-        Confiança de Entrega "” Percentis (combinados)
-      </h3>
-      <Chart options={options} series={series} type="bar" height={140} />
-      <div className="mt-2 space-y-1 text-[9px] text-gray-400">
-        <p>50% das entregas em até {p50 ?? "N/A"} dias</p>
-        <p>85% das entregas em até {p85 ?? "N/A"} dias</p>
-        <p>95% das entregas em até {p95 ?? "N/A"} dias</p>
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <h3 className="text-[11px] font-bold uppercase tracking-wide t-secondary">
+          Confiança de entrega — percentis do Cycle Time
+        </h3>
+        <span className="shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold" style={{ background: "var(--ds-color-feedback-neutral-surface)", color: "var(--ds-color-feedback-neutral-label)" }}>
+          {sampleSize} cards
+        </span>
       </div>
+      <div style={{ width: "100%", height: 150 }}>
+        <ResponsiveContainer>
+          <BarChart data={data} layout="vertical" margin={{ top: 0, right: 36, left: 0, bottom: 0 }} barCategoryGap="28%">
+            <CartesianGrid horizontal={false} stroke={t.grid} />
+            <XAxis type="number" tick={{ fill: t.muted, fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} tickFormatter={(v) => `${v}d`} />
+            <YAxis type="category" dataKey="name" width={34} tick={{ fill: t.body, fontSize: 11, fontWeight: 600 }} axisLine={false} tickLine={false} />
+            <Tooltip
+              cursor={{ fill: t.grid, opacity: 0.35 }}
+              contentStyle={{ background: t.surface, border: `1px solid ${t.grid}`, borderRadius: 12, fontSize: 12, color: t.title }}
+              labelStyle={{ color: t.title, fontWeight: 600 }}
+              formatter={(v, _n, item) => [`${v} dias`, item.payload.label]}
+            />
+            <Bar isAnimationActive={false} dataKey="value" radius={[0, 6, 6, 0]} maxBarSize={24}>
+              {data.map((d) => (
+                <Cell key={d.name} fill={t.series[0]} fillOpacity={d.opacity} />
+              ))}
+              <LabelList dataKey="value" position="right" formatter={(v) => `${v}d`} fill={t.title} fontSize={11} fontWeight={600} />
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+      <ul className="mt-2 space-y-1 text-[11px] t-muted">
+        {data.map((d) => (
+          <li key={d.name}>
+            {d.text} em até <strong style={{ color: "var(--ds-color-content-title)" }}>{d.value || "N/A"} dias</strong>
+            {d.name === "P85" && " — prazo que podemos prometer"}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

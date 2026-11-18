@@ -89,8 +89,8 @@ export default function LoginPage() {
   if (isRefreshing) {
     return (
       <main className="min-h-screen flex items-center justify-center">
-        <div className="flex items-center gap-3 text-sm text-gray-400">
-          <span className="h-4 w-4 animate-spin rounded-full border-2 border-indigo-400 border-t-transparent" />
+        <div className="flex items-center gap-3 text-sm" style={{ color: "var(--text-secondary)" }}>
+          <span className="h-4 w-4 animate-spin rounded-full border-2" style={{ borderColor: "var(--accent)", borderTopColor: "transparent" }} />
           Renovando sessão...
         </div>
       </main>
@@ -101,7 +101,7 @@ export default function LoginPage() {
     <main className="min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         {/* Card de login */}
-        <div className="rounded-xl p-6 text-center" style={{ backgroundColor: "var(--bg-card)", border: "0.5px solid var(--border-primary)" }}>
+        <div className="ds-card text-center" style={{ padding: "var(--ds-space-xxl)" }}>
           {/* Logo */}
           <ThemedLogo
             src="/images/logo-montebravo-center.svg"
@@ -116,7 +116,7 @@ export default function LoginPage() {
 
           {/* Erro */}
           {errorMessage && (
-            <div className="mb-4 rounded-lg bg-red-500/10 border border-red-500/20 px-3 py-2 text-[11px] text-red-400">
+            <div className="ds-alert-negative mb-4">
               {errorMessage}
             </div>
           )}
@@ -124,7 +124,7 @@ export default function LoginPage() {
           {/* Formulário */}
           <form onSubmit={handleSubmit} className="space-y-4 text-left">
             <div>
-              <label htmlFor="email" className="block text-[11px] font-semibold uppercase tracking-wide mb-1.5" style={{ color: "var(--text-secondary)" }}>
+              <label htmlFor="email" className="ds-label">
                 Email corporativo
               </label>
               <input
@@ -134,8 +134,7 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="seu.nome@montebravo.com.br"
                 disabled={status === "loading"}
-                className="w-full rounded-lg px-3 py-2.5 text-sm outline-none transition"
-                style={{ backgroundColor: "var(--bg-secondary)", border: "0.5px solid var(--border-primary)", color: "var(--text-primary)" }}
+                className="ds-input"
                 autoComplete="email"
                 autoFocus
               />
@@ -144,15 +143,11 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={status === "loading"}
-              className={`w-full rounded-lg px-4 py-2.5 text-sm font-semibold transition ${
-                status === "loading"
-                  ? "bg-indigo-500/30 text-indigo-300 cursor-wait"
-                  : "bg-indigo-500 text-white hover:bg-indigo-600"
-              }`}
+              className="ds-btn ds-btn-primary ds-btn-large w-full"
             >
               {status === "loading" ? (
                 <span className="flex items-center justify-center gap-2">
-                  <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
                   Verificando...
                 </span>
               ) : (
@@ -162,7 +157,7 @@ export default function LoginPage() {
           </form>
         </div>
 
-        <p className="mt-4 text-center text-[10px] text-gray-600">
+        <p className="mt-4 text-center text-[11px]" style={{ color: "var(--text-muted)" }}>
           Acesso restrito a colaboradores Monte Bravo.
         </p>
       </div>

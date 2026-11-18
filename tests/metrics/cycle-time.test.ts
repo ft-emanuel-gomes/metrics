@@ -46,7 +46,7 @@ describe("calculateIssueCycleTime", () => {
     expect(result!.days).toBe(75); // 9 Abr → 24 Jun = 75 dias (calendarDaysBetween)
   });
 
-  it("CT = 0 quando concluído no mesmo dia que entrou em To Do", () => {
+  it("CT mínimo de 1 dia quando concluído em horas, no mesmo dia que entrou em To Do", () => {
     const transitions: StatusTransition[] = [
       { timestamp: "2026-06-10T08:00:00Z", fromStatus: "Backlog", toStatus: "To Do" },
       { timestamp: "2026-06-10T16:00:00Z", fromStatus: "To Do", toStatus: "In Progress" },
@@ -54,7 +54,7 @@ describe("calculateIssueCycleTime", () => {
     ];
     const result = calculateIssueCycleTime("CT-99", transitions);
     expect(result).not.toBeNull();
-    expect(result!.days).toBe(0);
+    expect(result!.days).toBe(1);
   });
 
   it("usa ÚLTIMA transição para Concluído (caso de retrabalho)", () => {

@@ -1,3 +1,22 @@
+const BRT_OFFSET_MS = 3 * 3_600_000; // America/Sao_Paulo (sem horário de verão desde 2019)
+
+/**
+ * Dias úteis (seg a sex) de um período, no fuso de Brasília, como datas YYYY-MM-DD.
+ * Regra: início e fim exatamente como cadastrados no Jira (datas no fuso de Brasília), os dois dias incluídos.
+ * Ex.: sprint de 17/11 a 01/12 conta de 17/11 até 01/12. Independe do fuso do servidor.
+ * Usado pela Ocupação e pela Capacidade da Sprint (mesma contagem nas duas).
+ */
+export function businessDaysListBrt(startIso: string, endIso: string): string[] {
+  const toBrDate = (ms: number) => new Date(ms - BRT_OFFSET_MS).toISOString().slice(0, 10);
+  const first = toBrDate(new Date(startIso).getTime());
+  const last = toBrDate(new Date(endIso).getTime());
+  const days: string[] = [];
+  for (let d = new Date(`${first}T12:00:00Z`); d.toISOString().slice(0, 10) <= last; d.setUTCDate(d.getUTCDate() + 1)) {
+    const wd = d.getUTCDay();
+    if (wd !== 0 && wd !== 6) days.push(d.toISOString().slice(0, 10));
+  }
+  return days;
+}
 /**
  * Calcula dias úteis entre duas datas (exclui sábado e domingo)
  */

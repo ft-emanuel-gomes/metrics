@@ -27,9 +27,9 @@ export default function ShareModal({ squadSlug, onClose }: ShareModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
       <div className="w-full max-w-sm rounded-xl theme-modal p-6 shadow-2xl">
-        <h3 className="text-sm font-bold text-white mb-4">Compartilhar Board</h3>
+        <h3 className="text-sm font-bold text-[color:var(--ds-color-content-title)] mb-4">Compartilhar Board</h3>
 
-        <p className="text-[10px] text-gray-400 mb-4">
+        <p className="text-[10px] text-[color:var(--ds-color-content-caption)] mb-4">
           Compartilhe o link ou QR Code com os participantes.
           O acesso requer login via Jira.
         </p>
@@ -46,7 +46,7 @@ export default function ShareModal({ squadSlug, onClose }: ShareModalProps) {
           <input
             readOnly
             value={shareUrl}
-            className="flex-1 rounded-md border border-white/10 bg-white/5 px-3 py-2 text-[11px] text-gray-300 outline-none"
+            className="flex-1 rounded-md border border-[color:var(--ds-color-container-divider-card)] bg-[var(--ds-color-input-surface)] px-3 py-2 text-[11px] text-[color:var(--ds-color-content-body)] outline-none"
           />
           <button
             onClick={handleCopy}
@@ -64,7 +64,7 @@ export default function ShareModal({ squadSlug, onClose }: ShareModalProps) {
         <div className="flex justify-end">
           <button
             onClick={onClose}
-            className="rounded-md bg-white/10 px-3 py-1.5 text-[11px] font-semibold text-gray-300 hover:bg-white/15 transition"
+            className="rounded-md bg-[var(--ds-color-input-surface)] px-3 py-1.5 text-[11px] font-semibold text-[color:var(--ds-color-content-body)] hover:bg-[var(--ds-color-input-surface-hover)] transition"
           >
             Fechar
           </button>

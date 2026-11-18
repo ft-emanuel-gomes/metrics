@@ -19,6 +19,7 @@ import { calculateForecast } from "@/metrics/forecast";
 import { calculateWipAging, buildWipAgingKpi, summarizeWipAging, WIP_AGING_LIMIT_DAYS, type WipAgingResult } from "@/metrics/wip-aging";
 import { calculateP50, calculateP85, calculateP95 } from "@/metrics/percentile";
 import { getSprintCapacity, getSprintBusinessDays } from "./capacity-store";
+import { hasReleasePlan } from "@/lib/release-calendar";
 import type {
   DashboardData,
   Period,
@@ -48,7 +49,7 @@ function normalizeType(type: string): string {
   return mapping[type] || type;
 }
 
-function matchesFilter(issueType: string, filter: string[]): boolean {
+export function matchesFilter(issueType: string, filter: string[]): boolean {
   return filter.includes(issueType) || filter.includes(normalizeType(issueType));
 }
 
@@ -185,8 +186,9 @@ export function buildDashboardFromRaw(
   // Forecast
   const forecast = r2Raw
     ? (() => {
-        const base = calculateForecast(r2Raw.r2WithChangelogs);
-        return { ...base, story: { type: "História", p85Days: percentiles.p85, sampleSize: percentiles.sampleSize } };
+        const closed = r2Raw.forecastBasis ?? null;
+        const base = calculateForecast(closed ? closed.items : r2Raw.r2WithChangelogs);
+        return { ...base, releaseName: closed ? closed.releaseName : r2Raw.releaseName, basis: (closed ? "encerrada" : "ativa") as "encerrada" | "ativa", story: { type: "História", p85Days: percentiles.p85, sampleSize: percentiles.sampleSize } };
       })()
     : { epic: { type: "Épico", p85Days: null, sampleSize: 0 }, feature: { type: "Feature", p85Days: null, sampleSize: 0 }, story: { type: "História", p85Days: percentiles.p85, sampleSize: percentiles.sampleSize } };
 
@@ -220,6 +222,16 @@ export function buildDashboardFromRaw(
     periodMetrics,
     wipAging,
     r2Progress,
+    releaseCalendar:
+      squad.methodology === "sprint" && r2Raw && r2Raw.releaseSprints && r2Raw.releaseDeadline &&
+      (r2Raw.releaseSprints.length > 0 || hasReleasePlan(r2Raw.releaseName))
+        ? {
+            releaseName: r2Raw.releaseName,
+            releaseStartDate: r2Raw.releaseStartDate,
+            releaseEndDate: r2Raw.releaseDeadline,
+            sprints: r2Raw.releaseSprints,
+          }
+        : undefined,
     percentiles,
     forecast,
     burndown,

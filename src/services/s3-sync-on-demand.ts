@@ -16,6 +16,7 @@ import {
 } from "@/services/jira-search";
 import { fetchChangelogsBatch } from "@/services/jira-changelog";
 import { fetchProjectVersions, findActiveRelease } from "@/services/jira-versions";
+import { buildReleaseCalendarFields } from "@/services/release-calendar-sync";
 import { getLatestSprints } from "@/services/jira-sprints";
 import {
   saveRawPeriod,
@@ -176,6 +177,7 @@ export async function ensureWipAndR2(
       summary: i.summary,
       status: i.status,
       issueType: i.issueType,
+      created: i.created,
       transitions: wipChangelogs.get(i.key) || [],
     })),
     fetchedAt: new Date().toISOString(),
@@ -209,8 +211,18 @@ export async function ensureWipAndR2(
       })),
       releaseName,
       releaseDeadline,
+      ...(await buildReleaseCalendarFields(squad, activeRelease)),
     };
     await saveRawR2(squad.slug, r2Raw);
+  } else if (r2Raw.releaseSprints === undefined || r2Raw.forecastBasis === undefined) {
+    // r2.json gerado antes do Calendário da Release: completa só o calendário (leve), sem refazer épicos/features
+    const projectVersions = await fetchProjectVersions("EP");
+    const activeRelease = findActiveRelease(projectVersions);
+    const extra = await buildReleaseCalendarFields(squad, activeRelease);
+    if (extra.releaseSprints !== undefined || extra.forecastBasis !== undefined) {
+      r2Raw = { ...r2Raw, ...extra };
+      await saveRawR2(squad.slug, r2Raw);
+    }
   }
 
   return { wipRaw, r2Raw };

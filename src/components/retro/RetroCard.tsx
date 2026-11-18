@@ -99,27 +99,27 @@ export default function RetroCardComponent({
               if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSaveEdit(); }
               if (e.key === "Escape") setIsEditing(false);
             }}
-            className="w-full rounded bg-white/10 px-2 py-1.5 text-sm text-white resize-none outline-none focus:ring-1 focus:ring-violet-500"
+            className="w-full rounded bg-[var(--ds-color-input-surface)] px-2 py-1.5 text-sm text-[color:var(--ds-color-content-title)] resize-none outline-none focus:ring-1 focus:ring-[color:var(--ds-color-container-border-primary)]"
             rows={3}
           />
           <div className="flex gap-1.5 mt-2">
-            <button onClick={handleSaveEdit} className="rounded bg-violet-600 px-2 py-1 text-[10px] font-semibold text-white hover:bg-violet-500">
+            <button onClick={handleSaveEdit} className="rounded bg-[var(--ds-color-action-primary-surface)] px-2 py-1 text-[10px] font-semibold text-white hover:bg-[var(--ds-color-action-primary-surface-hover)]">
               Salvar
             </button>
-            <button onClick={() => setIsEditing(false)} className="rounded bg-white/5 px-2 py-1 text-[10px] text-gray-400 hover:bg-white/10">
+            <button onClick={() => setIsEditing(false)} className="rounded bg-[var(--ds-color-input-surface)] px-2 py-1 text-[10px] text-[color:var(--ds-color-content-caption)] hover:bg-[var(--ds-color-input-surface-hover)]">
               Cancelar
             </button>
           </div>
         </div>
       ) : (
-        <p className="text-sm text-white whitespace-pre-wrap leading-relaxed">
+        <p className="text-sm text-[color:var(--ds-color-content-title)] whitespace-pre-wrap leading-relaxed">
           {card.text}
         </p>
       )}
 
       {/* Author + actions */}
       <div className="mt-2 flex items-center justify-between">
-        <span className="text-[9px] text-gray-500 truncate max-w-[120px]">
+        <span className="text-[9px] text-[color:var(--ds-color-content-caption)] truncate max-w-[120px]">
           {card.authorName}
         </span>
 
@@ -129,7 +129,7 @@ export default function RetroCardComponent({
             {canEdit && (
               <button
                 onClick={(e) => { e.stopPropagation(); setIsEditing(true); setEditText(card.text); }}
-                className="p-1 rounded hover:bg-white/10 text-gray-500 hover:text-white"
+                className="p-1 rounded hover:bg-[var(--ds-color-input-surface-hover)] text-[color:var(--ds-color-content-caption)] hover:text-[color:var(--ds-color-content-title)]"
                 title="Editar"
               >
                 <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -140,7 +140,7 @@ export default function RetroCardComponent({
             {canDelete && (
               <button
                 onClick={(e) => { e.stopPropagation(); onDelete?.(columnId, card.id); }}
-                className="p-1 rounded hover:bg-red-500/10 text-gray-500 hover:text-red-400"
+                className="p-1 rounded hover:bg-[color-mix(in_srgb,var(--ds-color-content-negative)_12%,transparent)] text-[color:var(--ds-color-content-caption)] hover:text-[color:var(--ds-color-content-negative)]"
                 title="Excluir"
               >
                 <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -151,7 +151,7 @@ export default function RetroCardComponent({
             {card.mergedFrom && card.mergedFrom.length > 0 && permissions.canMergeCards && (
               <button
                 onClick={(e) => { e.stopPropagation(); onUnmerge?.(columnId, card.id); }}
-                className="p-1 rounded hover:bg-amber-500/10 text-gray-500 hover:text-amber-400"
+                className="p-1 rounded hover:bg-[color-mix(in_srgb,var(--ds-color-content-alert)_12%,transparent)] text-[color:var(--ds-color-content-caption)] hover:text-[color:var(--ds-color-content-alert)]"
                 title="Desfazer merge"
               >
                 <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -177,8 +177,8 @@ export default function RetroCardComponent({
               onClick={(e) => { e.stopPropagation(); onReact?.(columnId, card.id, type); }}
               className={`flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] transition ${
                 hasReacted
-                  ? "bg-violet-500/20 text-violet-300"
-                  : "bg-white/5 text-gray-500 hover:bg-white/10"
+                  ? "bg-[color-mix(in_srgb,var(--ds-color-content-primary)_20%,transparent)] text-[color:var(--ds-color-content-primary)]"
+                  : "bg-[var(--ds-color-input-surface)] text-[color:var(--ds-color-content-caption)] hover:bg-[var(--ds-color-input-surface-hover)]"
               }`}
             >
               <span>{emoji}</span>
@@ -193,8 +193,8 @@ export default function RetroCardComponent({
             onClick={(e) => { e.stopPropagation(); onVote?.(columnId, card.id); }}
             className={`flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[10px] font-semibold transition ${
               hasVoted
-                ? "bg-emerald-500/20 text-emerald-300"
-                : "bg-white/5 text-gray-500 hover:bg-white/10"
+                ? "bg-[color-mix(in_srgb,var(--ds-color-content-positive)_20%,transparent)] text-[color:var(--ds-color-content-positive)]"
+                : "bg-[var(--ds-color-input-surface)] text-[color:var(--ds-color-content-caption)] hover:bg-[var(--ds-color-input-surface-hover)]"
             }`}
           >
             <svg className="h-3 w-3" fill={hasVoted ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

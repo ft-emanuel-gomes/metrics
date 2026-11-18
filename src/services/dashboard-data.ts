@@ -1,0 +1,94 @@
+import type { SquadConfig } from "@/config/squads";
+import type { DashboardData } from "@/adapters/types";
+import { createDashboardAdapter } from "@/adapters/adapter-factory";
+import { fetchClosedSprints } from "@/services/jira-sprints";
+import { loadRawMeta, loadRawPeriod, type RawPeriodData } from "@/services/s3-raw-storage";
+import { buildDashboardFromRaw } from "@/services/metrics-from-raw";
+import { fetchAndSaveSprintPeriod, fetchAndSaveMonthPeriod, ensureWipAndR2 } from "@/services/s3-sync-on-demand";
+
+/** Tipos de issue padrão do dashboard (quando não há filtro explícito). */
+export const DEFAULT_ISSUE_TYPES = ["História", "Bug", "Task", "Tech Debt"];
+
+export interface DashboardDataOptions {
+  /** Sprints pedidas (squads Sprint). Sem isso, usa as 3 últimas sprints fechadas. */
+  sprintIds?: number[];
+  /** Meses pedidos (squads Kanban, "YYYY-MM"). */
+  months?: string[];
+  /** Filtro de tipos de issue. Sem isso, usa DEFAULT_ISSUE_TYPES. */
+  issueTypes?: string[];
+}
+
+/**
+ * Monta o DashboardData exatamente como o dashboard: lê os períodos do S3 raw (buscando do Jira
+ * só os que faltam), usa WIP/R2 em tempo real e, se não houver nada, cai no adapter Jira-direto.
+ * Compartilhado pela tela e pela exportação (PDF), para os números serem os mesmos nos dois.
+ */
+export async function loadDashboardData(squad: SquadConfig, options: DashboardDataOptions = {}): Promise<DashboardData> {
+  const issueTypeFilter = options.issueTypes && options.issueTypes.length > 0 ? options.issueTypes : DEFAULT_ISSUE_TYPES;
+  const requestedSprintIds = options.sprintIds && options.sprintIds.length > 0 ? options.sprintIds : undefined;
+  const requestedMonths = options.months && options.months.length > 0 ? options.months : undefined;
+  const slug = squad.slug;
+  const adapter = createDashboardAdapter(squad);
+
+  let data: DashboardData | undefined;
+  let periodIds: string[] = [];
+  let sprintIdsToFetch: number[] = [];
+  let monthsToFetch: string[] = [];
+
+  const rawMeta = await loadRawMeta(slug).catch(() => null);
+  if (squad.methodology === "sprint") {
+    if (requestedSprintIds) {
+      periodIds = requestedSprintIds.map((id) => `sprint-${id}`);
+      sprintIdsToFetch = requestedSprintIds;
+    } else {
+      // Sempre consultar o Jira para saber quais sprints estão concluídas (fonte da verdade)
+      const { getCacheManager } = await import("@/cache/cache-manager");
+      getCacheManager().del(`sprints:${squad.boardId}`);
+      const closedSprints = await fetchClosedSprints(squad.boardId, 3).catch(() => []);
+      if (closedSprints.length > 0) {
+        const latestIds = closedSprints.map((s) => s.id);
+        periodIds = latestIds.map((id) => `sprint-${id}`);
+        sprintIdsToFetch = latestIds;
+      } else if (rawMeta && rawMeta.sprintIds && rawMeta.sprintIds.length > 0) {
+        periodIds = rawMeta.sprintIds.map((id) => `sprint-${id}`);
+        sprintIdsToFetch = rawMeta.sprintIds;
+      } else if (rawMeta && rawMeta.monthKeys && rawMeta.monthKeys.length > 0) {
+        // Squad mudou de kanban para sprint mas ainda tem dados mensais no S3
+        periodIds = rawMeta.monthKeys.map((m) => `month-${m}`);
+        monthsToFetch = rawMeta.monthKeys;
+      }
+    }
+  } else if (requestedMonths) {
+    periodIds = requestedMonths.map((m) => `month-${m}`);
+    monthsToFetch = requestedMonths;
+  } else if (rawMeta) {
+    periodIds = rawMeta.monthKeys.map((m) => `month-${m}`);
+    monthsToFetch = rawMeta.monthKeys;
+  }
+
+  // Carregar períodos do S3; buscar do Jira (e salvar) os que estiverem faltando
+  if (periodIds.length > 0) {
+    const periodsRaw = await Promise.all(
+      periodIds.map(async (id, idx) => {
+        const existing = await loadRawPeriod(slug, id).catch(() => null);
+        if (existing) return existing;
+        if (sprintIdsToFetch[idx]) return fetchAndSaveSprintPeriod(squad, sprintIdsToFetch[idx]);
+        if (monthsToFetch[idx]) return fetchAndSaveMonthPeriod(squad, monthsToFetch[idx]);
+        return null;
+      })
+    );
+    const validPeriods = periodsRaw.filter(Boolean) as RawPeriodData[];
+    if (validPeriods.length > 0) {
+      const { wipRaw, r2Raw } = await ensureWipAndR2(squad);
+      data = buildDashboardFromRaw(squad, validPeriods, wipRaw, r2Raw, issueTypeFilter);
+    }
+  }
+
+  // Fallback final: nenhum dado disponível no S3, buscar tudo do Jira
+  if (!data) {
+    data = squad.methodology === "sprint"
+      ? await adapter(squad, requestedSprintIds, issueTypeFilter)
+      : await adapter(squad, requestedMonths, undefined, issueTypeFilter);
+  }
+  return data;
+}

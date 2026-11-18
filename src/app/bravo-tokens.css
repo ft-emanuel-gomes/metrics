@@ -1,0 +1,1483 @@
+/* Tokens do Bravo System beta.75 (MB One). GERADO de vendor/bravo/bravo.css (secoes 3/4 e 4/4). Nao editar a mao. */
+/* 3/4 tokens, temas e estilos dos componentes */
+:root {
+  
+  --color-brand-light-100: #ffffff;
+  --color-brand-light-90: #ffffffe6;
+  --color-brand-light-80: #ffffffcc;
+  --color-brand-light-60: #ffffff99;
+  --color-brand-light-30: #ffffff4d;
+  --color-brand-light-20: #ffffff33;
+  --color-brand-light-10: #ffffff1a;
+  --color-brand-light-5: #ffffff0d;
+  --color-brand-light-2: #ffffff05;
+  --color-brand-light-0: #ffffff00;
+
+  
+  --color-brand-dark-100: #000000;
+  --color-brand-dark-90: #000000e6;
+  --color-brand-dark-80: #000000cc;
+  --color-brand-dark-60: #00000099;
+  --color-brand-dark-30: #0000004d;
+  --color-brand-dark-20: #00000033;
+  --color-brand-dark-10: #0000001a;
+  --color-brand-dark-5: #0000000d;
+  --color-brand-dark-2: #00000005;
+  --color-brand-dark-0: #00000000;
+
+  
+  --color-brand-neutral-1: #242424;
+  --color-brand-neutral-2: #363636;
+  --color-brand-neutral-3: #494949;
+  --color-brand-neutral-4: #5c5c5c;
+  --color-brand-neutral-5: #6f6f6f;
+  --color-brand-neutral-6: #828282;
+  --color-brand-neutral-7: #949494;
+  --color-brand-neutral-8: #a7a7a7;
+  --color-brand-neutral-9: #bababa;
+  --color-brand-neutral-10: #cdcdcd;
+  --color-brand-neutral-11: #dfdfdf;
+  --color-brand-neutral-12: #f2f2f2;
+
+  
+  --color-brand-green-1: #001d08;
+  --color-brand-green-2: #002107;
+  --color-brand-green-3: #002c09;
+  --color-brand-green-4: #013f09;
+  --color-brand-green-5: #015a03;
+  --color-brand-green-6: #1b7d00;
+  --color-brand-green-7: #3ba306;
+  --color-brand-green-8: #70c34b;
+  --color-brand-green-9: #a3d988;
+  --color-brand-green-10: #c6e9b0;
+  --color-brand-green-11: #daf2c8;
+  --color-brand-green-12: #e4f6d3;
+
+  
+  --color-brand-yellow-1: #201300;
+  --color-brand-yellow-2: #241700;
+  --color-brand-yellow-3: #302000;
+  --color-brand-yellow-4: #432f00;
+  --color-brand-yellow-5: #5f4501;
+  --color-brand-yellow-6: #836103;
+  --color-brand-yellow-7: #ac8204;
+  --color-brand-yellow-8: #d4a305;
+  --color-brand-yellow-9: #f4bf1d;
+  --color-brand-yellow-10: #ffd772;
+  --color-brand-yellow-11: #ffe7a9;
+  --color-brand-yellow-12: #ffedbf;
+
+  
+  --color-brand-red-1: #2f0500;
+  --color-brand-red-2: #360600;
+  --color-brand-red-3: #460800;
+  --color-brand-red-4: #610c00;
+  --color-brand-red-5: #8a1100;
+  --color-brand-red-6: #c11401;
+  --color-brand-red-7: #f23a2b;
+  --color-brand-red-8: #ff7f70;
+  --color-brand-red-9: #ffb0a5;
+  --color-brand-red-10: #ffcec8;
+  --color-brand-red-11: #ffe1dd;
+  --color-brand-red-12: #ffe9e6;
+
+  
+  --color-brand-purple-1: #170640;
+  --color-brand-purple-2: #1a0847;
+  --color-brand-purple-3: #230f59;
+  --color-brand-purple-4: #321a78;
+  --color-brand-purple-5: #482aa4;
+  --color-brand-purple-6: #6540df;
+  --color-brand-purple-7: #846dfe;
+  --color-brand-purple-8: #a39cff;
+  --color-brand-purple-9: #c1bfff;
+  --color-brand-purple-10: #d8d7ff;
+  --color-brand-purple-11: #e6e6ff;
+  --color-brand-purple-12: #ecedff;
+
+  
+  --color-brand-blue-1: #001828;
+  --color-brand-blue-2: #001c2f;
+  --color-brand-blue-3: #00253e;
+  --color-brand-blue-4: #003558;
+  --color-brand-blue-5: #014c80;
+  --color-brand-blue-6: #006ab4;
+  --color-brand-blue-7: #038bf2;
+  --color-brand-blue-8: #68afff;
+  --color-brand-blue-9: #a1caff;
+  --color-brand-blue-10: #c6deff;
+  --color-brand-blue-11: #dceaff;
+  --color-brand-blue-12: #e5efff;
+
+  
+  --color-brand-orange-1: #2b1200;
+  --color-brand-orange-2: #311400;
+  --color-brand-orange-3: #411b00;
+  --color-brand-orange-4: #5c2600;
+  --color-brand-orange-5: #c85008;
+  --color-brand-orange-6: #e86a14;
+  --color-brand-orange-7: #f68c38;
+  --color-brand-orange-8: #ffa968;
+  --color-brand-orange-9: #ffbe8a;
+  --color-brand-orange-10: #ffc99e;
+  --color-brand-orange-11: #fed2a2;
+  --color-brand-orange-12: #ffead2;
+
+  
+  --color-other-santander: #ec0000;
+  --color-other-itau: #ff6200;
+  --color-other-btg: #0b2859;
+  
+  
+  --color-chart-renda-fixa: #6540df;
+  --color-chart-renda-fixa-subdued: #6540df33;
+  --color-chart-renda-fixa-inflacao: #482aa4;
+  --color-chart-renda-fixa-inflacao-subdued: #482aa433;
+  --color-chart-renda-fixa-pre-fixado: #846dfe;
+  --color-chart-renda-fixa-pre-fixado-subdued: #846dfe33;
+  --color-chart-renda-fixa-pos-fixado: #a39cff;
+  --color-chart-renda-fixa-pos-fixado-subdued: #a39cff33;
+  
+  --color-chart-renda-variavel: #f4bf1d;
+  --color-chart-renda-variavel-subdued: #f4bf1d33;
+  --color-chart-renda-variavel-acoes: #5f4501;
+  --color-chart-renda-variavel-acoes-subdued: #5f450133;
+  --color-chart-renda-variavel-futuros: #836103;
+  --color-chart-renda-variavel-futuros-subdued: #83610333;
+  --color-chart-renda-variavel-opcoes: #ac8204;
+  --color-chart-renda-variavel-opcoes-subdued: #ac820433;
+  --color-chart-renda-variavel-aluguel-de-ativos: #d4a305;
+  --color-chart-renda-variavel-aluguel-de-ativos-subdued: #d4a30533;
+  --color-chart-renda-variavel-etfs: #ffd772;
+  --color-chart-renda-variavel-etfs-subdued: #ffd77233;
+  --color-chart-renda-variavel-bdrs: #ffe7a9;
+  --color-chart-renda-variavel-bdrs-subdued: #ffe7a933;
+  --color-chart-renda-variavel-termo: #ffedbf;
+  --color-chart-renda-variavel-termo-subdued: #ffedbf33;
+  
+  --color-chart-fundos-de-investimentos: #1b7d00;
+  --color-chart-fundos-de-investimentos-subdued: #1b7d0033;
+  --color-chart-fundos-de-investimentos-renda-fixa-pos-fixado: #015a03;
+  --color-chart-fundos-de-investimentos-renda-fixa-pos-fixado-subdued: #015a0333;
+  --color-chart-fundos-de-investimentos-renda-fixa-pre-fixado: #3ba306;
+  --color-chart-fundos-de-investimentos-renda-fixa-pre-fixado-subdued: #3ba30633;
+  --color-chart-fundos-de-investimentos-renda-fixa-inflacao: #70c34b;
+  --color-chart-fundos-de-investimentos-renda-fixa-inflacao-subdued: #70c34b33;
+  --color-chart-fundos-de-investimentos-multimercado: #a3d988;
+  --color-chart-fundos-de-investimentos-multimercado-subdued: #a3d98833;
+  --color-chart-fundos-de-investimentos-alternativos: #c6e9b0;
+  --color-chart-fundos-de-investimentos-alternativos-subdued: #c6e9b033;
+  --color-chart-fundos-de-investimentos-internacionais: #daf2c8;
+  --color-chart-fundos-de-investimentos-internacionais-subdued: #daf2c833;
+  
+  --color-chart-fundos-imobiliarios: #1842d6;
+  --color-chart-fundos-imobiliarios-subdued: #1842d633;
+  --color-chart-fundos-imobiliarios-tijolo: #2c5cee;
+  --color-chart-fundos-imobiliarios-tijolo-subdued: #2c5cee33;
+  --color-chart-fundos-imobiliarios-papeis: #5880f6;
+  --color-chart-fundos-imobiliarios-papeis-subdued: #5880f633;
+  --color-chart-fundos-imobiliarios-hibridos: #88a6fc;
+  --color-chart-fundos-imobiliarios-hibridos-subdued: #88a6fc33;
+  --color-chart-fundos-imobiliarios-fofs: #b6c8ff;
+  --color-chart-fundos-imobiliarios-fofs-subdued: #b6c8ff33;
+  --color-chart-fundos-imobiliarios-fiagro: #d8e0ff;
+  --color-chart-fundos-imobiliarios-fiagro-subdued: #d8e0ff33;
+  
+  --color-chart-produtos-estruturados: #e86a14;
+  --color-chart-produtos-estruturados-subdued: #e86a1433;
+  --color-chart-produtos-estruturados-operacoes-estruturadas: #c85008;
+  --color-chart-produtos-estruturados-operacoes-estruturadas-subdued: #c8500833;
+  --color-chart-produtos-estruturados-coe: #f68c38;
+  --color-chart-produtos-estruturados-coe-subdued: #f68c3833;
+  
+  --color-chart-tesouro-direto: #006ab4;
+  --color-chart-tesouro-direto-subdued: #006ab433;
+  --color-chart-tesouro-direto-inflacao: #014c80;
+  --color-chart-tesouro-direto-inflacao-subdued: #014c8033;
+  --color-chart-tesouro-direto-pre-fixado: #038bf2;
+  --color-chart-tesouro-direto-pre-fixado-subdued: #038bf233;
+  --color-chart-tesouro-direto-selic: #68afff;
+  --color-chart-tesouro-direto-selic-subdued: #68afff33;
+  
+  --color-chart-titulos-publicos: #209e97;
+  --color-chart-titulos-publicos-subdued: #209e9733;
+  --color-chart-titulos-publicos-balcao: #48b9b0;
+  --color-chart-titulos-publicos-balcao-subdued: #48b9b033;
+  --color-chart-titulos-publicos-tesouro-direto: #72d0c8;
+  --color-chart-titulos-publicos-tesouro-direto-subdued: #72d0c833;
+  
+  --color-chart-previdencia-privada: #a82a9e;
+  --color-chart-previdencia-privada-subdued: #a82a9e33;
+  --color-chart-previdencia-privada-pgbl: #c052b4;
+  --color-chart-previdencia-privada-pgbl-subdued: #c052b433;
+  --color-chart-previdencia-privada-vgbl: #d67cc8;
+  --color-chart-previdencia-privada-vgbl-subdued: #d67cc833;
+  
+  --color-chart-operacoes-compromissadas: #ff7f70;
+  --color-chart-operacoes-compromissadas-subdued: #ff7f7033;
+  
+  --color-chart-proventos-futuros: #94a808;
+  --color-chart-proventos-futuros-subdued: #94a80833;
+  --color-chart-proventos-futuros-dividendos: #b6c81c;
+  --color-chart-proventos-futuros-dividendos-subdued: #b6c81c33;
+  --color-chart-proventos-futuros-rendimentos: #cada4c;
+  --color-chart-proventos-futuros-rendimentos-subdued: #cada4c33;
+  --color-chart-proventos-futuros-jscp: #deea86;
+  --color-chart-proventos-futuros-jscp-subdued: #deea8633;
+  --color-chart-proventos-futuros-outros: #eef6bc;
+  --color-chart-proventos-futuros-outros-subdued: #eef6bc33;
+  
+  --color-chart-garantias: #a63f52;
+  --color-chart-garantias-subdued: #a63f5233;
+  --color-chart-garantias-dinheiro: #c56b6f;
+  --color-chart-garantias-dinheiro-subdued: #c56b6f33;
+  --color-chart-garantias-acoes: #df948e;
+  --color-chart-garantias-acoes-subdued: #df948e33;
+  --color-chart-garantias-titulos-publicos: #f3b6aa;
+  --color-chart-garantias-titulos-publicos-subdued: #f3b6aa33;
+  --color-chart-garantias-titulos-privados: #ffcfc1;
+  --color-chart-garantias-titulos-privados-subdued: #ffcfc133;
+  
+  --color-chart-outros: #949494;
+  --color-chart-outros-subdued: #94949433;
+  
+  --color-chart-saldo-em-conta: #242424;
+  --color-chart-saldo-em-conta-subdued: #24242433;
+
+  
+  --color-chart-generic-primary: #6540df;
+  --color-chart-generic-primary-subdued: #6540df33;
+  --color-chart-generic-primary-faded: #6540df33;
+  --color-chart-generic-positive: #1b7d00;
+  --color-chart-generic-positive-subdued: #1b7d0033;
+  --color-chart-generic-positive-faded: #1b7d0033;
+  --color-chart-generic-neutral: #6f6f6f;
+  --color-chart-generic-neutral-subdued: #6f6f6f33;
+  --color-chart-generic-neutral-faded: #6f6f6f33;
+}
+:root {
+  
+  --color-page-surface: var(--color-brand-neutral-12);
+  --color-page-backdrop: var(--color-brand-dark-30);
+  --color-page-skeleton: var(--color-brand-dark-10);
+  --color-page-surface-highlight: var(--color-brand-light-100);
+
+  
+  --color-content-title: var(--color-brand-neutral-1);
+  --color-content-body: var(--color-brand-neutral-2);
+  --color-content-caption: var(--color-brand-neutral-5);
+  --color-content-subdued: var(--color-brand-neutral-6);
+  
+  --color-content-description: var(--color-brand-neutral-8);
+  --color-content-highlight: var(--color-brand-dark-100);
+  --color-content-primary: var(--color-brand-neutral-1);
+  --color-content-accent: var(--color-brand-purple-6);
+  --color-content-positive: var(--color-brand-green-6);
+  --color-content-negative: var(--color-brand-red-6);
+  --color-content-alert: var(--color-brand-yellow-6);
+  --color-content-informative: var(--color-brand-blue-6);
+  --color-content-disabled: var(--color-brand-neutral-10);
+  --color-content-inverted-neutral: var(--color-brand-light-100);
+  --color-content-inverted-accent: var(--color-brand-purple-8);
+
+  
+
+  
+  --color-container-border-neutral: var(--color-brand-neutral-11);
+  --color-container-border-positive: var(--color-brand-green-6);
+  --color-container-border-negative: var(--color-brand-red-6);
+  --color-container-border-alert: var(--color-brand-yellow-9);
+  --color-container-border-informative: var(--color-brand-blue-6);
+  --color-container-border-primary: var(--color-brand-neutral-1);
+  --color-container-border-accent: var(--color-brand-purple-7);
+  --color-container-border-neutral-inverted: var(--color-brand-light-20);
+
+  
+  --color-container-border-subtle: var(--color-brand-dark-10);
+  --color-container-border-glass: var(--color-brand-light-100);
+
+  
+  --color-container-card-default-enabled: var(--color-brand-light-60);
+  --color-container-card-default-pressed: var(--color-brand-light-80);
+  --color-container-card-emphasis-enabled: var(--color-brand-light-100);
+  --color-container-card-emphasis-pressed: var(--color-brand-neutral-12);
+
+  
+  --color-container-divider-section: var(--color-brand-neutral-11);
+  --color-container-divider-card-default: var(--color-brand-neutral-11);
+  --color-container-divider-card-emphasis: var(--color-brand-light-20);
+
+  
+  --color-container-dialog-surface: var(--color-brand-light-100);
+
+  
+  --color-container-tooltip-surface: var(--color-brand-neutral-2);
+
+  
+  --color-container-surface-inverted: var(--color-brand-dark-100);
+  --color-container-surface-subtle: var(--color-brand-dark-5);
+
+  
+  --color-container-surface-glass-subtle: var(--color-brand-light-30);
+  --color-container-surface-glass-default: var(--color-brand-light-60);
+  --color-container-surface-glass-strong: var(--color-brand-light-80);
+
+  
+
+  
+  --color-feedback-neutral-default-surface-enabled: var(--color-brand-neutral-11);
+  --color-feedback-neutral-default-surface-pressed: var(--color-brand-neutral-10);
+  --color-feedback-neutral-default-label-enabled: var(--color-brand-neutral-3);
+  --color-feedback-neutral-default-label-pressed: var(--color-brand-neutral-2);
+  --color-feedback-neutral-emphasis-surface-enabled: var(--color-brand-neutral-2);
+  --color-feedback-neutral-emphasis-surface-pressed: var(--color-brand-neutral-1);
+  --color-feedback-neutral-emphasis-label-enabled: var(--color-brand-light-100);
+  --color-feedback-neutral-emphasis-label-pressed: var(--color-brand-light-100);
+
+  
+  --color-feedback-positive-default-surface-enabled: var(--color-brand-green-12);
+  --color-feedback-positive-default-surface-pressed: var(--color-brand-green-11);
+  --color-feedback-positive-default-label-enabled: var(--color-brand-green-4);
+  --color-feedback-positive-default-label-pressed: var(--color-brand-green-3);
+  --color-feedback-positive-emphasis-surface-enabled: var(--color-brand-green-6);
+  --color-feedback-positive-emphasis-surface-pressed: var(--color-brand-green-5);
+  --color-feedback-positive-emphasis-label-enabled: var(--color-brand-light-100);
+  --color-feedback-positive-emphasis-label-pressed: var(--color-brand-light-100);
+
+  
+  --color-feedback-alert-default-surface-enabled: var(--color-brand-yellow-12);
+  --color-feedback-alert-default-surface-pressed: var(--color-brand-yellow-11);
+  --color-feedback-alert-default-label-enabled: var(--color-brand-yellow-4);
+  --color-feedback-alert-default-label-pressed: var(--color-brand-yellow-3);
+  --color-feedback-alert-emphasis-surface-enabled: var(--color-brand-yellow-9);
+  
+  --color-feedback-alert-emphasis-surface-pressed: var(--color-brand-yellow-8);
+  --color-feedback-alert-emphasis-label-enabled: var(--color-brand-dark-100);
+  --color-feedback-alert-emphasis-label-pressed: var(--color-brand-dark-100);
+
+  
+  --color-feedback-negative-default-surface-enabled: var(--color-brand-red-12);
+  --color-feedback-negative-default-surface-pressed: var(--color-brand-red-11);
+  --color-feedback-negative-default-label-enabled: var(--color-brand-red-4);
+  --color-feedback-negative-default-label-pressed: var(--color-brand-red-3);
+  --color-feedback-negative-emphasis-surface-enabled: var(--color-brand-red-6);
+  --color-feedback-negative-emphasis-surface-pressed: var(--color-brand-red-5);
+  --color-feedback-negative-emphasis-label-enabled: var(--color-brand-light-100);
+  --color-feedback-negative-emphasis-label-pressed: var(--color-brand-light-100);
+
+  
+  --color-feedback-informative-default-surface-enabled: var(--color-brand-blue-12);
+  --color-feedback-informative-default-surface-pressed: var(--color-brand-blue-11);
+  --color-feedback-informative-default-label-enabled: var(--color-brand-blue-4);
+  --color-feedback-informative-default-label-pressed: var(--color-brand-blue-3);
+  --color-feedback-informative-emphasis-surface-enabled: var(--color-brand-blue-6);
+  --color-feedback-informative-emphasis-surface-pressed: var(--color-brand-blue-5);
+  --color-feedback-informative-emphasis-label-enabled: var(--color-brand-light-100);
+  --color-feedback-informative-emphasis-label-pressed: var(--color-brand-light-100);
+
+  
+  --color-feedback-info-default-surface-enabled: var(--color-brand-blue-10);
+  --color-feedback-info-default-surface-pressed: var(--color-brand-blue-9);
+  --color-feedback-info-default-label-enabled: var(--color-brand-dark-100);
+  --color-feedback-info-default-label-pressed: var(--color-brand-dark-100);
+  --color-feedback-info-emphasis-surface-enabled: var(--color-brand-blue-6);
+  --color-feedback-info-emphasis-surface-pressed: var(--color-brand-blue-7);
+  --color-feedback-info-emphasis-label-enabled: var(--color-brand-light-100);
+  --color-feedback-info-emphasis-label-pressed: var(--color-brand-light-100);
+
+  
+  --color-feedback-trending-default-surface-enabled: var(--color-brand-orange-12);
+  --color-feedback-trending-default-surface-pressed: var(--color-brand-orange-11);
+  --color-feedback-trending-default-label-enabled: var(--color-brand-dark-100);
+  --color-feedback-trending-default-label-pressed: var(--color-brand-dark-100);
+  --color-feedback-trending-emphasis-surface-enabled: var(--color-brand-orange-6);
+  --color-feedback-trending-emphasis-surface-pressed: var(--color-brand-orange-5);
+  --color-feedback-trending-emphasis-label-enabled: var(--color-brand-light-100);
+  --color-feedback-trending-emphasis-label-pressed: var(--color-brand-light-100);
+
+  
+  --color-feedback-primary-default-surface-enabled: var(--color-brand-purple-12);
+  --color-feedback-primary-default-surface-pressed: var(--color-brand-purple-11);
+  --color-feedback-primary-default-label-enabled: var(--color-brand-purple-4);
+  --color-feedback-primary-default-label-pressed: var(--color-brand-purple-3);
+  --color-feedback-primary-emphasis-surface-enabled: var(--color-brand-purple-6);
+  --color-feedback-primary-emphasis-surface-pressed: var(--color-brand-purple-5);
+  --color-feedback-primary-emphasis-label-enabled: var(--color-brand-light-100);
+  --color-feedback-primary-emphasis-label-pressed: var(--color-brand-light-100);
+
+  
+
+  
+  --color-action-primary-neutral-surface-enabled: var(--color-brand-neutral-1);
+  --color-action-primary-neutral-surface-hover: var(--color-brand-neutral-2);
+  --color-action-primary-neutral-surface-pressed: var(--color-brand-neutral-3);
+  --color-action-primary-neutral-surface-disabled: var(--color-brand-neutral-11);
+  --color-action-primary-neutral-content-enabled: var(--color-brand-light-100);
+  --color-action-primary-neutral-content-hover: var(--color-brand-light-100);
+  --color-action-primary-neutral-content-pressed: var(--color-brand-light-100);
+  --color-action-primary-neutral-content-disabled: var(--color-brand-neutral-8);
+
+  
+  --color-action-primary-negative-surface-enabled: var(--color-brand-red-6);
+  --color-action-primary-negative-surface-hover: var(--color-brand-red-7);
+  --color-action-primary-negative-surface-pressed: var(--color-brand-red-5);
+  --color-action-primary-negative-surface-disabled: var(--color-brand-neutral-11);
+  --color-action-primary-negative-content-enabled: var(--color-brand-light-100);
+  --color-action-primary-negative-content-hover: var(--color-brand-light-100);
+  --color-action-primary-negative-content-pressed: var(--color-brand-light-100);
+  --color-action-primary-negative-content-disabled: var(--color-brand-neutral-8);
+
+  
+  --color-action-primary-accent-surface-enabled: var(--color-brand-purple-6);
+  --color-action-primary-accent-surface-hover: var(--color-brand-purple-7);
+  --color-action-primary-accent-surface-pressed: var(--color-brand-purple-5);
+  --color-action-primary-accent-surface-disabled: var(--color-brand-neutral-11);
+  --color-action-primary-accent-content-enabled: var(--color-brand-light-100);
+  --color-action-primary-accent-content-hover: var(--color-brand-light-100);
+  --color-action-primary-accent-content-pressed: var(--color-brand-light-100);
+  --color-action-primary-accent-content-disabled: var(--color-brand-neutral-8);
+
+  
+
+  
+  --color-action-secondary-default-surface-enabled: var(--color-brand-light-100);
+  --color-action-secondary-default-surface-hover: var(--color-brand-light-100);
+  --color-action-secondary-default-surface-pressed: var(--color-brand-neutral-11);
+  --color-action-secondary-default-surface-disabled: var(--color-brand-neutral-12);
+  --color-action-secondary-default-content-enabled: var(--color-brand-neutral-2);
+  --color-action-secondary-default-content-hover: var(--color-brand-neutral-1);
+  --color-action-secondary-default-content-pressed: var(--color-brand-neutral-1);
+  --color-action-secondary-default-content-disabled: var(--color-brand-neutral-8);
+  --color-action-secondary-default-border-enabled: var(--color-brand-neutral-9);
+  --color-action-secondary-default-border-hover: var(--color-brand-neutral-5);
+  --color-action-secondary-default-border-pressed: var(--color-brand-neutral-2);
+  --color-action-secondary-default-border-disabled: var(--color-brand-neutral-10);
+
+  
+  --color-action-secondary-container-surface-enabled: var(--color-brand-dark-5);
+  --color-action-secondary-container-surface-hover: var(--color-brand-dark-5);
+  --color-action-secondary-container-surface-pressed: var(--color-brand-dark-10);
+  --color-action-secondary-container-surface-disabled: var(--color-brand-neutral-10);
+  --color-action-secondary-container-content-enabled: var(--color-brand-neutral-4);
+  --color-action-secondary-container-content-hover: var(--color-brand-neutral-3);
+  --color-action-secondary-container-content-pressed: var(--color-brand-neutral-2);
+  --color-action-secondary-container-content-disabled: var(--color-brand-neutral-8);
+  --color-action-secondary-container-border-enabled: var(--color-brand-neutral-11);
+  --color-action-secondary-container-border-hover: var(--color-brand-neutral-9);
+  --color-action-secondary-container-border-pressed: var(--color-brand-neutral-8);
+  --color-action-secondary-container-border-disabled: var(--color-brand-neutral-11);
+
+  
+  --color-action-secondary-negative-surface-enabled: transparent;
+  --color-action-secondary-negative-surface-hover: var(--color-brand-red-12);
+  --color-action-secondary-negative-surface-pressed: var(--color-brand-red-11);
+  --color-action-secondary-negative-surface-disabled: transparent;
+  --color-action-secondary-negative-content-enabled: var(--color-brand-red-6);
+  --color-action-secondary-negative-content-hover: var(--color-brand-red-6);
+  --color-action-secondary-negative-content-pressed: var(--color-brand-red-5);
+  --color-action-secondary-negative-content-disabled: var(--color-brand-neutral-8);
+  --color-action-secondary-negative-border-enabled: var(--color-brand-red-8);
+  --color-action-secondary-negative-border-hover: var(--color-brand-red-7);
+  --color-action-secondary-negative-border-pressed: var(--color-brand-red-6);
+  --color-action-secondary-negative-border-disabled: var(--color-brand-neutral-10);
+
+  
+  --color-action-secondary-primary-surface-enabled: transparent;
+  --color-action-secondary-primary-surface-hover: var(--color-brand-purple-12);
+  --color-action-secondary-primary-surface-pressed: var(--color-brand-purple-11);
+  --color-action-secondary-primary-surface-disabled: transparent;
+  --color-action-secondary-primary-content-enabled: var(--color-brand-purple-6);
+  --color-action-secondary-primary-content-hover: var(--color-brand-purple-6);
+  --color-action-secondary-primary-content-pressed: var(--color-brand-purple-5);
+  --color-action-secondary-primary-content-disabled: var(--color-brand-neutral-8);
+  --color-action-secondary-primary-border-enabled: var(--color-brand-purple-8);
+  --color-action-secondary-primary-border-hover: var(--color-brand-purple-7);
+  --color-action-secondary-primary-border-pressed: var(--color-brand-purple-6);
+  --color-action-secondary-primary-border-disabled: var(--color-brand-neutral-10);
+
+  
+  --color-action-inverse-neutral-content-enabled: var(--color-brand-light-100);
+  --color-action-inverse-neutral-content-hover: var(--color-brand-light-100);
+  --color-action-inverse-neutral-content-pressed: var(--color-brand-light-100);
+  --color-action-inverse-neutral-content-disabled: var(--color-brand-light-30);
+  --color-action-inverse-neutral-surface-enabled: var(--color-brand-light-0);
+  --color-action-inverse-neutral-surface-hover: var(--color-brand-light-10);
+  --color-action-inverse-neutral-surface-pressed: var(--color-brand-light-20);
+  --color-action-inverse-neutral-surface-disabled: var(--color-brand-light-0);
+
+  
+  --color-action-link-content-enabled: var(--color-brand-neutral-5);
+  --color-action-link-content-hover: var(--color-brand-neutral-3);
+  --color-action-link-content-pressed: var(--color-brand-neutral-1);
+  --color-action-link-content-disabled: var(--color-brand-neutral-7);
+
+  
+
+  
+  --color-action-text-neutral-content-enabled: var(--color-brand-neutral-5);
+  --color-action-text-neutral-content-hover: var(--color-brand-neutral-4);
+  --color-action-text-neutral-content-pressed: var(--color-brand-neutral-1);
+  --color-action-text-neutral-content-disabled: var(--color-brand-neutral-10);
+  --color-action-text-neutral-surface-pressed: var(--color-brand-dark-10);
+
+  
+  --color-action-text-primary-content-enabled: var(--color-brand-purple-6);
+  --color-action-text-primary-content-hover: var(--color-brand-purple-5);
+  --color-action-text-primary-content-pressed: var(--color-brand-purple-4);
+  --color-action-text-primary-content-disabled: var(--color-brand-neutral-10);
+  --color-action-text-primary-surface-pressed: var(--color-brand-purple-12);
+
+  
+  --color-action-text-negative-content-enabled: var(--color-brand-red-6);
+  --color-action-text-negative-content-hover: var(--color-brand-red-7);
+  --color-action-text-negative-content-pressed: var(--color-brand-red-5);
+  --color-action-text-negative-content-disabled: var(--color-brand-neutral-11);
+  --color-action-text-negative-surface-pressed: var(--color-brand-red-12);
+
+  
+
+  
+  --color-action-on-image-default-surface-enabled: var(--color-brand-light-80);
+  --color-action-on-image-default-surface-hover: var(--color-brand-light-90);
+  --color-action-on-image-default-surface-pressed: var(--color-brand-light-100);
+  --color-action-on-image-default-surface-disabled: var(--color-brand-light-30);
+  --color-action-on-image-default-content-enabled: var(--color-brand-neutral-1);
+  --color-action-on-image-default-content-hover: var(--color-brand-neutral-1);
+  --color-action-on-image-default-content-pressed: var(--color-brand-neutral-1);
+  --color-action-on-image-default-content-disabled: var(--color-brand-neutral-7);
+
+  
+
+  
+  --color-input-field-surface-enabled: var(--color-brand-light-100);
+  --color-input-field-surface-hover: var(--color-brand-neutral-12);
+  --color-input-field-surface-active: var(--color-brand-light-100);
+  --color-input-field-surface-disabled: var(--color-brand-neutral-12);
+
+  
+  --color-input-field-border-enabled: var(--color-brand-neutral-11);
+  --color-input-field-border-hover: var(--color-brand-neutral-9);
+  --color-input-field-border-active: var(--color-brand-neutral-1);
+  --color-input-field-border-negative: var(--color-brand-red-6);
+  --color-input-field-border-disabled: var(--color-brand-neutral-11);
+
+  
+  --color-input-field-label-enabled: var(--color-brand-neutral-4);
+  --color-input-field-label-active: var(--color-brand-neutral-1);
+  --color-input-field-label-disabled: var(--color-brand-neutral-10);
+
+  
+  --color-input-field-icon-enabled: var(--color-brand-neutral-5);
+  --color-input-field-icon-disabled: var(--color-brand-neutral-9);
+
+  
+  --color-input-control-surface-enabled: var(--color-brand-light-100);
+  --color-input-control-surface-hover: var(--color-brand-light-100);
+  --color-input-control-surface-selected: var(--color-brand-neutral-1);
+  --color-input-control-surface-disabled: var(--color-brand-neutral-11);
+
+  
+  --color-input-control-border-enabled: var(--color-brand-neutral-7);
+  --color-input-control-border-hover: var(--color-brand-neutral-4);
+  --color-input-control-border-selected: var(--color-brand-neutral-1);
+  --color-input-control-border-disabled: var(--color-brand-neutral-9);
+
+  
+  --color-input-control-icon-enabled: var(--color-brand-neutral-7);
+  --color-input-control-icon-selected: var(--color-brand-light-100);
+  --color-input-control-icon-disabled: var(--color-brand-neutral-9);
+
+  
+
+  
+  --color-navigation-surface-default: var(--color-brand-light-100);
+  --color-navigation-border-default: var(--color-brand-neutral-11);
+
+  
+  --color-navigation-item-surface-selected: var(--color-brand-neutral-1);
+  --color-navigation-item-content-enabled: var(--color-brand-neutral-5);
+  --color-navigation-item-content-hover: var(--color-brand-neutral-3);
+  --color-navigation-item-content-selected: var(--color-brand-neutral-1);
+  --color-navigation-item-border-enabled: transparent;
+  --color-navigation-item-border-hover: var(--color-brand-neutral-8);
+  --color-navigation-item-border-selected: var(--color-brand-neutral-1);
+
+  
+  --color-navigation-progress-surface: var(--color-brand-neutral-11);
+  --color-navigation-progress-bar: var(--color-brand-neutral-1);
+
+  
+  --color-navigation-shadow: var(--color-brand-dark-5);
+  
+  
+  --color-chart-investment-renda-fixa-default: var(--color-chart-renda-fixa);
+  --color-chart-investment-renda-fixa-subdued: var(--color-chart-renda-fixa-subdued);
+  --color-chart-investment-renda-fixa-inflacao-default: var(--color-chart-renda-fixa-inflacao);
+  --color-chart-investment-renda-fixa-inflacao-subdued: var(
+    --color-chart-renda-fixa-inflacao-subdued
+  );
+  --color-chart-investment-renda-fixa-pre-fixado-default: var(--color-chart-renda-fixa-pre-fixado);
+  --color-chart-investment-renda-fixa-pre-fixado-subdued: var(
+    --color-chart-renda-fixa-pre-fixado-subdued
+  );
+  --color-chart-investment-renda-fixa-pos-fixado-default: var(--color-chart-renda-fixa-pos-fixado);
+  --color-chart-investment-renda-fixa-pos-fixado-subdued: var(
+    --color-chart-renda-fixa-pos-fixado-subdued
+  );
+  
+  --color-chart-investment-renda-variavel-default: var(--color-chart-renda-variavel);
+  --color-chart-investment-renda-variavel-subdued: var(--color-chart-renda-variavel-subdued);
+  --color-chart-investment-renda-variavel-acoes-default: var(--color-chart-renda-variavel-acoes);
+  --color-chart-investment-renda-variavel-acoes-subdued: var(
+    --color-chart-renda-variavel-acoes-subdued
+  );
+  --color-chart-investment-renda-variavel-futuros-default: var(
+    --color-chart-renda-variavel-futuros
+  );
+  --color-chart-investment-renda-variavel-futuros-subdued: var(
+    --color-chart-renda-variavel-futuros-subdued
+  );
+  --color-chart-investment-renda-variavel-opcoes-default: var(--color-chart-renda-variavel-opcoes);
+  --color-chart-investment-renda-variavel-opcoes-subdued: var(
+    --color-chart-renda-variavel-opcoes-subdued
+  );
+  --color-chart-investment-renda-variavel-aluguel-de-ativos-default: var(
+    --color-chart-renda-variavel-aluguel-de-ativos
+  );
+  --color-chart-investment-renda-variavel-aluguel-de-ativos-subdued: var(
+    --color-chart-renda-variavel-aluguel-de-ativos-subdued
+  );
+  --color-chart-investment-renda-variavel-etfs-default: var(--color-chart-renda-variavel-etfs);
+  --color-chart-investment-renda-variavel-etfs-subdued: var(
+    --color-chart-renda-variavel-etfs-subdued
+  );
+  --color-chart-investment-renda-variavel-bdrs-default: var(--color-chart-renda-variavel-bdrs);
+  --color-chart-investment-renda-variavel-bdrs-subdued: var(
+    --color-chart-renda-variavel-bdrs-subdued
+  );
+  --color-chart-investment-renda-variavel-termo-default: var(--color-chart-renda-variavel-termo);
+  --color-chart-investment-renda-variavel-termo-subdued: var(
+    --color-chart-renda-variavel-termo-subdued
+  );
+  
+  --color-chart-investment-fundos-de-investimentos-default: var(
+    --color-chart-fundos-de-investimentos
+  );
+  --color-chart-investment-fundos-de-investimentos-subdued: var(
+    --color-chart-fundos-de-investimentos-subdued
+  );
+  --color-chart-investment-fundos-de-investimentos-renda-fixa-pos-fixado-default: var(
+    --color-chart-fundos-de-investimentos-renda-fixa-pos-fixado
+  );
+  --color-chart-investment-fundos-de-investimentos-renda-fixa-pos-fixado-subdued: var(
+    --color-chart-fundos-de-investimentos-renda-fixa-pos-fixado-subdued
+  );
+  --color-chart-investment-fundos-de-investimentos-renda-fixa-pre-fixado-default: var(
+    --color-chart-fundos-de-investimentos-renda-fixa-pre-fixado
+  );
+  --color-chart-investment-fundos-de-investimentos-renda-fixa-pre-fixado-subdued: var(
+    --color-chart-fundos-de-investimentos-renda-fixa-pre-fixado-subdued
+  );
+  --color-chart-investment-fundos-de-investimentos-renda-fixa-inflacao-default: var(
+    --color-chart-fundos-de-investimentos-renda-fixa-inflacao
+  );
+  --color-chart-investment-fundos-de-investimentos-renda-fixa-inflacao-subdued: var(
+    --color-chart-fundos-de-investimentos-renda-fixa-inflacao-subdued
+  );
+  --color-chart-investment-fundos-de-investimentos-multimercado-default: var(
+    --color-chart-fundos-de-investimentos-multimercado
+  );
+  --color-chart-investment-fundos-de-investimentos-multimercado-subdued: var(
+    --color-chart-fundos-de-investimentos-multimercado-subdued
+  );
+  --color-chart-investment-fundos-de-investimentos-alternativos-default: var(
+    --color-chart-fundos-de-investimentos-alternativos
+  );
+  --color-chart-investment-fundos-de-investimentos-alternativos-subdued: var(
+    --color-chart-fundos-de-investimentos-alternativos-subdued
+  );
+  --color-chart-investment-fundos-de-investimentos-internacionais-default: var(
+    --color-chart-fundos-de-investimentos-internacionais
+  );
+  --color-chart-investment-fundos-de-investimentos-internacionais-subdued: var(
+    --color-chart-fundos-de-investimentos-internacionais-subdued
+  );
+  
+  --color-chart-investment-fundos-imobiliarios-default: var(--color-chart-fundos-imobiliarios);
+  --color-chart-investment-fundos-imobiliarios-subdued: var(
+    --color-chart-fundos-imobiliarios-subdued
+  );
+  --color-chart-investment-fundos-imobiliarios-tijolo-default: var(
+    --color-chart-fundos-imobiliarios-tijolo
+  );
+  --color-chart-investment-fundos-imobiliarios-tijolo-subdued: var(
+    --color-chart-fundos-imobiliarios-tijolo-subdued
+  );
+  --color-chart-investment-fundos-imobiliarios-papeis-default: var(
+    --color-chart-fundos-imobiliarios-papeis
+  );
+  --color-chart-investment-fundos-imobiliarios-papeis-subdued: var(
+    --color-chart-fundos-imobiliarios-papeis-subdued
+  );
+  --color-chart-investment-fundos-imobiliarios-hibridos-default: var(
+    --color-chart-fundos-imobiliarios-hibridos
+  );
+  --color-chart-investment-fundos-imobiliarios-hibridos-subdued: var(
+    --color-chart-fundos-imobiliarios-hibridos-subdued
+  );
+  --color-chart-investment-fundos-imobiliarios-fofs-default: var(
+    --color-chart-fundos-imobiliarios-fofs
+  );
+  --color-chart-investment-fundos-imobiliarios-fofs-subdued: var(
+    --color-chart-fundos-imobiliarios-fofs-subdued
+  );
+  --color-chart-investment-fundos-imobiliarios-fiagro-default: var(
+    --color-chart-fundos-imobiliarios-fiagro
+  );
+  --color-chart-investment-fundos-imobiliarios-fiagro-subdued: var(
+    --color-chart-fundos-imobiliarios-fiagro-subdued
+  );
+  
+  --color-chart-investment-produtos-estruturados-default: var(--color-chart-produtos-estruturados);
+  --color-chart-investment-produtos-estruturados-subdued: var(
+    --color-chart-produtos-estruturados-subdued
+  );
+  --color-chart-investment-produtos-estruturados-operacoes-estruturadas-default: var(
+    --color-chart-produtos-estruturados-operacoes-estruturadas
+  );
+  --color-chart-investment-produtos-estruturados-operacoes-estruturadas-subdued: var(
+    --color-chart-produtos-estruturados-operacoes-estruturadas-subdued
+  );
+  --color-chart-investment-produtos-estruturados-coe-default: var(
+    --color-chart-produtos-estruturados-coe
+  );
+  --color-chart-investment-produtos-estruturados-coe-subdued: var(
+    --color-chart-produtos-estruturados-coe-subdued
+  );
+  
+  --color-chart-investment-tesouro-direto-default: var(--color-chart-tesouro-direto);
+  --color-chart-investment-tesouro-direto-subdued: var(--color-chart-tesouro-direto-subdued);
+  --color-chart-investment-tesouro-direto-inflacao-default: var(
+    --color-chart-tesouro-direto-inflacao
+  );
+  --color-chart-investment-tesouro-direto-inflacao-subdued: var(
+    --color-chart-tesouro-direto-inflacao-subdued
+  );
+  --color-chart-investment-tesouro-direto-pre-fixado-default: var(
+    --color-chart-tesouro-direto-pre-fixado
+  );
+  --color-chart-investment-tesouro-direto-pre-fixado-subdued: var(
+    --color-chart-tesouro-direto-pre-fixado-subdued
+  );
+  --color-chart-investment-tesouro-direto-selic-default: var(--color-chart-tesouro-direto-selic);
+  --color-chart-investment-tesouro-direto-selic-subdued: var(
+    --color-chart-tesouro-direto-selic-subdued
+  );
+  
+  --color-chart-investment-titulos-publicos-default: var(--color-chart-titulos-publicos);
+  --color-chart-investment-titulos-publicos-subdued: var(--color-chart-titulos-publicos-subdued);
+  --color-chart-investment-titulos-publicos-balcao-default: var(
+    --color-chart-titulos-publicos-balcao
+  );
+  --color-chart-investment-titulos-publicos-balcao-subdued: var(
+    --color-chart-titulos-publicos-balcao-subdued
+  );
+  --color-chart-investment-titulos-publicos-tesouro-direto-default: var(
+    --color-chart-titulos-publicos-tesouro-direto
+  );
+  --color-chart-investment-titulos-publicos-tesouro-direto-subdued: var(
+    --color-chart-titulos-publicos-tesouro-direto-subdued
+  );
+  
+  --color-chart-investment-previdencia-privada-default: var(--color-chart-previdencia-privada);
+  --color-chart-investment-previdencia-privada-subdued: var(
+    --color-chart-previdencia-privada-subdued
+  );
+  --color-chart-investment-previdencia-privada-pgbl-default: var(
+    --color-chart-previdencia-privada-pgbl
+  );
+  --color-chart-investment-previdencia-privada-pgbl-subdued: var(
+    --color-chart-previdencia-privada-pgbl-subdued
+  );
+  --color-chart-investment-previdencia-privada-vgbl-default: var(
+    --color-chart-previdencia-privada-vgbl
+  );
+  --color-chart-investment-previdencia-privada-vgbl-subdued: var(
+    --color-chart-previdencia-privada-vgbl-subdued
+  );
+  
+  --color-chart-investment-operacoes-compromissadas-default: var(
+    --color-chart-operacoes-compromissadas
+  );
+  --color-chart-investment-operacoes-compromissadas-subdued: var(
+    --color-chart-operacoes-compromissadas-subdued
+  );
+  
+  --color-chart-investment-proventos-futuros-default: var(--color-chart-proventos-futuros);
+  --color-chart-investment-proventos-futuros-subdued: var(--color-chart-proventos-futuros-subdued);
+  --color-chart-investment-proventos-futuros-dividendos-default: var(
+    --color-chart-proventos-futuros-dividendos
+  );
+  --color-chart-investment-proventos-futuros-dividendos-subdued: var(
+    --color-chart-proventos-futuros-dividendos-subdued
+  );
+  --color-chart-investment-proventos-futuros-rendimentos-default: var(
+    --color-chart-proventos-futuros-rendimentos
+  );
+  --color-chart-investment-proventos-futuros-rendimentos-subdued: var(
+    --color-chart-proventos-futuros-rendimentos-subdued
+  );
+  --color-chart-investment-proventos-futuros-jscp-default: var(
+    --color-chart-proventos-futuros-jscp
+  );
+  --color-chart-investment-proventos-futuros-jscp-subdued: var(
+    --color-chart-proventos-futuros-jscp-subdued
+  );
+  --color-chart-investment-proventos-futuros-outros-default: var(
+    --color-chart-proventos-futuros-outros
+  );
+  --color-chart-investment-proventos-futuros-outros-subdued: var(
+    --color-chart-proventos-futuros-outros-subdued
+  );
+  
+  --color-chart-investment-garantias-default: var(--color-chart-garantias);
+  --color-chart-investment-garantias-subdued: var(--color-chart-garantias-subdued);
+  --color-chart-investment-garantias-dinheiro-default: var(--color-chart-garantias-dinheiro);
+  --color-chart-investment-garantias-dinheiro-subdued: var(
+    --color-chart-garantias-dinheiro-subdued
+  );
+  --color-chart-investment-garantias-acoes-default: var(--color-chart-garantias-acoes);
+  --color-chart-investment-garantias-acoes-subdued: var(--color-chart-garantias-acoes-subdued);
+  --color-chart-investment-garantias-titulos-publicos-default: var(
+    --color-chart-garantias-titulos-publicos
+  );
+  --color-chart-investment-garantias-titulos-publicos-subdued: var(
+    --color-chart-garantias-titulos-publicos-subdued
+  );
+  --color-chart-investment-garantias-titulos-privados-default: var(
+    --color-chart-garantias-titulos-privados
+  );
+  --color-chart-investment-garantias-titulos-privados-subdued: var(
+    --color-chart-garantias-titulos-privados-subdued
+  );
+  
+  --color-chart-investment-outros-default: var(--color-chart-outros);
+  --color-chart-investment-outros-subdued: var(--color-chart-outros-subdued);
+  
+  --color-chart-investment-saldo-em-conta-default: var(--color-chart-saldo-em-conta);
+  --color-chart-investment-saldo-em-conta-subdued: var(--color-chart-saldo-em-conta-subdued);
+  
+  --color-chart-generic-primary-default: var(--color-chart-generic-primary);
+  --color-chart-generic-primary-subdued: var(--color-chart-generic-primary-faded);
+  --color-chart-generic-positive-default: var(--color-chart-generic-positive);
+  --color-chart-generic-positive-subdued: var(--color-chart-generic-positive-faded);
+  --color-chart-generic-neutral-default: var(--color-chart-generic-neutral);
+  --color-chart-generic-neutral-subdued: var(--color-chart-generic-neutral-faded);
+}
+:root[data-mb-scheme="dark"] {
+  
+}
+:root {
+  
+  --color-primary: var(--color-brand-purple-6);
+  --color-primary-dark: var(--color-brand-purple-5);
+  --color-primary-accent: var(--color-brand-purple-6);
+  --color-primary-bg: var(--color-brand-purple-12);
+  --color-brand-purple: var(--color-brand-purple-7);
+  --color-alert-surface: var(--color-brand-purple-11);
+
+  --color-surface: var(--color-brand-light-100);
+  --color-background: var(--color-brand-neutral-12);
+  --color-background-alt: #fafafa;
+  --color-border: var(--color-brand-neutral-11);
+  --color-subtle-text: var(--color-brand-neutral-7);
+  --color-muted-text: var(--color-brand-neutral-4);
+  --color-primary-text: var(--color-brand-neutral-1);
+  --color-secondary-text: var(--color-brand-neutral-2);
+  --color-neutral-3: var(--color-brand-neutral-3);
+  --color-neutral-light: var(--color-brand-neutral-11);
+  --color-neutral-soft: var(--color-brand-neutral-12);
+
+  --color-success-dark: var(--color-brand-green-5);
+  --color-growth: var(--color-brand-green-7);
+  --color-success-bg: var(--color-brand-green-11);
+  --color-success-accent: var(--color-brand-green-8);
+  --color-warning: var(--color-brand-yellow-6);
+  --color-review: var(--color-brand-yellow-6);
+  --color-warning-bg: var(--color-brand-neutral-12);
+
+  --color-glass-card: var(--color-brand-light-30);
+  --color-glass-light: var(--color-brand-light-60);
+  --color-glass-strong: var(--color-brand-light-80);
+  --color-glass-alert: #6540df26;
+  --color-glass-white-8: #ffffff14;
+  --color-glass-white-12: #ffffff1f;
+  --color-glass-white-15: #ffffff26;
+  --color-glass-white-18: #ffffff2e;
+  --color-glass-white-20: var(--color-brand-light-20);
+  --color-glass-white-22: #ffffff38;
+  --color-glass-white-30: var(--color-brand-light-30);
+  --color-glass-white-35: #ffffff59;
+  --color-glass-white-45: #ffffff73;
+  --color-glass-white-55: #ffffff8c;
+  --color-glass-white-60: var(--color-brand-light-60);
+  --color-glass-white-70: #ffffffb2;
+}
+:root {
+  
+  --spacing-space-xxxs: 4px;
+  --spacing-space-xxs: 8px;
+  --spacing-space-xs: 12px;
+  --spacing-space-small: 16px;
+  --spacing-space-medium: 20px;
+  --spacing-space-large: 24px;
+  --spacing-space-xl: 28px;
+  --spacing-space-xxl: 32px;
+  --spacing-space-xxxl: 40px;
+
+  
+  --size-generic-nano: 4px;
+  --size-generic-micro: 8px;
+  --size-generic-mini: 16px;
+  --size-generic-xxxs: 20px;
+  --size-generic-xxs: 24px;
+  --size-generic-xs: 32px;
+  --size-generic-small: 40px;
+  --size-generic-medium: 48px;
+  --size-generic-large: 56px;
+  --size-generic-xl: 64px;
+  --size-generic-xxl: 72px;
+  --size-generic-xxxl: 80px;
+  --size-generic-giant: 96px;
+
+  
+  --spacing-xs: var(--spacing-space-xxxs);
+  --spacing-sm: var(--spacing-space-xxs);
+  --spacing-md: var(--spacing-space-xs);
+  --spacing-base: var(--spacing-space-small);
+  --spacing-lg: var(--spacing-space-large);
+  --spacing-xl: var(--spacing-space-xxl);
+  --spacing-2xl: var(--spacing-space-xxxl);
+}
+:root {
+  
+  --font-sans:
+    "Sora", "Graphie", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
+  --font-mono: "Consolas", "Courier New", monospace;
+
+  
+  --font-weight-text: 400;
+  --font-weight-headline: 450;
+
+  
+  --font-display-md-size: 2.5rem; 
+  --font-display-md-line-height: 3rem; 
+  --font-display-md-weight: var(--font-weight-headline);
+
+  --font-display-sm-size: 2rem; 
+  --font-display-sm-line-height: 2.5rem; 
+  --font-display-sm-weight: var(--font-weight-headline);
+
+  
+  --font-title-xl-size: 1.75rem; 
+  --font-title-xl-line-height: 2rem; 
+  --font-title-xl-weight: var(--font-weight-headline);
+
+  --font-title-lg-size: 1.5rem; 
+  --font-title-lg-line-height: 1.75rem; 
+  --font-title-lg-weight: var(--font-weight-headline);
+
+  --font-title-md-size: 1.25rem; 
+  --font-title-md-line-height: 1.5rem; 
+  --font-title-md-weight: var(--font-weight-headline);
+
+  --font-title-sm-size: 1.125rem; 
+  --font-title-sm-line-height: 1.25rem; 
+  --font-title-sm-weight: var(--font-weight-headline);
+
+  
+  --font-text-xl-size: 1.125rem; 
+  --font-text-xl-line-height: 1.5rem; 
+  --font-text-xl-weight: var(--font-weight-text);
+
+  --font-text-lg-size: 1rem; 
+  --font-text-lg-line-height: 1.5rem; 
+  --font-text-lg-weight: var(--font-weight-text);
+
+  --font-text-md-size: 0.875rem; 
+  --font-text-md-line-height: 1.25rem; 
+  --font-text-md-weight: var(--font-weight-text);
+
+  --font-text-sm-size: 0.75rem; 
+  --font-text-sm-line-height: 1rem; 
+  --font-text-sm-weight: var(--font-weight-text);
+
+  
+  --font-detail-size: 0.6875rem; 
+  --font-detail-line-height: 1rem; 
+  --font-detail-weight: var(--font-weight-text);
+  --font-detail-letter-spacing: 1px;
+
+  
+  --font-detail-caption-size: 0.6875rem; 
+  --font-detail-caption-line-height: 1rem; 
+  --font-detail-caption-weight: var(--font-weight-text);
+
+  
+  --font-weight-label: 500;
+
+  --font-label-xl-size: 1rem; 
+  --font-label-xl-line-height: 1.25rem; 
+  --font-label-xl-weight: var(--font-weight-label);
+
+  --font-label-lg-size: 0.875rem; 
+  --font-label-lg-line-height: 1rem; 
+  --font-label-lg-weight: var(--font-weight-label);
+
+  --font-label-md-size: 0.75rem; 
+  --font-label-md-line-height: 1rem; 
+  --font-label-md-weight: var(--font-weight-label);
+
+  --font-label-sm-size: 0.6875rem; 
+  --font-label-sm-line-height: 1rem; 
+  --font-label-sm-weight: var(--font-weight-label);
+
+  
+  --text-h1: 2rem;
+  --text-h1--line-height: 1.2;
+  --text-h1--font-weight: 300;
+
+  --text-h2: 1.25rem;
+  --text-h2--line-height: 1.4;
+  --text-h2--font-weight: 300;
+
+  --text-h3: 1rem;
+  --text-h3--line-height: 1.3;
+  --text-h3--font-weight: 600;
+
+  --text-body-lg: 0.875rem;
+  --text-body-lg--line-height: 1.43;
+  --text-body-lg--font-weight: 400;
+
+  --text-body-sm: 0.75rem;
+  --text-body-sm--line-height: 1.5;
+  --text-body-sm--font-weight: 400;
+
+  --text-caption: 0.625rem;
+  --text-caption--line-height: 1.6;
+  --text-caption--font-weight: 400;
+
+  --text-overline: 0.5rem;
+  --text-overline--line-height: 1.5;
+  --text-overline--font-weight: 700;
+}
+:root {
+  
+
+  
+  --shadow-elevation-1: 0px 0px 10px 0px rgba(0, 0, 0, 0.05);
+
+  
+  --shadow-elevation-2-top: 0px 4px 40px 0px rgba(0, 0, 0, 0.1);
+  --shadow-elevation-2-bottom: 0px -4px 10px 0px rgba(0, 0, 0, 0.1);
+  --shadow-elevation-2-left: 4px 0px 10px 0px rgba(0, 0, 0, 0.1);
+  --shadow-elevation-2-right: -4px 0px 10px 0px rgba(0, 0, 0, 0.1);
+
+  
+  --shadow-glass-inset: inset 0px 15px 25px 0px rgba(255, 255, 255, 0.7);
+  --shadow-card-ambient: var(--shadow-elevation-1);
+  --shadow-floating: var(--shadow-elevation-2-top);
+  --shadow-button: 0px 2px 2px 0px rgba(0, 0, 0, 0.1);
+  --shadow-bottom-nav: 0 8px 32px rgba(0, 0, 0, 0.12);
+  --shadow-fixed-bottom: 0px 10px 40px 0px rgba(89, 60, 221, 0.2);
+  --shadow-glass-border: 0 0 0 1px white;
+
+  
+  --opacity-20: 0.2;
+
+  
+
+  
+  --shadow-dropdown: 0px 4px 40px 0px rgba(0, 0, 0, 0.1);
+  --shadow-primary: 0px 0px 10px 0px rgba(0, 0, 0, 0.1);
+  --shadow-secondary: 0px 0px 10px 0px rgba(0, 0, 0, 0.05);
+
+  
+  --shadow-fixed-top: 0px 4px 40px 0px rgba(0, 0, 0, 0.1);
+  --shadow-fixed-left: 4px 0px 40px 0px rgba(0, 0, 0, 0.1);
+
+  
+  --backdrop-blur-low: 5px;
+  --backdrop-blur-high: 20px;
+  --backdrop-blur-illustration: 100px;
+}
+:root {
+  
+  --radius-generic-small: 12px;
+  --radius-generic-medium: 16px;
+  --radius-generic-large: 24px;
+  --radius-generic-x-large: 32px;
+  --radius-generic-circular: 240px;
+
+  
+  --radius-action-button: var(--radius-generic-circular);
+  --radius-input-field: var(--radius-generic-small);
+  --radius-container-card: var(--radius-generic-medium);
+  --radius-container-dialog: var(--radius-generic-large);
+
+  
+  --radius-lg: 8px;
+  --radius-xl: var(--radius-generic-small);
+  --radius-xl2: var(--radius-generic-medium);
+  --radius-2xl: var(--radius-generic-large);
+  --radius-full: 9999px;
+  --radius-circle: 50%;
+
+  
+  --border-stroke-medium: 1px;
+  --border-stroke-large: 2px;
+  --border-stroke-x-large: 4px;
+}
+:root {
+  
+
+  
+  --breakpoint-sm: 320px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1440px;
+
+  
+  --grid-columns-sm: 6;
+  --grid-columns-md: 8;
+  --grid-columns-lg: 12;
+  --grid-columns-xl: 12;
+  --grid-columns-2xl: 12;
+
+  
+  --grid-gutter-sm: 16px;
+  --grid-gutter-md: 32px;
+  --grid-gutter-lg: 24px;
+  --grid-gutter-xl: 24px;
+  --grid-gutter-2xl: 24px;
+
+  
+  --grid-margin-sm: 16px;
+  --grid-margin-md: 32px;
+  --grid-margin-lg: 40px;
+  --grid-margin-xl: 48px;
+  --grid-margin-2xl: 32px;
+
+  
+  --grid-container-sm: 320px;
+  --grid-container-md: 768px;
+  --grid-container-lg: 1024px;
+  --grid-container-xl: 1024px;
+  --grid-container-2xl: 1280px;
+}
+
+/* 4/4 esquema escuro MB One */
+/* Esquema escuro do MB One — gerado de "Semantic Colors.json" (Figma, modo Dark BETA)
+ * por tools/darkgen.py. Não editar à mão. Ativado por data-mb-scheme="dark" no <html>
+ * (o MBThemeProvider do Bravo escreve esse atributo). */
+:root[data-mb-scheme="dark"] {
+  /* primitivos do Figma que o pacote beta.75 ainda não publica (rampa night etc.) */
+  --color-brand-dark-40: rgba(0, 0, 0, 0.4);
+  --color-brand-light-40: rgba(255, 255, 255, 0.4);
+  --color-brand-night-3: rgba(24, 24, 24, 1);
+  --color-brand-night-4: rgba(30, 30, 30, 1);
+  --color-brand-night-5: rgba(36, 36, 36, 1);
+  --color-brand-night-6: rgba(43, 43, 43, 1);
+  --color-brand-night-7: rgba(50, 50, 50, 1);
+  --color-brand-night-8: rgba(58, 58, 58, 1);
+  --color-chart-orange-0: rgba(42, 14, 0, 1);
+  --color-chart-orange-1: rgba(64, 22, 0, 1);
+  --color-chart-orange-10: rgba(255, 234, 210, 1);
+  --color-chart-orange-11: rgba(255, 246, 234, 1);
+  --color-chart-orange-2: rgba(92, 32, 0, 1);
+  --color-chart-orange-3: rgba(126, 44, 0, 1);
+  --color-chart-orange-7: rgba(246, 140, 56, 1);
+  --color-chart-orange-8: rgba(252, 176, 104, 1);
+
+  /* semânticos e legado */
+  --color-action-inverse-neutral-content-enabled: var(--color-brand-neutral-1);
+  --color-action-inverse-neutral-content-hover: var(--color-brand-light-100);
+  --color-action-inverse-neutral-content-pressed: var(--color-brand-neutral-1);
+  --color-action-inverse-neutral-surface-disabled: var(--color-brand-light-0);
+  --color-action-inverse-neutral-surface-enabled: var(--color-brand-light-0);
+  --color-action-inverse-neutral-surface-hover: var(--color-brand-dark-5);
+  --color-action-inverse-neutral-surface-pressed: var(--color-brand-dark-10);
+  --color-action-link-content-disabled: var(--color-brand-neutral-8);
+  --color-action-link-content-enabled: var(--color-brand-neutral-10);
+  --color-action-link-content-hover: var(--color-brand-neutral-12);
+  --color-action-link-content-pressed: var(--color-brand-neutral-12);
+  --color-action-on-image-default-content-disabled: var(--color-brand-neutral-9);
+  --color-action-on-image-default-content-enabled: var(--color-brand-neutral-2);
+  --color-action-on-image-default-content-hover: var(--color-brand-neutral-1);
+  --color-action-on-image-default-content-pressed: var(--color-brand-neutral-2);
+  --color-action-on-image-default-surface-disabled: var(--color-brand-neutral-12);
+  --color-action-on-image-default-surface-enabled: var(--color-brand-light-60);
+  --color-action-on-image-default-surface-hover: var(--color-brand-light-90);
+  --color-action-on-image-default-surface-pressed: var(--color-brand-light-60);
+  --color-action-primary-accent-content-disabled: var(--color-brand-neutral-8);
+  --color-action-primary-accent-content-enabled: var(--color-brand-light-100);
+  --color-action-primary-accent-content-hover: var(--color-brand-light-100);
+  --color-action-primary-accent-content-pressed: var(--color-brand-light-100);
+  --color-action-primary-accent-surface-disabled: var(--color-brand-night-7);
+  --color-action-primary-accent-surface-enabled: var(--color-brand-purple-6);
+  --color-action-primary-accent-surface-hover: var(--color-brand-purple-7);
+  --color-action-primary-accent-surface-pressed: var(--color-brand-purple-5);
+  --color-action-primary-negative-content-disabled: var(--color-brand-neutral-8);
+  --color-action-primary-negative-content-enabled: var(--color-brand-light-100);
+  --color-action-primary-negative-content-hover: var(--color-brand-light-100);
+  --color-action-primary-negative-content-pressed: var(--color-brand-light-100);
+  --color-action-primary-negative-surface-disabled: var(--color-brand-night-7);
+  --color-action-primary-negative-surface-enabled: var(--color-brand-red-6);
+  --color-action-primary-negative-surface-hover: var(--color-brand-red-7);
+  --color-action-primary-negative-surface-pressed: var(--color-brand-red-5);
+  --color-action-primary-neutral-content-disabled: var(--color-brand-neutral-8);
+  --color-action-primary-neutral-content-enabled: var(--color-brand-neutral-1);
+  --color-action-primary-neutral-content-hover: var(--color-brand-neutral-1);
+  --color-action-primary-neutral-content-pressed: var(--color-brand-neutral-1);
+  --color-action-primary-neutral-surface-disabled: var(--color-brand-neutral-11);
+  --color-action-primary-neutral-surface-enabled: var(--color-brand-neutral-12);
+  --color-action-primary-neutral-surface-hover: var(--color-brand-neutral-12);
+  --color-action-primary-neutral-surface-pressed: var(--color-brand-neutral-11);
+  --color-action-secondary-container-border-disabled: var(--color-brand-light-10);
+  --color-action-secondary-container-border-enabled: var(--color-brand-light-10);
+  --color-action-secondary-container-border-hover: var(--color-brand-light-40);
+  --color-action-secondary-container-border-pressed: var(--color-brand-neutral-8);
+  --color-action-secondary-container-content-disabled: var(--color-brand-neutral-8);
+  --color-action-secondary-container-content-enabled: var(--color-brand-neutral-11);
+  --color-action-secondary-container-content-hover: var(--color-brand-neutral-12);
+  --color-action-secondary-container-content-pressed: var(--color-brand-neutral-2);
+  --color-action-secondary-container-surface-disabled: var(--color-brand-neutral-4);
+  --color-action-secondary-container-surface-enabled: var(--color-brand-light-5);
+  --color-action-secondary-container-surface-hover: var(--color-brand-light-10);
+  --color-action-secondary-container-surface-pressed: var(--color-brand-light-20);
+  --color-action-secondary-default-border-disabled: var(--color-brand-light-10);
+  --color-action-secondary-default-border-enabled: var(--color-brand-light-20);
+  --color-action-secondary-default-border-hover: var(--color-brand-light-40);
+  --color-action-secondary-default-border-pressed: var(--color-brand-light-60);
+  --color-action-secondary-default-content-disabled: var(--color-brand-neutral-8);
+  --color-action-secondary-default-content-enabled: var(--color-brand-neutral-11);
+  --color-action-secondary-default-content-hover: var(--color-brand-neutral-12);
+  --color-action-secondary-default-content-pressed: var(--color-brand-light-100);
+  --color-action-secondary-default-surface-disabled: var(--color-brand-night-4);
+  --color-action-secondary-default-surface-enabled: var(--color-brand-night-6);
+  --color-action-secondary-default-surface-hover: var(--color-brand-night-7);
+  --color-action-secondary-default-surface-pressed: var(--color-brand-night-8);
+  --color-action-secondary-negative-border-disabled: var(--color-brand-light-10);
+  --color-action-secondary-negative-border-hover: var(--color-brand-red-7);
+  --color-action-secondary-negative-border-pressed: var(--color-brand-red-8);
+  --color-action-secondary-negative-content-disabled: var(--color-brand-neutral-8);
+  --color-action-secondary-negative-content-enabled: var(--color-brand-red-8);
+  --color-action-secondary-negative-content-hover: var(--color-brand-red-8);
+  --color-action-secondary-negative-content-pressed: var(--color-brand-red-7);
+  --color-action-secondary-negative-surface-hover: var(--color-brand-red-2);
+  --color-action-secondary-negative-surface-pressed: var(--color-brand-red-4);
+  --color-action-secondary-primary-border-disabled: var(--color-brand-light-10);
+  --color-action-secondary-primary-border-enabled: var(--color-brand-purple-5);
+  --color-action-secondary-primary-border-hover: var(--color-brand-purple-8);
+  --color-action-secondary-primary-border-pressed: var(--color-brand-purple-6);
+  --color-action-secondary-primary-content-disabled: var(--color-brand-neutral-8);
+  --color-action-secondary-primary-content-enabled: var(--color-brand-purple-8);
+  --color-action-secondary-primary-content-hover: var(--color-brand-purple-8);
+  --color-action-secondary-primary-content-pressed: var(--color-brand-purple-7);
+  --color-action-secondary-primary-surface-hover: var(--color-brand-purple-2);
+  --color-action-secondary-primary-surface-pressed: var(--color-brand-purple-5);
+  --color-action-text-negative-content-disabled: var(--color-brand-neutral-5);
+  --color-action-text-negative-content-enabled: var(--color-brand-red-8);
+  --color-action-text-negative-content-hover: var(--color-brand-red-9);
+  --color-action-text-negative-content-pressed: var(--color-brand-red-7);
+  --color-action-text-negative-surface-pressed: var(--color-brand-red-2);
+  --color-action-text-neutral-content-disabled: var(--color-brand-neutral-5);
+  --color-action-text-neutral-content-enabled: var(--color-brand-neutral-10);
+  --color-action-text-neutral-content-hover: var(--color-brand-neutral-11);
+  --color-action-text-neutral-content-pressed: var(--color-brand-neutral-12);
+  --color-action-text-neutral-surface-pressed: var(--color-brand-light-20);
+  --color-action-text-primary-content-disabled: var(--color-brand-neutral-5);
+  --color-action-text-primary-content-enabled: var(--color-brand-purple-8);
+  --color-action-text-primary-content-hover: var(--color-brand-purple-9);
+  --color-action-text-primary-content-pressed: var(--color-brand-purple-7);
+  --color-action-text-primary-surface-pressed: var(--color-brand-purple-2);
+  --color-alert-surface: var(--color-brand-purple-6);
+  --color-background: var(--color-brand-night-3);
+  --color-background-alt: var(--color-brand-night-4);
+  --color-border: var(--color-brand-light-10);
+  --color-chart-generic-neutral: var(--color-brand-neutral-6);
+  --color-chart-generic-neutral-default: var(--color-brand-neutral-6);
+  --color-chart-generic-neutral-faded: color-mix(in srgb, var(--color-brand-neutral-6) 20%, transparent);
+  --color-chart-generic-neutral-subdued: color-mix(in srgb, var(--color-brand-neutral-6) 20%, transparent);
+  --color-chart-generic-positive: var(--color-brand-green-7);
+  --color-chart-generic-positive-default: var(--color-brand-green-7);
+  --color-chart-generic-positive-faded: color-mix(in srgb, var(--color-brand-green-7) 20%, transparent);
+  --color-chart-generic-positive-subdued: color-mix(in srgb, var(--color-brand-green-7) 20%, transparent);
+  --color-chart-generic-primary: var(--color-brand-purple-8);
+  --color-chart-generic-primary-default: var(--color-brand-purple-8);
+  --color-chart-generic-primary-faded: color-mix(in srgb, var(--color-brand-purple-8) 20%, transparent);
+  --color-chart-generic-primary-subdued: color-mix(in srgb, var(--color-brand-purple-8) 20%, transparent);
+  --color-container-border-accent: var(--color-brand-purple-8);
+  --color-container-border-alert: var(--color-brand-yellow-9);
+  --color-container-border-glass: var(--color-brand-night-5);
+  --color-container-border-informative: var(--color-brand-blue-9);
+  --color-container-border-negative: var(--color-brand-red-8);
+  --color-container-border-neutral: var(--color-brand-light-10);
+  --color-container-border-positive: var(--color-brand-green-8);
+  --color-container-border-primary: var(--color-brand-neutral-7);
+  --color-container-border-subtle: var(--color-brand-light-20);
+  --color-container-card-default-enabled: var(--color-brand-night-4);
+  --color-container-card-default-pressed: var(--color-brand-night-6);
+  --color-container-card-emphasis-enabled: var(--color-brand-night-5);
+  --color-container-card-emphasis-pressed: var(--color-brand-night-7);
+  --color-container-dialog-surface: var(--color-brand-night-5);
+  --color-container-divider-card-default: var(--color-brand-light-10);
+  --color-container-divider-card-emphasis: var(--color-brand-light-10);
+  --color-container-divider-section: var(--color-brand-light-10);
+  --color-container-surface-glass-default: var(--color-brand-night-4);
+  --color-container-surface-glass-strong: var(--color-brand-night-6);
+  --color-container-surface-glass-subtle: var(--color-brand-night-6);
+  --color-container-surface-inverted: var(--color-brand-light-100);
+  --color-container-surface-subtle: var(--color-brand-light-10);
+  --color-container-tooltip-surface: var(--color-brand-neutral-12);
+  --color-content-accent: var(--color-brand-purple-8);
+  --color-content-alert: var(--color-brand-yellow-9);
+  --color-content-body: var(--color-brand-neutral-11);
+  --color-content-caption: var(--color-brand-neutral-9);
+  --color-content-description: var(--color-brand-neutral-8);
+  --color-content-disabled: var(--color-brand-neutral-5);
+  --color-content-highlight: var(--color-brand-light-100);
+  --color-content-informative: var(--color-brand-blue-9);
+  --color-content-inverted-accent: var(--color-brand-purple-5);
+  --color-content-inverted-neutral: var(--color-brand-neutral-1);
+  --color-content-negative: var(--color-brand-red-8);
+  --color-content-positive: var(--color-brand-green-8);
+  --color-content-primary: var(--color-brand-purple-8);
+  --color-content-subdued: var(--color-brand-neutral-7);
+  --color-content-title: var(--color-brand-neutral-12);
+  --color-feedback-alert-default-label-enabled: var(--color-brand-yellow-12);
+  --color-feedback-alert-default-label-pressed: var(--color-brand-yellow-11);
+  --color-feedback-alert-default-surface-enabled: var(--color-brand-yellow-4);
+  --color-feedback-alert-default-surface-pressed: var(--color-brand-yellow-5);
+  --color-feedback-alert-emphasis-label-enabled: var(--color-brand-yellow-2);
+  --color-feedback-alert-emphasis-label-pressed: var(--color-brand-yellow-1);
+  --color-feedback-alert-emphasis-surface-enabled: var(--color-brand-yellow-9);
+  --color-feedback-alert-emphasis-surface-pressed: var(--color-brand-yellow-8);
+  --color-feedback-info-default-label-enabled: var(--color-brand-blue-12);
+  --color-feedback-info-default-label-pressed: var(--color-brand-blue-11);
+  --color-feedback-info-default-surface-enabled: var(--color-brand-blue-4);
+  --color-feedback-info-default-surface-pressed: var(--color-brand-blue-5);
+  --color-feedback-info-emphasis-label-enabled: var(--color-brand-blue-2);
+  --color-feedback-info-emphasis-label-pressed: var(--color-brand-blue-1);
+  --color-feedback-info-emphasis-surface-enabled: var(--color-brand-blue-9);
+  --color-feedback-info-emphasis-surface-pressed: var(--color-brand-blue-8);
+  --color-feedback-informative-default-label-enabled: var(--color-brand-blue-12);
+  --color-feedback-informative-default-label-pressed: var(--color-brand-blue-11);
+  --color-feedback-informative-default-surface-enabled: var(--color-brand-blue-4);
+  --color-feedback-informative-default-surface-pressed: var(--color-brand-blue-5);
+  --color-feedback-informative-emphasis-label-enabled: var(--color-brand-blue-2);
+  --color-feedback-informative-emphasis-label-pressed: var(--color-brand-blue-1);
+  --color-feedback-informative-emphasis-surface-enabled: var(--color-brand-blue-9);
+  --color-feedback-informative-emphasis-surface-pressed: var(--color-brand-blue-8);
+  --color-feedback-negative-default-label-enabled: var(--color-brand-red-12);
+  --color-feedback-negative-default-label-pressed: var(--color-brand-red-11);
+  --color-feedback-negative-default-surface-enabled: var(--color-brand-red-4);
+  --color-feedback-negative-default-surface-pressed: var(--color-brand-red-5);
+  --color-feedback-negative-emphasis-label-enabled: var(--color-brand-red-2);
+  --color-feedback-negative-emphasis-label-pressed: var(--color-brand-red-1);
+  --color-feedback-negative-emphasis-surface-enabled: var(--color-brand-red-9);
+  --color-feedback-negative-emphasis-surface-pressed: var(--color-brand-red-8);
+  --color-feedback-neutral-default-label-enabled: var(--color-brand-neutral-11);
+  --color-feedback-neutral-default-label-pressed: var(--color-brand-neutral-12);
+  --color-feedback-neutral-default-surface-enabled: var(--color-brand-neutral-3);
+  --color-feedback-neutral-default-surface-pressed: var(--color-brand-neutral-4);
+  --color-feedback-neutral-emphasis-label-enabled: var(--color-brand-neutral-1);
+  --color-feedback-neutral-emphasis-label-pressed: var(--color-brand-neutral-1);
+  --color-feedback-neutral-emphasis-surface-enabled: var(--color-brand-neutral-12);
+  --color-feedback-neutral-emphasis-surface-pressed: var(--color-brand-neutral-11);
+  --color-feedback-positive-default-label-enabled: var(--color-brand-green-12);
+  --color-feedback-positive-default-label-pressed: var(--color-brand-green-11);
+  --color-feedback-positive-default-surface-enabled: var(--color-brand-green-4);
+  --color-feedback-positive-default-surface-pressed: var(--color-brand-green-5);
+  --color-feedback-positive-emphasis-label-enabled: var(--color-brand-green-2);
+  --color-feedback-positive-emphasis-label-pressed: var(--color-brand-green-1);
+  --color-feedback-positive-emphasis-surface-enabled: var(--color-brand-green-9);
+  --color-feedback-positive-emphasis-surface-pressed: var(--color-brand-green-8);
+  --color-feedback-primary-default-label-enabled: var(--color-brand-purple-12);
+  --color-feedback-primary-default-label-pressed: var(--color-brand-purple-11);
+  --color-feedback-primary-default-surface-enabled: var(--color-brand-purple-5);
+  --color-feedback-primary-default-surface-pressed: var(--color-brand-purple-6);
+  --color-feedback-primary-emphasis-label-enabled: var(--color-brand-purple-2);
+  --color-feedback-primary-emphasis-label-pressed: var(--color-brand-purple-1);
+  --color-feedback-primary-emphasis-surface-enabled: var(--color-brand-purple-9);
+  --color-feedback-primary-emphasis-surface-pressed: var(--color-brand-purple-8);
+  --color-feedback-trending-default-label-enabled: var(--color-chart-orange-11);
+  --color-feedback-trending-default-label-pressed: var(--color-chart-orange-10);
+  --color-feedback-trending-default-surface-enabled: var(--color-chart-orange-2);
+  --color-feedback-trending-default-surface-pressed: var(--color-chart-orange-3);
+  --color-feedback-trending-emphasis-label-enabled: var(--color-chart-orange-1);
+  --color-feedback-trending-emphasis-label-pressed: var(--color-chart-orange-0);
+  --color-feedback-trending-emphasis-surface-enabled: var(--color-chart-orange-8);
+  --color-feedback-trending-emphasis-surface-pressed: var(--color-chart-orange-7);
+  --color-glass-card: var(--color-brand-night-6);
+  --color-glass-light: var(--color-brand-night-4);
+  --color-glass-strong: var(--color-brand-night-6);
+  --color-input-control-border-disabled: var(--color-brand-neutral-4);
+  --color-input-control-border-enabled: var(--color-brand-neutral-7);
+  --color-input-control-border-hover: var(--color-brand-neutral-9);
+  --color-input-control-border-selected: var(--color-brand-neutral-12);
+  --color-input-control-icon-disabled: var(--color-brand-neutral-5);
+  --color-input-control-icon-enabled: var(--color-brand-neutral-1);
+  --color-input-control-icon-selected: var(--color-brand-neutral-1);
+  --color-input-control-surface-disabled: var(--color-brand-night-7);
+  --color-input-control-surface-enabled: var(--color-brand-light-0);
+  --color-input-control-surface-hover: var(--color-brand-light-10);
+  --color-input-control-surface-selected: var(--color-brand-neutral-12);
+  --color-input-field-border-active: var(--color-brand-neutral-11);
+  --color-input-field-border-disabled: var(--color-brand-light-10);
+  --color-input-field-border-enabled: var(--color-brand-light-20);
+  --color-input-field-border-hover: var(--color-brand-light-40);
+  --color-input-field-border-negative: var(--color-brand-red-8);
+  --color-input-field-icon-disabled: var(--color-brand-neutral-5);
+  --color-input-field-icon-enabled: var(--color-brand-neutral-8);
+  --color-input-field-label-active: var(--color-brand-neutral-12);
+  --color-input-field-label-disabled: var(--color-brand-neutral-5);
+  --color-input-field-label-enabled: var(--color-brand-neutral-9);
+  --color-input-field-surface-active: var(--color-brand-night-5);
+  --color-input-field-surface-disabled: var(--color-brand-night-4);
+  --color-input-field-surface-enabled: var(--color-brand-night-5);
+  --color-input-field-surface-hover: var(--color-brand-night-7);
+  --color-muted-text: var(--color-brand-neutral-11);
+  --color-navigation-border-default: var(--color-brand-light-10);
+  --color-navigation-item-border-enabled: var(--color-brand-light-20);
+  --color-navigation-item-border-hover: var(--color-brand-neutral-8);
+  --color-navigation-item-border-selected: var(--color-brand-neutral-11);
+  --color-navigation-item-content-enabled: var(--color-brand-neutral-8);
+  --color-navigation-item-content-hover: var(--color-brand-neutral-10);
+  --color-navigation-item-content-selected: var(--color-brand-neutral-12);
+  --color-navigation-item-surface-selected: var(--color-brand-purple-6);
+  --color-navigation-progress-bar: var(--color-brand-neutral-12);
+  --color-navigation-progress-surface: var(--color-brand-light-10);
+  --color-navigation-shadow: var(--color-brand-dark-40);
+  --color-navigation-surface-default: color-mix(in srgb, var(--color-brand-night-6) 20%, transparent);
+  --color-neutral-3: var(--color-brand-neutral-11);
+  --color-neutral-light: var(--color-brand-light-10);
+  --color-neutral-soft: var(--color-brand-night-3);
+  --color-page-backdrop: var(--color-brand-dark-60);
+  --color-page-skeleton: var(--color-brand-light-10);
+  --color-page-surface: var(--color-brand-night-3);
+  --color-page-surface-highlight: var(--color-brand-night-4);
+  --color-primary: var(--color-brand-purple-8);
+  --color-primary-accent: var(--color-brand-purple-8);
+  --color-primary-bg: var(--color-brand-purple-2);
+  --color-primary-dark: var(--color-brand-purple-5);
+  --color-primary-text: var(--color-brand-neutral-12);
+  --color-secondary-text: var(--color-brand-neutral-11);
+  --color-subtle-text: var(--color-brand-neutral-8);
+  --color-surface: var(--color-brand-night-5);
+  --color-warning-bg: var(--color-brand-night-3);
+}
+
+/* branco fixo das telas antigas -> container/card/surface/emphasis (Figma) */

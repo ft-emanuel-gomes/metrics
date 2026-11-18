@@ -126,16 +126,16 @@ export default function CapacityButton({ squad, availableSprints, autoOpen, onAu
             </h3>
 
             {/* Campo: Selecionar Sprint */}
-            <label className="block text-[10px] text-gray-400 uppercase font-semibold mb-1">
+            <label className="block text-[10px] text-[color:var(--ds-color-content-caption)] uppercase font-semibold mb-1">
               Selecionar Sprint
             </label>
             <select
               value={selectedSprintId}
               onChange={(e) => setSelectedSprintId(e.target.value)}
-              className="w-full rounded-md border border-white/10 theme-input mb-4"
+              className="w-full rounded-md border border-[color:var(--ds-color-container-divider-card)] theme-input mb-4"
             >
               {availableSprints.map((s) => (
-                <option key={s.id} value={String(s.id)} className="bg-gray-900">
+                <option key={s.id} value={String(s.id)} className="bg-[var(--ds-color-container-popover-surface)]">
                   {simplifySprintName(s.name)}
                   {savedCapacities[String(s.id)] ? ` (${savedCapacities[String(s.id)].teamSize}p / ${savedCapacities[String(s.id)].businessDays || "?"}d)` : ""}
                 </option>
@@ -145,7 +145,7 @@ export default function CapacityButton({ squad, availableSprints, autoOpen, onAu
             {/* Campos: Pessoas e Dias úteis lado a lado */}
             <div className="grid grid-cols-2 gap-3 mb-4">
               <div>
-                <label className="block text-[10px] text-gray-400 uppercase font-semibold mb-1">
+                <label className="block text-[10px] text-[color:var(--ds-color-content-caption)] uppercase font-semibold mb-1">
                   Pessoas
                 </label>
                 <input
@@ -158,7 +158,7 @@ export default function CapacityButton({ squad, availableSprints, autoOpen, onAu
                 />
               </div>
               <div>
-                <label className="block text-[10px] text-gray-400 uppercase font-semibold mb-1">
+                <label className="block text-[10px] text-[color:var(--ds-color-content-caption)] uppercase font-semibold mb-1">
                   Dias Úteis
                 </label>
                 <input
@@ -181,7 +181,7 @@ export default function CapacityButton({ squad, availableSprints, autoOpen, onAu
 
             {/* Mensagem */}
             {message && (
-              <p className={`text-[10px] mb-3 ${message.includes("Erro") ? "text-red-400" : "text-emerald-400"}`}>
+              <p className={`text-[10px] mb-3 ${message.includes("Erro") ? "text-[color:var(--ds-color-content-negative)]" : "text-[color:var(--ds-color-content-positive)]"}`}>
                 {message}
               </p>
             )}
@@ -190,7 +190,7 @@ export default function CapacityButton({ squad, availableSprints, autoOpen, onAu
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => { setIsOpen(false); if (onAutoClose) onAutoClose(); setMessage(""); }}
-                className="rounded-md bg-white/10 px-3 py-1.5 text-[10px] font-semibold text-gray-300 hover:bg-white/15 transition"
+                className="rounded-md bg-[var(--ds-color-input-surface)] px-3 py-1.5 text-[10px] font-semibold text-[color:var(--ds-color-content-body)] hover:bg-[var(--ds-color-input-surface-hover)] transition"
               >
                 Cancelar
               </button>

@@ -1,58 +1,13 @@
 @import "tailwindcss";
 
-/* ===== Theme System — Monte Bravo Metrics ===== */
-
-:root,
-[data-theme="dark"] {
-  --bg-primary: #0D0D0F;
-  --bg-secondary: #18181B;
-  --bg-card: #18181B;
-  --bg-hover: #222225;
-  --border-primary: #26262A;
-  --border-hover: #3a3a3e;
-  --text-primary: #f2f2f0;
-  --text-secondary: #A8A8A2;
-  --text-muted: #6B6B66;
-  --accent: #9791E8;
-  --accent-bg: rgba(151, 145, 232, 0.12);
-  --ring-bg: #2A2A2D;
-  --pill-up-bg: #1C2A0E;
-  --pill-up-text: #97C459;
-  --pill-down-bg: #34190E;
-  --pill-down-text: #F0997B;
-  --pill-neutral-bg: #222225;
-  --pill-neutral-text: #A8A8A2;
-  --tab-active-bg: #F2F2F0;
-  --tab-active-text: #101012;
-  --tab-inactive-text: #A8A8A2;
-}
-
-[data-theme="light"] {
-  --bg-primary: #EFEEEA;
-  --bg-secondary: #F7F7F5;
-  --bg-card: #FFFFFF;
-  --bg-hover: #F1EFE8;
-  --border-primary: #E5E4DE;
-  --border-hover: #D1D0C8;
-  --text-primary: #1a1a1a;
-  --text-secondary: #6B6B66;
-  --text-muted: #9A9A94;
-  --accent: #534AB7;
-  --accent-bg: rgba(83, 74, 183, 0.08);
-  --ring-bg: #E5E4DE;
-  --pill-up-bg: #EAF3DE;
-  --pill-up-text: #3B6D11;
-  --pill-down-bg: #FAECE7;
-  --pill-down-text: #993C1D;
-  --pill-neutral-bg: #F1EFE8;
-  --pill-neutral-text: #6B6B66;
-  --tab-active-bg: #1A1A18;
-  --tab-active-text: #FAFAF8;
-  --tab-inactive-text: #6B6B66;
-}
+/* Tokens do Design System MB (paleta, semanticos light/dark e ponte para as variaveis legadas) */
+@import "./bravo-tokens.css";
+@import "./ds-tokens.css";
+@import "./ds-components.css";
 
 /* Base body styles */
 body {
+  font-family: var(--ds-font-family-default);
   background-color: var(--bg-primary);
   color: var(--text-primary);
   transition: background-color 0.2s ease, color 0.2s ease;
@@ -62,7 +17,7 @@ body {
 .theme-card {
   background-color: var(--bg-card);
   border: 0.5px solid var(--border-primary);
-  border-radius: 12px;
+  border-radius: var(--ds-radius-medium);
   padding: 16px 18px;
   transition: border-color 0.15s ease;
 }
@@ -120,7 +75,7 @@ body {
 .theme-section {
   background-color: var(--bg-card);
   border: 0.5px solid var(--border-primary);
-  border-radius: 12px;
+  border-radius: var(--ds-radius-medium);
   padding: 16px;
 }
 
@@ -182,7 +137,7 @@ body {
   background-color: var(--accent-bg);
   color: var(--accent);
   font-weight: 600;
-  border-radius: 8px;
+  border-radius: var(--ds-radius-circular);
   padding: 8px 16px;
   font-size: 12px;
   transition: opacity 0.15s ease;
@@ -206,7 +161,15 @@ body {
 [data-theme="light"] .text-white {
   color: var(--text-primary);
 }
-/* Preserve white text on colored button backgrounds */
+/* Preserve white text on colored backgrounds (same element) */
+[data-theme="light"] .text-white[class*="bg-indigo-"],
+[data-theme="light"] .text-white[class*="bg-violet-"],
+[data-theme="light"] .text-white[class*="bg-purple-"],
+[data-theme="light"] .text-white[class*="bg-emerald-"],
+[data-theme="light"] .text-white[class*="bg-green-"],
+[data-theme="light"] .text-white[class*="bg-red-"],
+[data-theme="light"] .text-white[class*="bg-amber-"],
+[data-theme="light"] .text-white[class*="bg-blue-"],
 [data-theme="light"] .bg-indigo-600 .text-white,
 [data-theme="light"] .bg-violet-600 .text-white,
 [data-theme="light"] .bg-emerald-600 .text-white,
@@ -215,7 +178,13 @@ body {
 [data-theme="light"] button[style*="background-color: var(--accent)"] {
   color: #ffffff !important;
 }
-[data-theme="light"] .text-gray-200,
+/* DS MB: indigo/violet genericos usam o primario da marca (purple) */
+.bg-indigo-500, .bg-indigo-600, .bg-violet-500, .bg-violet-600 {
+  background-color: var(--ds-color-action-primary-surface);
+}
+.hover\:bg-indigo-600:hover, .hover\:bg-violet-600:hover {
+  background-color: var(--ds-color-action-primary-surface-hover);
+}[data-theme="light"] .text-gray-200,
 [data-theme="light"] .text-gray-300 {
   color: var(--text-primary);
 }
@@ -237,3 +206,11 @@ body {
   border-color: var(--border-primary);
 }
 
+/* Impressão / PDF do dashboard (/export/[squad] imprime a própria página; o navegador usa o mesmo CSS).
+   Esconde menu lateral, seletores e botões; mantém as cores do tema e evita cortar cards entre páginas. */
+@media print {
+  @page { size: A4 landscape; margin: 8mm; }
+  html, body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .print-full { margin-left: 0 !important; }
+  .theme-section { break-inside: avoid; page-break-inside: avoid; }
+}

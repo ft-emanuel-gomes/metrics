@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import type { BurndownPoint } from "@/adapters/types";
 
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
+import { useChartTheme } from "@/lib/use-chart-theme";
 
 interface BurndownChartProps {
   burndown: BurndownPoint[];
@@ -13,6 +14,7 @@ interface BurndownChartProps {
 }
 
 export default function BurndownChart({ burndown, deadline, totalFeatures, completedFeatures }: BurndownChartProps) {
+  const t = useChartTheme();
   const categories = burndown.map((b) => b.period.shortName);
   const ideal = burndown.map((b) => b.idealRemaining);
   const real = burndown.map((b) => b.realRemaining);
@@ -25,20 +27,20 @@ export default function BurndownChart({ burndown, deadline, totalFeatures, compl
       width: [2.5, 2.5],
       dashArray: [6, 0],
     },
-    colors: ["#34d399", "#f87171"],
-    markers: { size: [4, 4], colors: ["#34d399", "#f87171"] },
+    colors: [t.positive, t.negative],
+    markers: { size: [4, 4], colors: [t.positive, t.negative] },
     xaxis: {
       categories,
-      labels: { style: { colors: "#94a3b8", fontSize: "10px" } },
+      labels: { style: { colors: t.body, fontSize: "10px" } },
     },
     yaxis: {
-      labels: { style: { colors: "#64748b", fontSize: "10px" } },
-      title: { text: "Features restantes", style: { color: "#64748b", fontSize: "9px" } },
+      labels: { style: { colors: t.muted, fontSize: "10px" } },
+      title: { text: "Features restantes", style: { color: t.muted, fontSize: "9px" } },
     },
-    grid: { borderColor: "rgba(255,255,255,0.04)" },
-    legend: { show: true, position: "bottom", labels: { colors: "#94a3b8" } },
-    tooltip: { theme: "dark" },
-    theme: { mode: "dark" },
+    grid: { borderColor: t.grid },
+    legend: { show: true, position: "bottom", labels: { colors: t.body } },
+    tooltip: { theme: t.mode },
+    theme: { mode: t.mode },
   };
 
   const series = [
@@ -52,7 +54,7 @@ export default function BurndownChart({ burndown, deadline, totalFeatures, compl
         R2 â€” Burndown (Features)
       </h3>
       <Chart options={options} series={series} type="line" height={180} />
-      <p className="mt-2 text-center text-[10px] text-amber-400">
+      <p className="mt-2 text-center text-[10px] text-[color:var(--ds-color-content-alert)]">
         {remaining} features restantes com deadline em {deadline}
       </p>
     </div>

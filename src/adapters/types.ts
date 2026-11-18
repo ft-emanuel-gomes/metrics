@@ -6,6 +6,7 @@ import type { SpilloverPeriodResult } from "@/metrics/spillover";
 import type { WipAgingResult } from "@/metrics/wip-aging";
 import type { OccupationPeriodResult } from "@/metrics/occupation";
 import type { R2ProgressResult } from "@/metrics/r2-progress";
+import type { ReleaseCalendar } from "@/lib/release-calendar";
 import type { ForecastResult } from "@/metrics/forecast";
 
 /**
@@ -119,6 +120,8 @@ export interface DashboardData {
   periodMetrics: PeriodMetrics[];
   wipAging?: WipAgingResult;
   r2Progress: R2ProgressResult;
+  /** Calendário da Release (sprints da release ativa). Ausente em squads Kanban ou antes do primeiro sync. */
+  releaseCalendar?: ReleaseCalendar;
   percentiles: { p50: number | null; p85: number | null; p95: number | null; sampleSize: number };
   forecast: ForecastResult;
   burndown: BurndownPoint[];

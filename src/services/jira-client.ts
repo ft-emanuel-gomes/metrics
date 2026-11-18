@@ -152,6 +152,15 @@ class JiraClient {
           continue;
         }
 
+        // Falha de rede transitória (conexão derrubada, proxy instável, resposta truncada): retry com backoff
+        if (isTransientNetworkError(error)) {
+          const backoff = Math.pow(2, attempt) * 1000;
+          console.warn(
+            `[JiraClient] Falha de rede (${(error as Error).message}). Retry em ${backoff}ms (tentativa ${attempt + 1}/${this.config.retryAttempts})`
+          );
+          await this.sleep(backoff);
+          continue;
+        }
         // Outros erros: não fazer retry
         throw error;
       }
@@ -165,6 +174,14 @@ class JiraClient {
   }
 }
 
+/** Erros de rede que costumam passar na segunda tentativa (socket hang up, ECONNRESET, resposta truncada do proxy...). */
+function isTransientNetworkError(error: unknown): boolean {
+  const code = (error as { code?: string })?.code;
+  const message = String((error as Error)?.message ?? "");
+  const codes = ["ECONNRESET", "ETIMEDOUT", "EPIPE", "ECONNREFUSED", "EAI_AGAIN", "ERR_NETWORK", "ERR_BAD_RESPONSE", "HPE_INVALID_CONSTANT"];
+  if (code && codes.includes(code)) return !(error instanceof AxiosError && error.response);
+  return /socket hang up|Parse Error|ECONNRESET|network error|ERR_SSL|ssl3_read_bytes|tls alert/i.test(message) || /^ERR_SSL/.test(code || "");
+}
 // --- Erros customizados ---
 
 export class JiraAuthError extends Error {

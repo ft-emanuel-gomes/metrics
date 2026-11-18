@@ -29,23 +29,36 @@ export default function AdminDashboardMenu({
   async function handleExport() {
     setIsExporting(true);
     try {
-      const res = await fetch(`/export/${squad}`);
-      if (res.ok) {
+      // Mesmos filtros e mesmo tema que o usuário está vendo
+      const params = new URLSearchParams(window.location.search);
+      params.set("theme", document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark");
+      params.set("download", "1");
+      const res = await fetch(`/export/${squad}?${params.toString()}`);
+      const type = res.headers.get("content-type") || "";
+      if (res.ok && type.includes("application/pdf")) {
         const blob = await res.blob();
+        const match = /filename="([^"]+)"/.exec(res.headers.get("content-disposition") || "");
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `metrics-${squad}.pdf`;
+        a.download = match ? match[1] : `metrics-${squad}.pdf`;
         a.click();
         URL.revokeObjectURL(url);
+        return;
       }
+      if (res.status === 503) {
+        // Servidor sem gerador de PDF: impressão do navegador da própria página ("Salvar como PDF")
+        window.print();
+        return;
+      }
+      const body = await res.json().catch(() => null);
+      alert(body?.message || "Não foi possível gerar o PDF. Tente novamente.");
     } catch {
-      alert("Erro ao exportar PDF");
+      alert("Não foi possível gerar o PDF. Verifique a conexão e tente novamente.");
     } finally {
       setIsExporting(false);
     }
   }
-
   return (
     <div className="relative">
       <button
@@ -56,7 +69,7 @@ export default function AdminDashboardMenu({
           <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
           <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
-        Administrador
+        {isExporting ? "Gerando PDF..." : "Administrador"}
         <svg className={`h-3 w-3 transition-transform ${isOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
         </svg>

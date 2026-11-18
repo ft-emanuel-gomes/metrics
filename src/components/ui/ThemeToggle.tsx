@@ -12,10 +12,9 @@ export default function ThemeToggle() {
 
   useEffect(() => {
     setMounted(true);
-    const saved = localStorage.getItem("theme") as "dark" | "light" | null;
-    const initial = saved || "dark";
-    setTheme(initial);
-    document.documentElement.setAttribute("data-theme", initial);
+    // O script do layout já resolveu o tema (escolha salva ou preferência do sistema).
+    const current = document.documentElement.getAttribute("data-theme");
+    setTheme(current === "light" ? "light" : "dark");
   }, []);
 
   function toggleTheme() {
@@ -23,6 +22,7 @@ export default function ThemeToggle() {
     setTheme(next);
     localStorage.setItem("theme", next);
     document.documentElement.setAttribute("data-theme", next);
+    document.documentElement.setAttribute("data-mb-scheme", next);
   }
 
   // Avoid hydration mismatch
@@ -31,12 +31,7 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition"
-      style={{
-        color: "var(--text-secondary)",
-        border: "0.5px solid var(--border-primary)",
-        background: "transparent",
-      }}
+      className="ds-btn ds-btn-secondary ds-btn-small"
       title={theme === "dark" ? "Mudar para modo claro" : "Mudar para modo escuro"}
     >
       {theme === "dark" ? (

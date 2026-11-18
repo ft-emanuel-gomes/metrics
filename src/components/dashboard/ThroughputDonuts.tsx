@@ -1,27 +1,45 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { useState } from "react";
 import type { PeriodMetrics } from "@/adapters/types";
+import { useChartTheme, type ChartTheme } from "@/lib/use-chart-theme";
+import MbDonut from "./MbDonut";
 
-const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 interface ThroughputDonutsProps {
   periodMetrics: PeriodMetrics[];
 }
 
-const TYPE_COLORS: Record<string, string> = {
-  "Historia": "#36B37E",
-  "História": "#36B37E",
-  "Story": "#36B37E",
-  "Bug": "#FF5630",
-  "Design": "#6554C0",
-  "Tech Debt": "#FF991F",
-  "Technical Debt": "#FF991F",
-  "Task": "#2684FF",
-  "Kaizen": "#00B8D9",
-  "Spike": "#FF8B00",
-};
+// Cores por tipo de item seguem os icones do Jira (Story verde, Task/Tech Debt/Design azul, Bug vermelho, Kaizen verde, Spike laranja)
+function typeColor(t: ChartTheme, type: string): string {
+  const c = t.issueType;
+  switch (type) {
+    case "Historia":
+    case "História":
+    case "Story":
+      return c.story;
+    case "Kaizen":
+      return c.kaizen;
+    case "Task":
+      return c.task;
+    case "Tech Debt":
+    case "Technical Debt":
+      return c.techDebt;
+    case "Design":
+      return c.design;
+    case "Bug":
+      return c.bug;
+    case "Spike":
+      return c.spike;
+    case "Sub-bug":
+      return c.subBug;
+    case "Sub-task":
+    case "Subtarefa":
+      return c.subTask;
+    default:
+      return t.muted;
+  }
+}
 
 interface PopoverData {
   type: string;
@@ -31,93 +49,50 @@ interface PopoverData {
 }
 
 export default function ThroughputDonuts({ periodMetrics }: ThroughputDonutsProps) {
+  const t = useChartTheme();
   const [popover, setPopover] = useState<PopoverData | null>(null);
 
   const allTypes = new Set<string>();
-  periodMetrics.forEach((pm) => pm.throughput.byType.forEach((t) => allTypes.add(t.type)));
+  periodMetrics.forEach((pm) => pm.throughput.byType.forEach((bt) => allTypes.add(bt.type)));
 
   return (
-    <div className="theme-section relative">
+    <div className="theme-section relative flex flex-col">
       <h3 className="text-[11px] font-bold uppercase tracking-wide t-secondary mb-3">
-        Vazao Sprints — Por Tipo
+        Vazão por sprint — por tipo
       </h3>
-      <div className="flex items-start justify-center gap-8 mx-auto">
-        {periodMetrics.map((pm) => {
-          const labels = pm.throughput.byType.map((t) => t.type);
-          const series = pm.throughput.byType.map((t) => t.count);
-          const colors = labels.map((l) => TYPE_COLORS[l] || "#94a3b8");
-
-          const options: ApexCharts.ApexOptions = {
-            chart: {
-              type: "donut",
-              background: "transparent",
-              events: {
-                dataPointSelection: (_event: unknown, _chartContext: unknown, config: unknown) => {
-                  const cfg = config as { dataPointIndex: number };
-                  const idx = cfg.dataPointIndex;
-                  const typeData = pm.throughput.byType[idx];
-                  if (typeData) {
-                    setPopover({
-                      type: typeData.type,
-                      count: typeData.count,
-                      issueKeys: typeData.issueKeys,
-                      period: pm.period.shortName,
-                    });
-                  }
-                },
-              },
-            },
-            labels,
-            colors,
-            legend: { show: false },
-            dataLabels: { enabled: false },
-            plotOptions: {
-              pie: {
-                donut: {
-                  size: "64%",
-                  labels: { show: false },
-                },
-                expandOnClick: false,
-              },
-            },
-            stroke: { show: false },
-            tooltip: {
-              theme: "dark",
-              y: { formatter: (val: number) => `${val} itens (clique para ver IDs)` },
-            },
-            theme: { mode: "dark" },
-          };
-
-          return (
-            <div key={pm.period.shortName} className="text-center">
-              <div className="relative cursor-pointer">
-                <Chart
-                  options={options}
-                  series={series}
-                  type="donut"
-                  width={120}
-                  height={120}
-                />
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <span className="text-2xl font-black" style={{ color: "var(--text-primary)" }}>{pm.throughput.total}</span>
-                </div>
-              </div>
-              <p className="mt-1 text-[9px] t-muted">{pm.period.shortName}</p>
-            </div>
-          );
-        })}
+      <div className="flex flex-1 flex-col items-center justify-center">
+      <div className="flex items-start justify-center gap-8">
+        {periodMetrics.map((pm) => (
+          <div key={pm.period.shortName} className="text-center">
+            <MbDonut
+              size={128}
+              ariaLabel={`Vazão ${pm.period.shortName}: ${pm.throughput.total} itens`}
+              segments={pm.throughput.byType.map((bt) => ({ key: bt.type, label: bt.type, value: bt.count, color: typeColor(t, bt.type) }))}
+              onSegmentClick={(seg) => {
+                const td = pm.throughput.byType.find((bt) => bt.type === seg.key);
+                if (td) setPopover({ type: td.type, count: td.count, issueKeys: td.issueKeys, period: pm.period.shortName });
+              }}
+              center={
+                <>
+                  <span className="text-2xl font-medium leading-none" style={{ color: "var(--ds-color-content-title)" }}>{pm.throughput.total}</span>
+                  <span className="mt-1 text-[10px]" style={{ color: "var(--ds-color-content-caption)" }}>itens</span>
+                </>
+              }
+            />
+            <p className="mt-1 text-[10px] t-muted">{pm.period.shortName}</p>
+          </div>
+        ))}
       </div>
-
       {/* Legend */}
-      <div className="mt-3 flex justify-center gap-4 text-[9px] t-secondary">
+      <div className="mt-4 flex flex-wrap justify-center gap-4 text-[10px] t-secondary">
         {Array.from(allTypes).map((type) => (
           <span key={type} className="flex items-center gap-1">
-            <span className="inline-block h-2 w-2 rounded-full" style={{ background: TYPE_COLORS[type] || "#94a3b8" }} />
+            <span className="inline-block h-2 w-2 rounded-full" style={{ background: typeColor(t, type) }} />
             {type}
           </span>
         ))}
       </div>
-
+      </div>
       {/* Popover — aparece ao CLICAR no segmento */}
       {popover && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setPopover(null)}>

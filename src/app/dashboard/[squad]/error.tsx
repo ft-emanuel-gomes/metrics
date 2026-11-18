@@ -22,29 +22,29 @@ export default function DashboardError({ error, reset }: ErrorProps) {
       <div className="mx-auto max-w-md text-center">
         <div className="mb-4 text-4xl">⚠️</div>
 
-        <h2 className="text-lg font-bold text-white mb-2">
+        <h2 className="text-lg font-bold text-[color:var(--ds-color-content-title)] mb-2">
           Erro ao carregar o dashboard
         </h2>
 
-        <p className="text-sm text-gray-400 mb-2">
+        <p className="text-sm text-[color:var(--ds-color-content-caption)] mb-2">
           O carregamento pode levar até 15 segundos na primeira vez (dados do Jira).
           Clique em recarregar para tentar novamente.
         </p>
 
-        <p className="text-[9px] text-gray-600 mb-6">
+        <p className="text-[9px] text-[color:var(--ds-color-content-subdued)] mb-6">
           {error.message || "Erro inesperado"}
         </p>
 
         <div className="flex justify-center gap-3">
           <button
             onClick={handleRetry}
-            className="rounded-md bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-500 transition"
+            className="ds-btn ds-btn-primary ds-btn-small"
           >
             Recarregar página
           </button>
           <a
             href="/"
-            className="rounded-md bg-white/10 px-4 py-2 text-xs font-semibold text-gray-300 hover:bg-white/15 transition"
+            className="ds-btn ds-btn-secondary ds-btn-small"
           >
             Voltar ao início
           </a>

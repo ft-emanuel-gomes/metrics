@@ -73,7 +73,7 @@ export default function RetroColumn({
     <div
       ref={setNodeRef}
       className={`flex flex-col w-72 min-w-[288px] rounded-xl border transition ${
-        isOver ? "border-violet-500/50" : ""
+        isOver ? "border-[color:var(--ds-color-container-border-primary)]" : ""
       }`}
       style={{
         backgroundColor: "var(--bg-secondary)",
@@ -81,7 +81,7 @@ export default function RetroColumn({
       }}
     >
       {/* Column header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[color:var(--ds-color-container-divider-card)]">
         {isRenaming && permissions.canManageColumns ? (
           <input
             autoFocus
@@ -89,11 +89,11 @@ export default function RetroColumn({
             onChange={(e) => setRenameText(e.target.value)}
             onBlur={handleRename}
             onKeyDown={(e) => { if (e.key === "Enter") handleRename(); if (e.key === "Escape") setIsRenaming(false); }}
-            className="flex-1 rounded bg-white/10 px-2 py-1 text-sm text-white outline-none focus:ring-1 focus:ring-violet-500"
+            className="flex-1 rounded bg-[var(--ds-color-input-surface)] px-2 py-1 text-sm text-[color:var(--ds-color-content-title)] outline-none focus:ring-1 focus:ring-[color:var(--ds-color-container-border-primary)]"
           />
         ) : (
           <h3
-            className={`text-sm font-bold text-white truncate ${permissions.canManageColumns ? "cursor-pointer hover:text-violet-300" : ""}`}
+            className={`text-sm font-bold text-[color:var(--ds-color-content-title)] truncate ${permissions.canManageColumns ? "cursor-pointer hover:text-[color:var(--ds-color-content-primary)]" : ""}`}
             onClick={() => permissions.canManageColumns && setIsRenaming(true)}
             title={column.tooltip || column.title}
           >
@@ -102,7 +102,7 @@ export default function RetroColumn({
         )}
 
         <div className="flex items-center gap-1 ml-2">
-          <span className="text-[10px] text-gray-500 font-mono">
+          <span className="text-[10px] text-[color:var(--ds-color-content-caption)] font-mono">
             {visibleCards.length}
           </span>
 
@@ -110,7 +110,7 @@ export default function RetroColumn({
             <div className="relative">
               <button
                 onClick={() => setShowMenu(!showMenu)}
-                className="p-1 rounded hover:bg-white/10 text-gray-500 hover:text-white transition"
+                className="p-1 rounded hover:bg-[var(--ds-color-input-surface-hover)] text-[color:var(--ds-color-content-caption)] hover:text-[color:var(--ds-color-content-title)] transition"
               >
                 <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M10 6a2 2 0 110-4 2 2 0 010 4zm0 6a2 2 0 110-4 2 2 0 010 4zm0 6a2 2 0 110-4 2 2 0 010 4z" />
@@ -118,22 +118,22 @@ export default function RetroColumn({
               </button>
 
               {showMenu && (
-                <div className="absolute right-0 top-full mt-1 z-20 rounded-lg border border-white/10 bg-gray-800 py-1 shadow-xl min-w-[140px]">
+                <div className="absolute right-0 top-full mt-1 z-20 rounded-lg border border-[color:var(--ds-color-container-divider-card)] bg-[var(--ds-color-container-popover-surface)] py-1 shadow-xl min-w-[140px]">
                   <button
                     onClick={() => { setIsRenaming(true); setShowMenu(false); }}
-                    className="w-full px-3 py-1.5 text-left text-[11px] text-gray-300 hover:bg-white/10"
+                    className="w-full px-3 py-1.5 text-left text-[11px] text-[color:var(--ds-color-content-body)] hover:bg-[var(--ds-color-input-surface-hover)]"
                   >
                     Renomear
                   </button>
                   <button
                     onClick={() => { setShowClearConfirm(true); setShowMenu(false); }}
-                    className="w-full px-3 py-1.5 text-left text-[11px] text-amber-400 hover:bg-amber-500/10"
+                    className="w-full px-3 py-1.5 text-left text-[11px] text-[color:var(--ds-color-content-alert)] hover:bg-[color-mix(in_srgb,var(--ds-color-content-alert)_12%,transparent)]"
                   >
                     Limpar coluna
                   </button>
                   <button
                     onClick={() => { onDelete(column.id); setShowMenu(false); }}
-                    className="w-full px-3 py-1.5 text-left text-[11px] text-red-400 hover:bg-red-500/10"
+                    className="w-full px-3 py-1.5 text-left text-[11px] text-[color:var(--ds-color-content-negative)] hover:bg-[color-mix(in_srgb,var(--ds-color-content-negative)_12%,transparent)]"
                   >
                     Excluir coluna
                   </button>
@@ -166,7 +166,7 @@ export default function RetroColumn({
 
         {/* Placeholder quando coluna vazia */}
         {visibleCards.length === 0 && !isAdding && (
-          <div className="flex items-center justify-center py-8 text-[10px] text-gray-600">
+          <div className="flex items-center justify-center py-8 text-[10px] text-[color:var(--ds-color-content-subdued)]">
             Nenhum card ainda
           </div>
         )}
@@ -185,20 +185,20 @@ export default function RetroColumn({
                 if (e.key === "Escape") { setIsAdding(false); setNewCardText(""); }
               }}
               placeholder="Digite seu card..."
-              className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-gray-500 resize-none outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/30"
+              className="w-full rounded-lg border border-[color:var(--ds-color-container-divider-card)] bg-[var(--ds-color-input-surface)] px-3 py-2 text-sm text-[color:var(--ds-color-content-title)] placeholder-[color:var(--ds-color-content-subdued)] resize-none outline-none focus:border-[color:var(--ds-color-container-border-primary)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--ds-color-content-primary)_30%,transparent)]"
               rows={3}
             />
             <div className="flex gap-2">
               <button
                 onClick={handleSubmitCard}
                 disabled={!newCardText.trim()}
-                className="rounded-md bg-violet-600 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-violet-500 disabled:opacity-40 transition"
+                className="rounded-md bg-[var(--ds-color-action-primary-surface)] px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-[var(--ds-color-action-primary-surface-hover)] disabled:opacity-40 transition"
               >
                 Adicionar
               </button>
               <button
                 onClick={() => { setIsAdding(false); setNewCardText(""); }}
-                className="rounded-md bg-white/5 px-3 py-1.5 text-[11px] text-gray-400 hover:bg-white/10 transition"
+                className="rounded-md bg-[var(--ds-color-input-surface)] px-3 py-1.5 text-[11px] text-[color:var(--ds-color-content-caption)] hover:bg-[var(--ds-color-input-surface-hover)] transition"
               >
                 Cancelar
               </button>
@@ -208,7 +208,7 @@ export default function RetroColumn({
           permissions.canCreateCards && (
             <button
               onClick={() => setIsAdding(true)}
-              className="w-full rounded-lg border border-dashed border-white/10 py-2 text-[11px] text-gray-500 hover:border-violet-500/30 hover:text-violet-400 transition"
+              className="w-full rounded-lg border border-dashed border-[color:var(--ds-color-container-divider-card)] py-2 text-[11px] text-[color:var(--ds-color-content-caption)] hover:border-[color-mix(in_srgb,var(--ds-color-content-primary)_30%,transparent)] hover:text-[color:var(--ds-color-content-primary)] transition"
             >
               + Novo card
             </button>
@@ -219,22 +219,22 @@ export default function RetroColumn({
       {/* Confirmation popup para limpar coluna */}
       {showClearConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="w-full max-w-xs rounded-xl border border-white/10 bg-gray-900 p-5 shadow-2xl">
-            <h4 className="text-sm font-bold text-white mb-2">Limpar coluna</h4>
-            <p className="text-[11px] text-gray-400 mb-4">
-              Tem certeza que deseja remover todos os <strong className="text-white">{column.cards.length} cards</strong> da coluna &quot;{column.title}&quot;?
-              <br /><span className="text-red-400">Esta ação não pode ser desfeita.</span>
+          <div className="w-full max-w-xs rounded-xl border border-[color:var(--ds-color-container-divider-card)] bg-[var(--ds-color-container-popover-surface)] p-5 shadow-2xl">
+            <h4 className="text-sm font-bold text-[color:var(--ds-color-content-title)] mb-2">Limpar coluna</h4>
+            <p className="text-[11px] text-[color:var(--ds-color-content-caption)] mb-4">
+              Tem certeza que deseja remover todos os <strong className="text-[color:var(--ds-color-content-title)]">{column.cards.length} cards</strong> da coluna &quot;{column.title}&quot;?
+              <br /><span className="text-[color:var(--ds-color-content-negative)]">Esta ação não pode ser desfeita.</span>
             </p>
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setShowClearConfirm(false)}
-                className="rounded-md bg-white/10 px-3 py-1.5 text-[11px] font-semibold text-gray-300 hover:bg-white/15 transition"
+                className="rounded-md bg-[var(--ds-color-input-surface)] px-3 py-1.5 text-[11px] font-semibold text-[color:var(--ds-color-content-body)] hover:bg-[var(--ds-color-input-surface-hover)] transition"
               >
                 Cancelar
               </button>
               <button
                 onClick={async () => { await onClear(column.id); setShowClearConfirm(false); }}
-                className="rounded-md bg-red-600 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-red-500 transition"
+                className="rounded-md bg-[var(--ds-color-brand-red-6)] px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-[var(--ds-color-brand-red-7)] transition"
               >
                 Limpar
               </button>
