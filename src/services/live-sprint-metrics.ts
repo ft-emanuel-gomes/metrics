@@ -1,6 +1,6 @@
 import type { SquadConfig } from "@/config/squads";
 import { getJiraClient } from "./jira-client";
-import { fetchActiveSprint, fetchAllSprints } from "./jira-sprints";
+import { fetchActiveSprint, fetchAllSprints, type SprintData } from "./jira-sprints";
 import { fetchChangelog, type StatusTransition } from "./jira-changelog";
 import type { JiraIssueWithChangelog } from "./jira-search";
 import { calculateCycleTimeP85 } from "@/metrics/cycle-time";
@@ -39,10 +39,40 @@ function lastDoneAt(transitions: StatusTransition[]): number | null {
   return null;
 }
 
+/** Limite do intervalo entre o fim da sprint anterior e o início da atual (cobre um fim de semana). */
+const MAX_GAP_BEFORE_START_MS = 72 * 3_600_000;
+
+/**
+ * Início da janela de apuração da sprint vigente.
+ *
+ * Regra de negócio: o time costuma concluir cards depois de fechar a sprint anterior e antes de
+ * clicar em "Iniciar sprint" na nova (ex.: concluído 12:05, sprint anterior fechada 12:02, nova
+ * iniciada 12:08). Usar só o startDate descartaria esses cards: não entrariam em nenhuma sprint.
+ * Por isso a janela começa no fechamento (completeDate) da sprint anterior, limitado a 72h antes
+ * do início para não varrer períodos sem sprint (ex.: squad parada por semanas).
+ */
+async function resolveWindowStartMs(boardId: number, active: SprintData): Promise<number> {
+  const startMs = new Date(active.startDate).getTime();
+  try {
+    const all = await fetchAllSprints(boardId, { fresh: true });
+    const previousCloseMs = all
+      .filter((s) => s.state === "closed" && s.id !== active.id && s.completeDate)
+      .map((s) => new Date(s.completeDate as string).getTime())
+      .filter((ms) => Number.isFinite(ms) && ms <= startMs)
+      .sort((a, b) => b - a)[0];
+    if (previousCloseMs === undefined) return startMs;
+    return Math.max(previousCloseMs, startMs - MAX_GAP_BEFORE_START_MS);
+  } catch {
+    // Sem a lista de sprints: mantém o comportamento anterior (início da sprint)
+    return startMs;
+  }
+}
+
 /**
  * Cycle Time, Vazão e Eficiência da sprint VIGENTE, em tempo real (sem cache), com as mesmas regras
- * do histórico aplicadas aos cards concluídos desde o início da sprint até agora:
- * status atual = Concluído e última transição para Concluído depois do início da sprint.
+ * do histórico aplicadas aos cards concluídos desde o início da janela da sprint (fechamento da
+ * anterior, ver resolveWindowStartMs) até agora:
+ * status atual = Concluído e última transição para Concluído depois do início da janela.
  * Sem sprint ativa: devolve a próxima sprint com state = "future" e indicadores vazios.
  */
 export async function fetchLiveSprintMetrics(
@@ -70,8 +100,8 @@ export async function fetchLiveSprintMetrics(
     };
   }
 
-  const startMs = new Date(active.startDate).getTime();
   const nowMs = Date.now();
+  const startMs = await resolveWindowStartMs(squad.boardId, active);
   // Mesma JQL da Vazão do histórico (concluídos no período, sem amarrar à sprint de origem), em tempo real
   const jql =
     `project = "${squad.project}" ` +
@@ -104,7 +134,7 @@ export async function fetchLiveSprintMetrics(
     // Changelog inline pode vir truncado (100 históricos): busca o completo
     if (histories.length >= 100) transitions = await fetchChangelog(r.key);
     transitions.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
-    // Concluído DEPOIS do início da sprint (o JQL trabalha em minutos; o changelog tem a hora exata)
+    // Concluído DEPOIS do início da janela (o JQL trabalha em minutos; o changelog tem a hora exata)
     const doneAt = lastDoneAt(transitions);
     if (doneAt === null || doneAt < startMs) continue;
     issues.push({
