@@ -15,6 +15,7 @@ import SprintBurndown from "@/components/dashboard/SprintBurndown";
 import LiveSprintMetrics from "@/components/dashboard/LiveSprintMetrics";
 import OccupationBars from "@/components/dashboard/OccupationBars";
 import R2Progress from "@/components/dashboard/R2Progress";
+import SprintSummaryCard from "@/components/dashboard/SprintSummaryCard";
 import ReleaseCalendarBar from "@/components/dashboard/ReleaseCalendarBar";
 import SprintCapacityBar from "@/components/dashboard/SprintCapacityBar";
 import { refreshReleaseSprints } from "@/services/release-calendar-sync";
@@ -288,7 +289,7 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
             {!isDesignMode && (
               <>
                 <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
-                  <CycleTimeChart periodMetrics={data.periodMetrics} stakeholderNote={data.stakeholderNote} />
+                  <SprintSummaryCard periodMetrics={data.periodMetrics} />
                   <R2Progress r2Progress={data.r2Progress} />
                 </div>
                 <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -300,8 +301,9 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
                   <OccupationBars periodMetrics={data.periodMetrics} teamSize={displayTeamSize} />
                 </div>
                 <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-                  {/* Esquerda: Confiança de Entrega + Forecast; direita: Transbordo, Qualidade e CT de correção */}
+                  {/* Esquerda: Cycle Time (comportamento), Confiança de Entrega e Forecast; direita: Transbordo, Qualidade e CT de correção */}
                   <div className="flex flex-col gap-4">
+                    <CycleTimeChart periodMetrics={data.periodMetrics} stakeholderNote={data.stakeholderNote} />
                     <PercentilesBars {...data.percentiles} />
                     <ForecastCards forecast={data.forecast} />
                   </div>
