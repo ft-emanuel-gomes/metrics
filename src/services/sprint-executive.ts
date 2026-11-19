@@ -10,12 +10,6 @@ import { buildSprintExecutive, type ExecCardInput, type ExecSubInput, type Sprin
 /** Campo "Flagged" (impedimento) do Jira da Monte Bravo. Pode ser trocado por env se o campo mudar. */
 const FLAGGED_FIELD = process.env.JIRA_FLAGGED_FIELD || "customfield_10021";
 
-/** Tipos de link que bloqueiam o card, no lado "este card é bloqueado por / requer como pré-requisito". */
-const LINK_KIND: Record<string, "bloqueio" | "pre-requisito"> = {
-  Bloqueio: "bloqueio",
-  "Pré-requisito": "pre-requisito",
-};
-
 const DONE_LIST = [...CYCLE_TIME_END_STATUSES].map((s) => `"${s}"`).join(", ");
 
 /**
@@ -34,7 +28,7 @@ export async function fetchSprintExecutive(
   // Cards (standard issues): com histórico, só para saber quando cada um foi concluído
   const standardRaw = await searchAll(
     `project = "${squad.project}" AND sprint = ${sprint.id} AND issuetype in ${STANDARD_TYPES} AND ${EXCLUDED}`,
-    ["summary", "issuetype", "status", "created", "parent", "issuelinks", FLAGGED_FIELD]
+    ["summary", "issuetype", "status", "created", "parent", FLAGGED_FIELD]
   );
   const cards: ExecCardInput[] = [];
   const cardAsBurndown = new Map<string, BurndownIssue>();
@@ -43,12 +37,7 @@ export async function fetchSprintExecutive(
     const { transitions } = await readHistory(r, sprint.id);
     const bd: BurndownIssue = { key: r.key, issueType: r.fields.issuetype.name, status: r.fields.status.name, created: r.fields.created, transitions };
     cardAsBurndown.set(r.key, bd);
-    const links: ExecCardInput["links"] = [];
-    for (const l of r.fields.issuelinks ?? []) {
-      const kind = l.type?.name ? LINK_KIND[l.type.name] : undefined;
-      // inwardIssue = "é bloqueado por" / "requer como pré-requisito"; outwardIssue é o card bloqueando outro (não conta)
-      if (kind && l.inwardIssue) links.push({ kind, refKey: l.inwardIssue.key, refStatus: l.inwardIssue.fields?.status?.name ?? "" });
-    }
+    // Bloqueio = só a bandeira de impedimento do Jira (links "bloqueia"/"é bloqueado por" não contam)
     const flagged = Array.isArray(r.fields[FLAGGED_FIELD]) && (r.fields[FLAGGED_FIELD] as unknown[]).length > 0;
     cards.push({
       key: r.key,
@@ -58,7 +47,6 @@ export async function fetchSprintExecutive(
       featureTitle: r.fields.parent?.fields?.summary,
       featureStatus: r.fields.parent?.fields?.status?.name,
       flagged,
-      links,
       doneAtMs: doneAt(bd),
     });
   }

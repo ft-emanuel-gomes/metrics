@@ -1,4 +1,4 @@
-import { CYCLE_TIME_END_STATUSES, EXCLUDED_STATUSES } from "@/config/status-mapping";
+import { CYCLE_TIME_END_STATUSES } from "@/config/status-mapping";
 
 /**
  * Resumo executivo da sprint vigente, organizado pelas FEATURES (pai dos standard issues).
@@ -8,11 +8,9 @@ import { CYCLE_TIME_END_STATUSES, EXCLUDED_STATUSES } from "@/config/status-mapp
  * - Concluído = status atual Concluído. Concluído ANTES da janela da sprint (fechamento da anterior) é trabalho
  *   da sprint anterior: fica fora de totais e percentuais (mesma regra do Burndown).
  * - Subtasks: % em HORAS pelo Original Estimate, como no Burndown; sem estimativa não entram no total e são contadas à parte.
- * - Bloqueio ATIVO de um card (não concluído):
- *     · link "Bloqueio" (é bloqueado por) com o bloqueador ainda aberto;
- *     · link "Pré-requisito" (requer como pré-requisito) com o pré-requisito ainda aberto;
- *     · flag de Impedimento marcada no Jira.
- *   Bloqueador já concluído/cancelado não conta. O bloqueio é do card, mas a Feature fica bloqueada.
+ * - Bloqueio = card ainda NÃO concluído marcado como impedimento no Jira (bandeira "Flagged" = Impediment).
+ *   Links entre issues ("bloqueia", "é bloqueado por", pré-requisito) NÃO contam como bloqueio.
+ *   O bloqueio é do card, mas a Feature dele fica bloqueada.
  * - Estado da Feature (nesta ordem): Concluída (status Concluído) > Bloqueada (algum card com bloqueio ativo)
  *   > Em andamento (algum card já iniciado ou concluído) > Por começar.
  */
@@ -28,10 +26,8 @@ export interface ExecCardInput {
   featureKey: string | null;
   featureTitle?: string;
   featureStatus?: string;
-  /** Marcado como impedimento (Flagged) */
+  /** Marcado como impedimento no Jira (Flagged) */
   flagged: boolean;
-  /** Links que podem bloquear o card (apenas "é bloqueado por" e "requer como pré-requisito") */
-  links: { kind: "bloqueio" | "pre-requisito"; refKey: string; refStatus: string }[];
   /** Momento da conclusão (última transição para Concluído); null = não concluído */
   doneAtMs: number | null;
 }
@@ -71,7 +67,6 @@ export interface SprintExecutiveResult {
   features: ExecFeature[];
 }
 
-const CLOSED = new Set<string>([...CYCLE_TIME_END_STATUSES, ...EXCLUDED_STATUSES, "Rejected"]);
 /** Status em que o card ainda não começou (fila/refinamento) */
 const NOT_STARTED = new Set([
   "To Do", "A Fazer", "Pendente", "Backlog", "Selected for Development",
@@ -82,33 +77,19 @@ const round1 = (n: number) => Math.round(n * 10) / 10;
 const pct = (done: number, total: number) => (total > 0 ? Math.round((done / total) * 100) : 0);
 const cardWord = (n: number) => (n === 1 ? "1 card" : `${n} cards`);
 
-/** Bloqueios ativos de um card (vazio = livre). */
-function activeBlockers(card: ExecCardInput): { refs: { key: string; status: string }[]; flagged: boolean } {
-  if (card.doneAtMs !== null) return { refs: [], flagged: false };
-  const refs = card.links.filter((l) => !CLOSED.has(l.refStatus)).map((l) => ({ key: l.refKey, status: l.refStatus }));
-  return { refs, flagged: card.flagged };
+/** Bloqueado = ainda não concluído e com impedimento marcado no Jira. */
+function isBlockedCard(card: ExecCardInput): boolean {
+  return card.doneAtMs === null && card.flagged;
 }
 
-function listRefs(keys: string[]): string {
-  const uniq = [...new Set(keys)];
-  if (uniq.length <= 3) return uniq.length <= 1 ? uniq.join("") : `${uniq.slice(0, -1).join(", ")} e ${uniq[uniq.length - 1]}`;
-  return `${uniq.slice(0, 3).join(", ")} e mais ${uniq.length - 3}`;
-}
-
-function buildBlockNote(blocked: { card: ExecCardInput; refs: { key: string; status: string }[]; flagged: boolean }[]): string {
-  const parts: string[] = [];
-  const linked = blocked.filter((b) => b.refs.length > 0);
-  if (linked.length > 0) {
-    const refKeys = linked.flatMap((b) => b.refs.map((r) => r.key));
-    const statuses = [...new Set(linked.flatMap((b) => b.refs.map((r) => r.status)))];
-    const n = linked.length;
-    parts.push(`${cardWord(n)} ${n === 1 ? "aguarda" : "aguardam"} ${listRefs(refKeys)}${statuses.length === 1 ? ` (${statuses[0]})` : ""}`);
-  }
-  const flagged = blocked.filter((b) => b.flagged);
-  if (flagged.length > 0) {
-    parts.push(flagged.length === 1 ? `${flagged[0].card.key} com impedimento marcado no Jira` : `${cardWord(flagged.length)} com impedimento marcado no Jira`);
-  }
-  return parts.join("; ");
+/** "ED-2045 com impedimento marcado no Jira" / "ED-2045 e ED-2046 com impedimento…" / "4 cards (ED-1, ED-2, ED-3 e mais 1) com…" */
+function buildBlockNote(blocked: ExecCardInput[]): string {
+  const keys = blocked.map((c) => c.key);
+  const list =
+    keys.length === 1 ? keys[0]
+    : keys.length <= 3 ? `${keys.slice(0, -1).join(", ")} e ${keys[keys.length - 1]}`
+    : `${cardWord(keys.length)} (${keys.slice(0, 3).join(", ")} e mais ${keys.length - 3})`;
+  return `${list} com impedimento marcado no Jira`;
 }
 
 export function buildSprintExecutive(input: {
@@ -128,11 +109,7 @@ export function buildSprintExecutive(input: {
   const priorHours = round1(input.subs.filter((s) => isPrior(s.doneAtMs)).reduce((a, s) => a + s.hours, 0));
 
   const cardByKey = new Map(cards.map((c) => [c.key, c]));
-  const blockInfo = new Map(cards.map((c) => [c.key, activeBlockers(c)]));
-  const isBlocked = (c: ExecCardInput) => {
-    const b = blockInfo.get(c.key);
-    return !!b && (b.refs.length > 0 || b.flagged);
-  };
+  const isBlocked = isBlockedCard;
 
   // Horas por Feature, pelo card pai da subtask
   const featureOfCard = (key: string | null) => (key ? cardByKey.get(key)?.featureKey ?? null : null);
@@ -157,7 +134,7 @@ export function buildSprintExecutive(input: {
 
   const features: ExecFeature[] = [...groups.entries()].map(([key, list]) => {
     const head = list[0];
-    const blocked = list.filter(isBlocked).map((c) => ({ card: c, ...(blockInfo.get(c.key) as ReturnType<typeof activeBlockers>) }));
+    const blocked = list.filter(isBlocked);
     const concluded = head.featureStatus ? CYCLE_TIME_END_STATUSES.has(head.featureStatus) : false;
     const started = list.some((c) => c.doneAtMs !== null || !NOT_STARTED.has(c.status));
     const state: FeatureState = concluded ? "concluida" : blocked.length > 0 ? "bloqueada" : started ? "em-andamento" : "nao-iniciada";
@@ -169,7 +146,7 @@ export function buildSprintExecutive(input: {
       state,
       cards: { total: list.length, done: list.filter((c) => c.doneAtMs !== null).length },
       hours: { total: round1(h.total), done: round1(h.done) },
-      blockedCardKeys: blocked.map((b) => b.card.key),
+      blockedCardKeys: blocked.map((c) => c.key),
       blockNote: state === "bloqueada" ? buildBlockNote(blocked) : "",
     };
   });
