@@ -295,15 +295,14 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
             {!isDesignMode && (
               <>
                 {/* Progresso da Release fica no Resumo executivo (Computador de Bordo) */}
-                {/* Linha 1: Vazão × Cycle Time | Cycle Time (comportamento) */}
+                {/* Esquerda: Cycle Time e Vazão por sprint; direita: Vazão × Cycle Time e Ocupação */}
                 <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
-                  <ThroughputVsCycleTime periodMetrics={data.periodMetrics} />
                   <CycleTimeChart periodMetrics={data.periodMetrics} stakeholderNote={data.stakeholderNote} />
+                  <ThroughputVsCycleTime periodMetrics={data.periodMetrics} />
                 </div>
-                {/* Linha 2: Ocupação | Vazão por sprint (abaixo do Cycle Time) */}
                 <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-                  <OccupationBars periodMetrics={data.periodMetrics} teamSize={displayTeamSize} />
                   <ThroughputDonuts periodMetrics={data.periodMetrics} />
+                  <OccupationBars periodMetrics={data.periodMetrics} teamSize={displayTeamSize} />
                 </div>
                 <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
                   {/* Esquerda: Eficiência de fluxo, Confiança de Entrega e Forecast; direita: Transbordo, Qualidade e CT de correção */}
