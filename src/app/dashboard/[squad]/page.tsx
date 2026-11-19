@@ -12,6 +12,7 @@ import ThroughputDonuts from "@/components/dashboard/ThroughputDonuts";
 import FlowEfficiencyBars from "@/components/dashboard/FlowEfficiencyBars";
 import WipAgingChart from "@/components/dashboard/WipAgingChart";
 import SprintBurndown from "@/components/dashboard/SprintBurndown";
+import SprintExecutive from "@/components/dashboard/SprintExecutive";
 import LiveSprintMetrics from "@/components/dashboard/LiveSprintMetrics";
 import OccupationBars from "@/components/dashboard/OccupationBars";
 import R2Progress from "@/components/dashboard/R2Progress";
@@ -230,7 +231,11 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
         {isBordo ? (
           <>
             {/* Computador de Bordo: tudo da sprint vigente, em tempo real */}
+            {/* Resumo executivo: Features priorizadas, avanço e bloqueios (primeira leitura do fórum) */}
             <div className="mt-5">
+              <SprintExecutive squadSlug={slug} issueType={issueTypeParam} />
+            </div>
+            <div className="mt-4">
               <LiveSprintMetrics squadSlug={slug} issueType={issueTypeParam} reference={liveReference} />
             </div>
             <div className="mt-4">

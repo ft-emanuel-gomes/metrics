@@ -1,18 +1,29 @@
-﻿import { getJiraClient } from "./jira-client";
+import { getJiraClient } from "./jira-client";
 import type { SquadConfig } from "@/config/squads";
 import { fetchActiveSprint } from "./jira-sprints";
 import { fetchChangelog } from "./jira-changelog";
 import { calculateSprintBurndown, doneAt, type BurndownIssue, type SprintBurndownResult } from "@/metrics/sprint-burndown";
 import { resolveWindowStartMs } from "./live-sprint-metrics";
 
-interface RawSearchIssue {
+/** Link entre issues como o Jira devolve (só o que o app usa). */
+export interface RawIssueLink {
+  type?: { name?: string };
+  inwardIssue?: { key: string; fields?: { status?: { name?: string } } };
+  outwardIssue?: { key: string; fields?: { status?: { name?: string } } };
+}
+
+export interface RawSearchIssue {
   key: string;
   fields: {
     issuetype: { name: string };
     status: { name: string };
     created: string;
-    parent?: { key?: string; fields?: { issuetype?: { name?: string } } };
+    summary?: string;
+    parent?: { key?: string; fields?: { summary?: string; status?: { name?: string }; issuetype?: { name?: string } } };
     timetracking?: { originalEstimateSeconds?: number };
+    issuelinks?: RawIssueLink[];
+    /** Campos extras pedidos por quem chama (ex.: Flagged) */
+    [field: string]: unknown;
   };
   changelog?: {
     histories: {
@@ -31,16 +42,18 @@ interface SearchResponse {
 export type BurndownMode = "cards" | "hours";
 
 const IDS = (s?: string | null) => (s ? s.split(",").map((v) => v.trim()).filter(Boolean) : []);
-const EXCLUDED = `status not in (Cancelado, CANCELADO, Rejeitado, "Lista de Pendências")`;
-const STANDARD_TYPES = `(História, Story, Bug, Design, "Technical Debt", Kaizen, Task, Spike)`;
-const SUBTASK_TYPES = `(Sub-task, Subtarefa, "Sub-bug")`;
+export const EXCLUDED = `status not in (Cancelado, CANCELADO, Rejeitado, "Lista de Pendências")`;
+export const STANDARD_TYPES = `(História, Story, Bug, Design, "Technical Debt", Kaizen, Task, Spike)`;
+export const SUBTASK_TYPES = `(Sub-task, Subtarefa, "Sub-bug")`;
 
-async function searchAll(jql: string, fields: string[]): Promise<RawSearchIssue[]> {
+/** Busca paginada. Sem changelog (withChangelog = false) é bem mais leve: use quando só o estado atual importa. */
+export async function searchAll(jql: string, fields: string[], withChangelog = true): Promise<RawSearchIssue[]> {
   const client = getJiraClient();
   const raw: RawSearchIssue[] = [];
   let nextPageToken: string | undefined;
   do {
-    const body: Record<string, unknown> = { jql, fields, expand: "changelog", maxResults: 50 };
+    const body: Record<string, unknown> = { jql, fields, maxResults: withChangelog ? 50 : 100 };
+    if (withChangelog) body.expand = "changelog";
     if (nextPageToken) body.nextPageToken = nextPageToken;
     const res: SearchResponse = await client.post<SearchResponse>("/rest/api/3/search/jql", body);
     raw.push(...res.issues);
@@ -50,7 +63,7 @@ async function searchAll(jql: string, fields: string[]): Promise<RawSearchIssue[
 }
 
 /** Transições de status e momento em que o item entrou na sprint (changelog do campo Sprint). */
-async function readHistory(r: RawSearchIssue, sprintId: number) {
+export async function readHistory(r: RawSearchIssue, sprintId: number) {
   const histories = r.changelog?.histories ?? [];
   let transitions = histories.flatMap((h) =>
     h.items
