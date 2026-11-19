@@ -264,9 +264,6 @@ export default function SprintExecutive({ squadSlug, issueType, releaseProgress 
       {/* Transparência: base dos números */}
       <p className="mt-5 text-[10px] t-muted">
         Base: {data.sprint.name} ({fmtDate(data.sprint.startDate)} a {fmtDate(data.sprint.endDate)}), atualizado às {fmtTime(data.asOf)}.
-        {(t.priorWork.cards > 0 || t.priorWork.hours > 0) && (
-          <> Fora da conta: {t.priorWork.cards > 0 && `${t.priorWork.cards} ${t.priorWork.cards === 1 ? "card" : "cards"}`}{t.priorWork.cards > 0 && t.priorWork.hours > 0 && " e "}{t.priorWork.hours > 0 && fmtH(t.priorWork.hours)} já concluídos antes da sprint.</>
-        )}
       </p>
     </section>
   );
