@@ -3,7 +3,7 @@ import { getSquadBySlug } from "@/config/squads";
 import { DataNotAvailableError } from "@/adapters/sprint-adapter-db";
 import { getSprintCapacity } from "@/services/capacity-store";
 import { getAuthSession } from "@/services/auth-session";
-import { fetchClosedSprints } from "@/services/jira-sprints";
+import { fetchClosedSprints, fetchEditableSprint } from "@/services/jira-sprints";
 import { loadDashboardData, DEFAULT_ISSUE_TYPES } from "@/services/dashboard-data";
 import KpiCards from "@/components/dashboard/KpiCards";
 import CycleTimeChart from "@/components/dashboard/CycleTimeChart";
@@ -126,6 +126,14 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
       })()
     : [];
 
+  // Sprints do modal de Capacidade (só admin): a vigente (ou a próxima, se a vigente já foi encerrada) + as concluídas
+  const capacitySprints = squad.methodology === "sprint" && session.isAdmin
+    ? await (async () => {
+        const open = await fetchEditableSprint(squad.boardId);
+        const closed = availableSprints.map((s) => ({ id: s.id, name: s.name, state: "closed" as const, startDate: s.startDate, endDate: s.endDate }));
+        return open ? [{ id: open.id, name: open.name, state: open.state, startDate: open.startDate, endDate: open.endDate }, ...closed] : closed;
+      })()
+    : [];
   // Gerar meses disponíveis (tanto para kanban quanto para sprint squads sem sprints concluídas)
   const availableMonths = generateAvailableMonths(6);
 
@@ -193,7 +201,7 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
           </h1>
           <div className="no-print flex gap-2">
             {session.isAdmin && (
-              <AdminDashboardMenu squad={slug} teamSize={displayTeamSize} availableSprints={availableSprints} />
+              <AdminDashboardMenu squad={slug} teamSize={displayTeamSize} availableSprints={availableSprints} capacitySprints={capacitySprints} />
             )}
             <ThemeToggle />
           </div>
