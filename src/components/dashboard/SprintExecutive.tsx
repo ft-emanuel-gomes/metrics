@@ -37,11 +37,6 @@ const STATE_COLOR: Record<FeatureState, string> = {
   concluida: "var(--ds-color-content-positive)",
 };
 
-const TOOLTIP_TEXT =
-  "Visão executiva da sprint vigente, em tempo real, organizada pelas Features (o pai dos cards). " +
-  "% de cards = standard issues concluídas sobre o total da sprint. % de subtasks = horas concluídas sobre as horas estimadas (Original Estimate), a mesma base do Burndown. " +
-  "Bloqueio ativo = card ainda aberto com link 'é bloqueado por' ou 'requer como pré-requisito' cujo bloqueador não foi concluído, ou card marcado como impedimento no Jira. " +
-  "A Feature fica Bloqueada quando algum card dela está nessa situação. O que foi concluído antes da sprint não conta. Atualiza a cada 5 minutos.";
 
 const fmtH = (v: number) => `${Number.isInteger(v) ? v : v.toFixed(1).replace(".", ",")}h`;
 
@@ -140,7 +135,6 @@ export default function SprintExecutive({ squadSlug, issueType, releaseProgress 
   const title = (
     <h3 className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide t-secondary">
       Resumo executivo — sprint vigente
-      <MetricTooltip text={TOOLTIP_TEXT} />
     </h3>
   );
 
