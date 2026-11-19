@@ -2,7 +2,7 @@
 import type { SquadConfig } from "@/config/squads";
 import { fetchActiveSprint } from "./jira-sprints";
 import { fetchChangelog } from "./jira-changelog";
-import { calculateSprintBurndown, type BurndownIssue, type SprintBurndownResult } from "@/metrics/sprint-burndown";
+import { calculateSprintBurndown, doneAt, type BurndownIssue, type SprintBurndownResult } from "@/metrics/sprint-burndown";
 import { resolveWindowStartMs } from "./live-sprint-metrics";
 
 interface RawSearchIssue {
@@ -127,6 +127,7 @@ export async function fetchSprintBurndown(
     if (seconds <= 0) unestimated.push(r.key);
     const { transitions, sprintAddedAt } = await readHistory(r, sprint.id);
     const parentAdded = parent ? parent.sprintAddedAt : undefined;
+    const parentDoneMs = parent ? doneAt(parent) : null;
     const scopeMs = Math.max(
       new Date(r.fields.created).getTime(),
       sprintAddedAt ? new Date(sprintAddedAt).getTime() : 0,
@@ -139,6 +140,7 @@ export async function fetchSprintBurndown(
       created: r.fields.created,
       transitions,
       sprintAddedAt: new Date(scopeMs).toISOString(),
+      parentDoneAt: parentDoneMs !== null ? new Date(parentDoneMs).toISOString() : undefined,
       weight: seconds / 3600,
     });
   }

@@ -26,6 +26,8 @@ export interface BurndownIssue {
   weight?: number;
   /** Quando entrou na sprint vigente (changelog do campo Sprint). Ausente = nasceu nela. */
   sprintAddedAt?: string;
+  /** Subtask: quando o card pai foi concluído (ISO 8601). Ausente = pai aberto ou desconhecido. */
+  parentDoneAt?: string;
 }
 
 export interface BurndownSprintInfo {
@@ -67,12 +69,19 @@ export interface SprintBurndownResult {
   dayTicks: { x: number; label: string }[];
 }
 
-function doneAt(issue: BurndownIssue): number | null {
+/** Momento em que o item foi concluído (última transição para Concluído); null se não está concluído. */
+export function doneAt(issue: BurndownIssue): number | null {
   if (!CYCLE_TIME_END_STATUSES.has(issue.status)) return null; // revertido/aberto
+  let own = new Date(issue.sprintAddedAt || issue.created).getTime();
   for (let i = issue.transitions.length - 1; i >= 0; i--) {
-    if (CYCLE_TIME_END_STATUSES.has(issue.transitions[i].toStatus)) return new Date(issue.transitions[i].timestamp).getTime();
+    if (CYCLE_TIME_END_STATUSES.has(issue.transitions[i].toStatus)) {
+      own = new Date(issue.transitions[i].timestamp).getTime();
+      break;
+    }
   }
-  return new Date(issue.sprintAddedAt || issue.created).getTime();
+  // Subtask concluída sob um card já concluído: o trabalho acabou quando o card foi entregue,
+  // mesmo que a subtask só tenha sido fechada no Jira depois (coesão com o Burndown de cards)
+  return issue.parentDoneAt ? Math.min(own, new Date(issue.parentDoneAt).getTime()) : own;
 }
 
 function scopeAt(issue: BurndownIssue): number {
