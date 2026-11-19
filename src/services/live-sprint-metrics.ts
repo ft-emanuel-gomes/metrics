@@ -1,6 +1,7 @@
 import type { SquadConfig } from "@/config/squads";
 import { getJiraClient } from "./jira-client";
 import { fetchActiveSprint, fetchAllSprints, type SprintData } from "./jira-sprints";
+import { getSprintNamer } from "./sprint-display";
 import { fetchChangelog, type StatusTransition } from "./jira-changelog";
 import type { JiraIssueWithChangelog } from "./jira-search";
 import { calculateCycleTimeP85 } from "@/metrics/cycle-time";
@@ -93,7 +94,7 @@ export async function fetchLiveSprintMetrics(
       .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())[0];
     if (!next) return null;
     return {
-      sprint: { id: next.id, name: next.name, startDate: next.startDate, endDate: next.endDate },
+      sprint: { id: next.id, name: (await getSprintNamer())(next.name, next.startDate), startDate: next.startDate, endDate: next.endDate },
       state: "future",
       ...empty,
       asOf: new Date().toISOString(),
@@ -151,7 +152,7 @@ export async function fetchLiveSprintMetrics(
   const ct = calculateCycleTimeP85(issues);
   const eff = calculatePeriodFlowEfficiency(issues.map((i) => ({ key: i.key, transitions: i.transitions, issueType: i.issueType })));
   return {
-    sprint: { id: active.id, name: active.name, startDate: active.startDate, endDate: active.endDate },
+    sprint: { id: active.id, name: (await getSprintNamer())(active.name, active.startDate), startDate: active.startDate, endDate: active.endDate },
     state: "active",
     cycleTime: { p85: ct.p85, issueCount: ct.issueCount },
     throughput: calculateThroughput(issues),

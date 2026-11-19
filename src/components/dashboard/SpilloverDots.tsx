@@ -74,7 +74,17 @@ export default function SpilloverDots({ periodMetrics, embedded = false }: Spill
           <BarChart data={rows} layout="vertical" stackOffset="sign" margin={{ top: 4, right: 12, left: 8, bottom: 0 }} barCategoryGap="28%">
             <CartesianGrid horizontal={false} stroke={t.grid} />
             <XAxis type="number" domain={[-100, 100]} ticks={[-100, -50, 0, 50, 100]} tickFormatter={(v) => `${Math.abs(v)}%`} tick={{ fill: t.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
-            <YAxis type="category" dataKey="name" width={78} tick={{ fill: t.body, fontSize: 11 }} axisLine={false} tickLine={false} />
+            {/* Largura para "Sprint N - RN · NN%" em uma linha */}
+            <YAxis
+              type="category"
+              dataKey="name"
+              width={132}
+              tick={(p: { x?: number; y?: number; payload?: { value: string } }) => (
+                <text key={`yt-${p.payload?.value}`} x={p.x} y={p.y} dy={4} textAnchor="end" fill={t.body} fontSize={11}>{p.payload?.value}</text>
+              )}
+              axisLine={false}
+              tickLine={false}
+            />
             <Tooltip
               cursor={{ fill: t.grid, opacity: 0.3 }}
               content={({ active, payload }) => {

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { businessDaysListBrt } from "@/lib/utils";
+import { formatSprintName } from "@/lib/sprint-name";
 
 /** Sprint listada no modal. Vigente/próxima trazem state "active"/"future" (a próxima pode não ter datas). */
 export interface CapacitySprintOption {
@@ -139,15 +140,9 @@ export default function CapacityButton({ squad, availableSprints, defaultTeamSiz
     }
   }
 
-  function simplifySprintName(name: string): string {
-    const match = name.match(/Sprint\s*(\d+)/i);
-    return match ? `Sprint ${match[1]}` : name;
-  }
-
-  /** "Sprint 2 - R3": mesmo formato do Jira. Vigente/próxima já trazem a release no nome. */
+  /** Padrão "Sprint N - RN" (regra em src/lib/sprint-name.ts). */
   function sprintDisplayName(s: CapacitySprintOption): string {
-    if (s.state === "active" || s.state === "future") return s.name;
-    return `${simplifySprintName(s.name)}${s.releaseLabel ? ` - ${s.releaseLabel}` : ""}`;
+    return formatSprintName(s.name, s.releaseLabel);
   }
 
   function optionLabel(s: CapacitySprintOption): string {

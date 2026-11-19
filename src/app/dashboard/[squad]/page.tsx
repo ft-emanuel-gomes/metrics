@@ -4,6 +4,8 @@ import { DataNotAvailableError } from "@/adapters/sprint-adapter-db";
 import { getSprintCapacity } from "@/services/capacity-store";
 import { getAuthSession } from "@/services/auth-session";
 import { fetchClosedSprints, fetchEditableSprint } from "@/services/jira-sprints";
+import { getSprintNamer } from "@/services/sprint-display";
+import { displaySprintName } from "@/lib/sprint-name";
 import { loadDashboardData, DEFAULT_ISSUE_TYPES } from "@/services/dashboard-data";
 import KpiCards from "@/components/dashboard/KpiCards";
 import CycleTimeChart from "@/components/dashboard/CycleTimeChart";
@@ -117,7 +119,8 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
             start <= new Date(`${v.releaseDate}T23:59:59-03:00`).getTime());
           return {
             id: sp.id,
-            name: sp.name,
+            // Padrão "Sprint N - RN" (filtro de sprints, modal de Capacidade, Monte Carlo)
+            name: displaySprintName(sp.name, sp.startDate, versions),
             startDate: sp.startDate,
             endDate: sp.completeDate || sp.endDate,
             releaseLabel: rel ? formatReleaseLabel(rel.name.split(" - ")[0] || rel.name) : undefined,
@@ -130,9 +133,9 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
   // Sprints do modal de Capacidade (só admin): a vigente (ou a próxima, se a vigente já foi encerrada) + as concluídas
   const capacitySprints = squad.methodology === "sprint" && session.isAdmin
     ? await (async () => {
-        const open = await fetchEditableSprint(squad.boardId);
+        const [open, name] = await Promise.all([fetchEditableSprint(squad.boardId), getSprintNamer()]);
         const closed = availableSprints.map((s) => ({ id: s.id, name: s.name, state: "closed" as const, startDate: s.startDate, endDate: s.endDate, releaseLabel: s.releaseShort }));
-        return open ? [{ id: open.id, name: open.name, state: open.state, startDate: open.startDate, endDate: open.endDate }, ...closed] : closed;
+        return open ? [{ id: open.id, name: name(open.name, open.startDate), state: open.state, startDate: open.startDate, endDate: open.endDate }, ...closed] : closed;
       })()
     : [];
   // Gerar meses disponíveis (tanto para kanban quanto para sprint squads sem sprints concluídas)

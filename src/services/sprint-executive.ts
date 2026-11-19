@@ -1,8 +1,7 @@
 import type { SquadConfig } from "@/config/squads";
 import { CYCLE_TIME_END_STATUSES } from "@/config/status-mapping";
 import { fetchActiveSprint } from "./jira-sprints";
-import { fetchProjectVersions } from "./jira-versions";
-import { formatSprintName } from "@/lib/sprint-name";
+import { getSprintNamer } from "./sprint-display";
 import { EXCLUDED, STANDARD_TYPES, SUBTASK_TYPES, readHistory, searchAll } from "./jira-burndown";
 import { resolveWindowStartMs } from "./live-sprint-metrics";
 import { doneAt, type BurndownIssue } from "@/metrics/sprint-burndown";
@@ -16,27 +15,6 @@ const LINK_KIND: Record<string, "bloqueio" | "pre-requisito"> = {
   Bloqueio: "bloqueio",
   "Pré-requisito": "pre-requisito",
 };
-
-/** Sprint iniciada até 3 dias antes da version conta nela (mesma regra do filtro de sprints e do calendário). */
-const RELEASE_TOLERANCE_MS = 3 * 86_400_000;
-
-/**
- * Release ("R4") em que a sprint cai pelas datas. Só busca no Jira quando o nome da sprint não traz a release.
- * Falha no Jira: undefined (o nome fica sem a release).
- */
-async function releaseOfSprint(sprintName: string, startDate: string): Promise<string | undefined> {
-  if (/\bR\s*\d+\b/i.test(sprintName)) return undefined;
-  try {
-    const start = new Date(startDate).getTime();
-    const versions = await fetchProjectVersions("EP");
-    const rel = versions.find((v) => v.startDate && v.releaseDate &&
-      start >= new Date(`${v.startDate}T00:00:00-03:00`).getTime() - RELEASE_TOLERANCE_MS &&
-      start <= new Date(`${v.releaseDate}T23:59:59-03:00`).getTime());
-    return rel ? rel.name.split(" - ")[0] || rel.name : undefined;
-  } catch {
-    return undefined;
-  }
-}
 
 const DONE_LIST = [...CYCLE_TIME_END_STATUSES].map((s) => `"${s}"`).join(", ");
 
@@ -120,7 +98,7 @@ export async function fetchSprintExecutive(
 
   return buildSprintExecutive({
     // Padrão de exibição "Sprint N - RN", seja qual for o nome no Jira
-    sprint: { id: sprint.id, name: formatSprintName(sprint.name, await releaseOfSprint(sprint.name, sprint.startDate)), startDate: sprint.startDate, endDate: sprint.endDate },
+    sprint: { id: sprint.id, name: (await getSprintNamer())(sprint.name, sprint.startDate), startDate: sprint.startDate, endDate: sprint.endDate },
     cards,
     subs,
     windowStartMs,

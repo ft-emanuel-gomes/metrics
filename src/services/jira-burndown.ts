@@ -4,6 +4,7 @@ import { fetchActiveSprint } from "./jira-sprints";
 import { fetchChangelog } from "./jira-changelog";
 import { calculateSprintBurndown, doneAt, type BurndownIssue, type SprintBurndownResult } from "@/metrics/sprint-burndown";
 import { resolveWindowStartMs } from "./live-sprint-metrics";
+import { getSprintNamer } from "./sprint-display";
 
 /** Link entre issues como o Jira devolve (só o que o app usa). */
 export interface RawIssueLink {
@@ -102,7 +103,8 @@ export async function fetchSprintBurndown(
   if (squad.methodology !== "sprint") return null;
   const sprint = await fetchActiveSprint(squad.boardId);
   if (!sprint) return null;
-  const sprintInfo = { id: sprint.id, name: sprint.name, startDate: sprint.startDate, endDate: sprint.endDate };
+  // Nome no padrão "Sprint N - RN"
+  const sprintInfo = { id: sprint.id, name: (await getSprintNamer())(sprint.name, sprint.startDate), startDate: sprint.startDate, endDate: sprint.endDate };
   // Mesma janela do Computador de Bordo: fechamento da sprint anterior (até 72h antes do start)
   const windowStartMs = await resolveWindowStartMs(squad.boardId, sprint);
 

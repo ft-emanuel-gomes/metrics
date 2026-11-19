@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { formatSprintName } from "@/lib/sprint-name";
 
 interface SprintOption {
   id: number;
@@ -29,9 +30,9 @@ interface SimulationResult {
   totalBusinessDays: number;
 }
 
+/** Padrão "Sprint N - RN" (regra em src/lib/sprint-name.ts); o nome já chega com a release. */
 function simplifySprintName(name: string): string {
-  const match = name.match(/Sprint\s*(\d+)/i);
-  return match ? `Sprint ${match[1]}` : name;
+  return formatSprintName(name);
 }
 
 function formatDate(iso: string): string {
