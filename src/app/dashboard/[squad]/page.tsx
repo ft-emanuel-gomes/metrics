@@ -15,8 +15,6 @@ import SprintBurndown from "@/components/dashboard/SprintBurndown";
 import SprintExecutive from "@/components/dashboard/SprintExecutive";
 import LiveSprintMetrics from "@/components/dashboard/LiveSprintMetrics";
 import OccupationBars from "@/components/dashboard/OccupationBars";
-import R2Progress from "@/components/dashboard/R2Progress";
-import SprintSummaryCard from "@/components/dashboard/SprintSummaryCard";
 import ReleaseCalendarBar from "@/components/dashboard/ReleaseCalendarBar";
 import SprintCapacityBar from "@/components/dashboard/SprintCapacityBar";
 import { refreshReleaseSprints } from "@/services/release-calendar-sync";
@@ -233,7 +231,7 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
             {/* Computador de Bordo: tudo da sprint vigente, em tempo real */}
             {/* Resumo executivo: Features priorizadas, avanço e bloqueios (primeira leitura do fórum) */}
             <div className="mt-5">
-              <SprintExecutive squadSlug={slug} issueType={issueTypeParam} />
+              <SprintExecutive squadSlug={slug} issueType={issueTypeParam} releaseProgress={data.r2Progress} />
             </div>
             <div className="mt-4">
               <LiveSprintMetrics squadSlug={slug} issueType={issueTypeParam} reference={liveReference} />
@@ -293,11 +291,8 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
             {/* Engineering Mode: Visão Geral (sprints fechadas) */}
             {!isDesignMode && (
               <>
+                {/* Progresso da Release fica no Resumo executivo (Computador de Bordo) */}
                 <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
-                  <SprintSummaryCard periodMetrics={data.periodMetrics} />
-                  <R2Progress r2Progress={data.r2Progress} />
-                </div>
-                <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
                   <ThroughputDonuts periodMetrics={data.periodMetrics} />
                   <ThroughputVsCycleTime periodMetrics={data.periodMetrics} />
                 </div>

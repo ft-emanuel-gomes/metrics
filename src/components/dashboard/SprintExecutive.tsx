@@ -1,12 +1,16 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import MetricTooltip from "@/components/ui/MetricTooltip";
+import type { R2ProgressResult } from "@/metrics/r2-progress";
+import R2Progress from "./R2Progress";
 import { buildExecutiveNarrative, type ExecFeature, type FeatureState, type SprintExecutiveResult } from "@/metrics/sprint-executive";
 
 interface SprintExecutiveProps {
   squadSlug: string;
   /** Mesmo filtro de tipos do dashboard (query ?issueType=...). */
   issueType?: string;
+  /** Progresso da release ativa (Épicos e Features), exibido abaixo do avanço da sprint */
+  releaseProgress?: R2ProgressResult;
 }
 
 const REFRESH_MS = 5 * 60 * 1000;
@@ -99,7 +103,15 @@ function FeatureRow({ f }: { f: ExecFeature }) {
  * (cards e subtasks) e onde há bloqueio. Hierarquia de texto do Resumo da Squad:
  * rótulo pequeno, frase de abertura grande, frase de atenção, detalhe em texto menor.
  */
-export default function SprintExecutive({ squadSlug, issueType }: SprintExecutiveProps) {
+export default function SprintExecutive({ squadSlug, issueType, releaseProgress }: SprintExecutiveProps) {
+  // Só mostra o progresso da release quando há Épicos ou Features na release ativa
+  const hasRelease = !!releaseProgress && releaseProgress.epics.total + releaseProgress.features.total > 0;
+  const release = hasRelease && releaseProgress ? (
+    <div className="mt-6">
+      <div className="mb-4 h-px w-full" style={{ background: "var(--ds-color-container-divider-card)" }} />
+      <R2Progress r2Progress={releaseProgress} embedded />
+    </div>
+  ) : null;
   const [data, setData] = useState<SprintExecutiveResult | null>(null);
   const [state, setState] = useState<"loading" | "ok" | "empty" | "error">("loading");
   const [message, setMessage] = useState("");
@@ -146,6 +158,8 @@ export default function SprintExecutive({ squadSlug, issueType }: SprintExecutiv
             </>
           )}
         </p>
+        {/* Sem sprint ativa (ou carregando), a release continua visível */}
+        {release && <div className="max-w-xl">{release}</div>}
       </section>
     );
   }
@@ -217,6 +231,9 @@ export default function SprintExecutive({ squadSlug, issueType }: SprintExecutiv
               </p>
             </div>
           </div>
+
+          {/* Progresso da release ativa: Épicos e Features */}
+          {release}
         </div>
 
         {/* Direita: Features priorizadas, bloqueadas primeiro */}
