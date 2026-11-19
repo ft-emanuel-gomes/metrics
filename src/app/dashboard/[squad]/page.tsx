@@ -295,18 +295,20 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
             {!isDesignMode && (
               <>
                 {/* Progresso da Release fica no Resumo executivo (Computador de Bordo) */}
+                {/* Linha 1: Vazão × Cycle Time | Cycle Time (comportamento) */}
                 <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
-                  <ThroughputDonuts periodMetrics={data.periodMetrics} />
                   <ThroughputVsCycleTime periodMetrics={data.periodMetrics} />
+                  <CycleTimeChart periodMetrics={data.periodMetrics} stakeholderNote={data.stakeholderNote} />
                 </div>
+                {/* Linha 2: Ocupação | Vazão por sprint (abaixo do Cycle Time) */}
                 <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-                  <FlowEfficiencyBars periodMetrics={data.periodMetrics} />
                   <OccupationBars periodMetrics={data.periodMetrics} teamSize={displayTeamSize} />
+                  <ThroughputDonuts periodMetrics={data.periodMetrics} />
                 </div>
                 <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-                  {/* Esquerda: Cycle Time (comportamento), Confiança de Entrega e Forecast; direita: Transbordo, Qualidade e CT de correção */}
+                  {/* Esquerda: Eficiência de fluxo, Confiança de Entrega e Forecast; direita: Transbordo, Qualidade e CT de correção */}
                   <div className="flex flex-col gap-4">
-                    <CycleTimeChart periodMetrics={data.periodMetrics} stakeholderNote={data.stakeholderNote} />
+                    <FlowEfficiencyBars periodMetrics={data.periodMetrics} />
                     <PercentilesBars {...data.percentiles} />
                     <ForecastCards forecast={data.forecast} />
                   </div>
