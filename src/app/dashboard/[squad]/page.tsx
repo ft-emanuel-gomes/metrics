@@ -121,6 +121,7 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
             startDate: sp.startDate,
             endDate: sp.completeDate || sp.endDate,
             releaseLabel: rel ? formatReleaseLabel(rel.name.split(" - ")[0] || rel.name) : undefined,
+            releaseShort: rel ? (rel.name.split(" - ")[0] || rel.name) : undefined,
           };
         });
       })()
@@ -130,7 +131,7 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
   const capacitySprints = squad.methodology === "sprint" && session.isAdmin
     ? await (async () => {
         const open = await fetchEditableSprint(squad.boardId);
-        const closed = availableSprints.map((s) => ({ id: s.id, name: s.name, state: "closed" as const, startDate: s.startDate, endDate: s.endDate }));
+        const closed = availableSprints.map((s) => ({ id: s.id, name: s.name, state: "closed" as const, startDate: s.startDate, endDate: s.endDate, releaseLabel: s.releaseShort }));
         return open ? [{ id: open.id, name: open.name, state: open.state, startDate: open.startDate, endDate: open.endDate }, ...closed] : closed;
       })()
     : [];

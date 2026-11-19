@@ -11,6 +11,8 @@ export interface CapacitySprintOption {
   state?: "closed" | "active" | "future";
   startDate?: string;
   endDate?: string;
+  /** Release a que a sprint pertence, forma curta ("R3"). Distingue "Sprint 2" de releases diferentes. */
+  releaseLabel?: string;
 }
 
 interface CapacityButtonProps {
@@ -142,13 +144,19 @@ export default function CapacityButton({ squad, availableSprints, defaultTeamSiz
     return match ? `Sprint ${match[1]}` : name;
   }
 
+  /** "Sprint 2 - R3": mesmo formato do Jira. Vigente/próxima já trazem a release no nome. */
+  function sprintDisplayName(s: CapacitySprintOption): string {
+    if (s.state === "active" || s.state === "future") return s.name;
+    return `${simplifySprintName(s.name)}${s.releaseLabel ? ` - ${s.releaseLabel}` : ""}`;
+  }
+
   function optionLabel(s: CapacitySprintOption): string {
     const saved = savedCapacities[String(s.id)];
     const savedInfo = saved ? ` (${saved.teamSize}p / ${saved.businessDays || jiraBusinessDays(s) || "?"}d)` : "";
     // Vigente e próxima: nome completo (o número da sprint se repete a cada release) e a situação
     if (s.state === "active") return `${s.name} · vigente${savedInfo}`;
     if (s.state === "future") return `${s.name} · próxima (planejamento)${savedInfo}`;
-    return `${simplifySprintName(s.name)}${savedInfo}`;
+    return `${sprintDisplayName(s)}${savedInfo}`;
   }
 
   const capacityHours = teamSize * 6 * businessDays;
@@ -275,7 +283,7 @@ export default function CapacityButton({ squad, availableSprints, defaultTeamSiz
             </p>
             <div className="rounded-md p-3 mb-4 text-[11px] leading-relaxed" style={{ backgroundColor: "var(--accent-bg)", color: "var(--accent)" }}>
               <p>
-                {selectedSprint ? simplifySprintName(selectedSprint.name) : "Sprint"}: de <strong>{initialDays}</strong> para <strong>{businessDays}</strong> dias úteis
+                {selectedSprint ? sprintDisplayName(selectedSprint) : "Sprint"}: de <strong>{initialDays}</strong> para <strong>{businessDays}</strong> dias úteis
                 {autoDays !== undefined && ` (Jira: ${autoDays})`}.
               </p>
               <p>
