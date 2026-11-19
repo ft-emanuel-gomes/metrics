@@ -1,5 +1,6 @@
 import type { SquadConfig } from "@/config/squads";
-import type { DashboardData } from "@/adapters/types";
+import type { DashboardData, Period } from "@/adapters/types";
+import { getSprintNamer } from "@/services/sprint-display";
 import { createDashboardAdapter } from "@/adapters/adapter-factory";
 import { fetchClosedSprints } from "@/services/jira-sprints";
 import { loadRawMeta, loadRawPeriod, type RawPeriodData } from "@/services/s3-raw-storage";
@@ -77,7 +78,7 @@ export async function loadDashboardData(squad: SquadConfig, options: DashboardDa
         return null;
       })
     );
-    const validPeriods = periodsRaw.filter(Boolean) as RawPeriodData[];
+    const validPeriods = await withSprintNames(periodsRaw.filter(Boolean) as RawPeriodData[]);
     if (validPeriods.length > 0) {
       const { wipRaw, r2Raw } = await ensureWipAndR2(squad);
       data = buildDashboardFromRaw(squad, validPeriods, wipRaw, r2Raw, issueTypeFilter);
@@ -89,6 +90,24 @@ export async function loadDashboardData(squad: SquadConfig, options: DashboardDa
     data = squad.methodology === "sprint"
       ? await adapter(squad, requestedSprintIds, issueTypeFilter)
       : await adapter(squad, requestedMonths, undefined, issueTypeFilter);
+    // Mesmo padrão de nome nos períodos do caminho Jira-direto
+    const name = await getSprintNamer();
+    const fix = (p: Period): Period => (p.type === "sprint" ? { ...p, label: name(p.label, p.startDate), shortName: name(p.label, p.startDate) } : p);
+    data = { ...data, periods: data.periods.map(fix), periodMetrics: data.periodMetrics.map((m) => ({ ...m, period: fix(m.period) })) };
   }
   return data;
+}
+
+/**
+ * Rótulos das sprints no padrão "Sprint N - RN" (regra em src/lib/sprint-name.ts), antes do cálculo:
+ * eixos dos gráficos, comparações dos KPIs, Evolução e insights usam o mesmo nome. Não altera o S3.
+ */
+async function withSprintNames(periods: RawPeriodData[]): Promise<RawPeriodData[]> {
+  if (!periods.some((p) => p.period.type === "sprint")) return periods;
+  const name = await getSprintNamer();
+  return periods.map((p) => {
+    if (p.period.type !== "sprint") return p;
+    const display = name(p.period.label, p.period.startDate);
+    return { ...p, period: { ...p.period, label: display, shortName: display } };
+  });
 }

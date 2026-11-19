@@ -63,8 +63,17 @@ export default function SprintCapacityBar({ squadSlug, issueType }: SprintCapaci
   useEffect(() => {
     load();
     const id = setInterval(load, REFRESH_MS);
-    return () => clearInterval(id);
-  }, [load]);
+    // Capacidade alterada no modal (Administrador → Capacidade): busca de novo na hora
+    const onUpdated = (e: Event) => {
+      const squad = (e as CustomEvent<{ squad?: string }>).detail?.squad;
+      if (!squad || squad === squadSlug) load();
+    };
+    window.addEventListener("capacity-updated", onUpdated);
+    return () => {
+      clearInterval(id);
+      window.removeEventListener("capacity-updated", onUpdated);
+    };
+  }, [load, squadSlug]);
 
   const title = (
     <h3 className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide t-secondary">

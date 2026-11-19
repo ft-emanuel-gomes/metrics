@@ -39,7 +39,17 @@ export default function OccupationBars({ periodMetrics, teamSize }: OccupationBa
           <BarChart data={data} layout="vertical" margin={{ top: 4, right: 28, left: 0, bottom: 0 }} barCategoryGap="30%">
             <CartesianGrid horizontal={false} stroke={t.grid} />
             <XAxis type="number" domain={[0, max]} ticks={ticks} tickFormatter={(v) => `${v}%`} tick={{ fill: t.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
-            <YAxis type="category" dataKey="name" width={36} tick={{ fill: t.body, fontSize: 11 }} axisLine={false} tickLine={false} />
+            {/* Largura para "Sprint N - RN" em uma linha */}
+            <YAxis
+              type="category"
+              dataKey="name"
+              width={96}
+              tick={(p: { x?: number; y?: number; payload?: { value: string } }) => (
+                <text key={`yt-${p.payload?.value}`} x={p.x} y={p.y} dy={4} textAnchor="end" fill={t.body} fontSize={11}>{p.payload?.value}</text>
+              )}
+              axisLine={false}
+              tickLine={false}
+            />
             <Tooltip
               cursor={{ fill: t.grid, opacity: 0.35 }}
               contentStyle={{ background: t.surface, border: `1px solid ${t.grid}`, borderRadius: 12, fontSize: 12, color: t.title }}

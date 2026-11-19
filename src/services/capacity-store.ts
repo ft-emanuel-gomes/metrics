@@ -51,8 +51,10 @@ function getBucket(): string {
 const S3_KEY = "config/capacity.json";
 
 // --- In-memory cache para evitar S3 calls constantes ---
-let memoryCache: CapacityAllData | null = null;
-let memoryCacheTs = 0;
+// Fica no globalThis: cada rota do Next pode carregar uma cópia própria deste módulo, e o cache precisa ser
+// o mesmo para que a capacidade salva em uma rota apareça logo nas outras (ex.: barra da Capacidade da Sprint).
+const globalCache = globalThis as typeof globalThis & { __capacityCache?: { data: CapacityAllData | null; ts: number } };
+const cacheState = (globalCache.__capacityCache ??= { data: null, ts: 0 });
 const CACHE_TTL = 60_000; // 1 minuto
 
 // --- S3 operations ---
@@ -114,12 +116,12 @@ function saveToLocal(data: CapacityAllData): void {
  */
 async function loadAll(): Promise<CapacityAllData> {
   const now = Date.now();
-  if (memoryCache && (now - memoryCacheTs) < CACHE_TTL) {
-    return memoryCache;
+  if (cacheState.data && (now - cacheState.ts) < CACHE_TTL) {
+    return cacheState.data;
   }
-  memoryCache = await loadFromS3();
-  memoryCacheTs = now;
-  return memoryCache;
+  cacheState.data = await loadFromS3();
+  cacheState.ts = now;
+  return cacheState.data;
 }
 
 /**
@@ -154,8 +156,8 @@ export async function saveCapacityConfig(
   all[squad][sprintId] = entry;
   await saveToS3(all);
   // Invalidar cache
-  memoryCache = all;
-  memoryCacheTs = Date.now();
+  cacheState.data = all;
+  cacheState.ts = Date.now();
 }
 
 /**
@@ -169,8 +171,8 @@ export function getSprintCapacity(
   fallback: number
 ): number {
   // Leitura síncrona — usa cache em memória ou arquivo local como fallback
-  if (memoryCache) {
-    const entry = memoryCache[squadSlug]?.[String(sprintId)];
+  if (cacheState.data) {
+    const entry = cacheState.data[squadSlug]?.[String(sprintId)];
     if (entry) return typeof entry === "number" ? entry : entry.teamSize;
   }
 
@@ -196,8 +198,8 @@ export function getSprintBusinessDays(
   sprintId: number
 ): number | undefined {
   // Leitura síncrona — usa cache em memória ou arquivo local como fallback
-  if (memoryCache) {
-    const entry = memoryCache[squadSlug]?.[String(sprintId)];
+  if (cacheState.data) {
+    const entry = cacheState.data[squadSlug]?.[String(sprintId)];
     if (entry && typeof entry !== "number") return entry.businessDays;
     return undefined;
   }

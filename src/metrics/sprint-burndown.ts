@@ -26,6 +26,8 @@ export interface BurndownIssue {
   weight?: number;
   /** Quando entrou na sprint vigente (changelog do campo Sprint). Ausente = nasceu nela. */
   sprintAddedAt?: string;
+  /** Subtask: quando o card pai foi concluído (ISO 8601). Ausente = pai aberto ou desconhecido. */
+  parentDoneAt?: string;
 }
 
 export interface BurndownSprintInfo {
@@ -57,6 +59,8 @@ export interface SprintBurndownResult {
   committed: number;
   added: number;
   completed: number;
+  /** Já concluído antes da janela da sprint (trabalho da sprint anterior): fora do Comprometido e dos Concluídos. */
+  priorWork?: number;
   remaining: number;
   /** Restante ideal em "agora". */
   idealNow: number;
@@ -65,12 +69,19 @@ export interface SprintBurndownResult {
   dayTicks: { x: number; label: string }[];
 }
 
-function doneAt(issue: BurndownIssue): number | null {
+/** Momento em que o item foi concluído (última transição para Concluído); null se não está concluído. */
+export function doneAt(issue: BurndownIssue): number | null {
   if (!CYCLE_TIME_END_STATUSES.has(issue.status)) return null; // revertido/aberto
+  let own = new Date(issue.sprintAddedAt || issue.created).getTime();
   for (let i = issue.transitions.length - 1; i >= 0; i--) {
-    if (CYCLE_TIME_END_STATUSES.has(issue.transitions[i].toStatus)) return new Date(issue.transitions[i].timestamp).getTime();
+    if (CYCLE_TIME_END_STATUSES.has(issue.transitions[i].toStatus)) {
+      own = new Date(issue.transitions[i].timestamp).getTime();
+      break;
+    }
   }
-  return new Date(issue.sprintAddedAt || issue.created).getTime();
+  // Subtask concluída sob um card já concluído: o trabalho acabou quando o card foi entregue,
+  // mesmo que a subtask só tenha sido fechada no Jira depois (coesão com o Burndown de cards)
+  return issue.parentDoneAt ? Math.min(own, new Date(issue.parentDoneAt).getTime()) : own;
 }
 
 function scopeAt(issue: BurndownIssue): number {
@@ -88,14 +99,41 @@ function fmtDay(ms: number): string {
   return String(d.getUTCDate()).padStart(2, "0");
 }
 
+export interface BurndownOptions {
+  /**
+   * Início da janela de apuração da sprint (fechamento da sprint anterior, limitado a 72h antes do start).
+   * Regra de negócio: o que foi concluído ANTES da janela é trabalho da sprint anterior que apenas segue
+   * vinculado ao card (ex.: subtasks já feitas de um card que passou de sprint). Não entra em Comprometido
+   * nem em Concluídos. O que foi concluído ENTRE a janela e o start (time conclui após fechar a anterior e
+   * antes de iniciar a nova) pertence à nova sprint: entra no Comprometido e é queimado no início.
+   * Ausente = comportamento antigo (nada é excluído).
+   */
+  windowStartMs?: number;
+}
+
 export function calculateSprintBurndown(
   issues: BurndownIssue[],
   sprint: BurndownSprintInfo,
   now: Date = new Date(),
-  unit: "cards" | "hours" = "cards"
+  unit: "cards" | "hours" = "cards",
+  options: BurndownOptions = {}
 ): SprintBurndownResult {
   const startMs = new Date(sprint.startDate).getTime();
   const endMs = new Date(sprint.endDate).getTime();
+
+  // Trabalho já concluído antes da janela da sprint: fica fora (é da sprint anterior)
+  const windowStartMs = options.windowStartMs === undefined ? undefined : Math.min(options.windowStartMs, startMs);
+  const all = issues;
+  const isPrior = (i: BurndownIssue) => {
+    const d = doneAt(i);
+    return windowStartMs !== undefined && d !== null && d < windowStartMs;
+  };
+  issues = all.filter((i) => !isPrior(i));
+  // Concluído na lacuna (janela até o start): conta na nova sprint, queimando logo após o início
+  const doneMs = (i: BurndownIssue): number | null => {
+    const d = doneAt(i);
+    return d !== null && windowStartMs !== undefined && d <= startMs ? startMs + 1 : d;
+  };
   const nowMs = Math.min(Math.max(now.getTime(), startMs), endMs + DAY_MS * 365);
   const totalDays = Math.max((endMs - startMs) / DAY_MS, 1);
 
@@ -103,11 +141,12 @@ export function calculateSprintBurndown(
   const w = (i: BurndownIssue) => (i.weight === undefined ? 1 : i.weight);
   const sum = (list: BurndownIssue[]) => Math.round(list.reduce((a, i) => a + w(i), 0) * 10) / 10;
   const remainingAt = (t: number) =>
-    sum(issues.filter((i) => scopeAt(i) <= t && !(doneAt(i) !== null && (doneAt(i) as number) <= t)));
+    sum(issues.filter((i) => scopeAt(i) <= t && !(doneMs(i) !== null && (doneMs(i) as number) <= t)));
 
   const committed = sum(issues.filter((i) => scopeAt(i) <= startMs));
   const added = sum(issues.filter((i) => scopeAt(i) > startMs));
-  const completed = sum(issues.filter((i) => doneAt(i) !== null));
+  const completed = sum(issues.filter((i) => doneMs(i) !== null));
+  const priorWork = sum(all.filter(isPrior));
   const remainingNow = remainingAt(nowMs);
   const ideal = (x: number) => Math.max(committed * (1 - x / totalDays), 0);
   const xOf = (t: number) => (t - startMs) / DAY_MS;
@@ -146,6 +185,7 @@ export function calculateSprintBurndown(
     committed,
     added,
     completed,
+    priorWork,
     remaining: remainingNow,
     idealNow: Math.round(ideal(xOf(Math.min(nowMs, endMs))) * 10) / 10,
     rows,

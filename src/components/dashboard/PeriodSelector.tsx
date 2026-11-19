@@ -2,6 +2,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
 import FilterDropdown, { type FilterGroup } from "@/components/ui/FilterDropdown";
+import { formatSprintName } from "@/lib/sprint-name";
 
 export interface SprintOption {
   id: number;
@@ -34,9 +35,9 @@ interface PeriodSelectorProps {
 
 const TZ = "America/Sao_Paulo";
 
+/** Padrão "Sprint N - RN" (regra em src/lib/sprint-name.ts); o nome já chega com a release. */
 function simplifySprintName(name: string): string {
-  const match = name.match(/Sprint\s*(\d+)/i);
-  return match ? `Sprint ${match[1]}` : name;
+  return formatSprintName(name);
 }
 
 function fmtDayMonth(iso?: string): string {

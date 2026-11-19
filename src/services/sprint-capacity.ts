@@ -2,6 +2,7 @@ import type { SquadConfig } from "@/config/squads";
 import { getJiraClient } from "./jira-client";
 import { fetchActiveSprint, fetchAllSprints, type SprintData } from "./jira-sprints";
 import { loadCapacityConfig } from "./capacity-store";
+import { getSprintNamer } from "./sprint-display";
 import type { SubtaskWithEstimate } from "./jira-search";
 import { resolveOccupationEstimates } from "@/metrics/occupation";
 import { businessDaysListBrt } from "@/lib/utils";
@@ -116,7 +117,8 @@ export async function fetchSprintCapacity(
   const businessDays = entry?.businessDays || days.length;
 
   return {
-    sprint: { id: sprint.id, name: sprint.name, startDate: sprint.startDate, endDate: sprint.endDate },
+    // Nome no padrão "Sprint N - RN"
+    sprint: { id: sprint.id, name: (await getSprintNamer())(sprint.name, sprint.startDate), startDate: sprint.startDate, endDate: sprint.endDate },
     state,
     teamSize,
     businessDays,

@@ -1,17 +1,30 @@
-﻿import { getJiraClient } from "./jira-client";
+import { getJiraClient } from "./jira-client";
 import type { SquadConfig } from "@/config/squads";
 import { fetchActiveSprint } from "./jira-sprints";
 import { fetchChangelog } from "./jira-changelog";
-import { calculateSprintBurndown, type BurndownIssue, type SprintBurndownResult } from "@/metrics/sprint-burndown";
+import { calculateSprintBurndown, doneAt, type BurndownIssue, type SprintBurndownResult } from "@/metrics/sprint-burndown";
+import { resolveWindowStartMs } from "./live-sprint-metrics";
+import { getSprintNamer } from "./sprint-display";
 
-interface RawSearchIssue {
+/** Link entre issues como o Jira devolve (só o que o app usa). */
+export interface RawIssueLink {
+  type?: { name?: string };
+  inwardIssue?: { key: string; fields?: { status?: { name?: string } } };
+  outwardIssue?: { key: string; fields?: { status?: { name?: string } } };
+}
+
+export interface RawSearchIssue {
   key: string;
   fields: {
     issuetype: { name: string };
     status: { name: string };
     created: string;
-    parent?: { key?: string; fields?: { issuetype?: { name?: string } } };
+    summary?: string;
+    parent?: { key?: string; fields?: { summary?: string; status?: { name?: string }; issuetype?: { name?: string } } };
     timetracking?: { originalEstimateSeconds?: number };
+    issuelinks?: RawIssueLink[];
+    /** Campos extras pedidos por quem chama (ex.: Flagged) */
+    [field: string]: unknown;
   };
   changelog?: {
     histories: {
@@ -30,16 +43,18 @@ interface SearchResponse {
 export type BurndownMode = "cards" | "hours";
 
 const IDS = (s?: string | null) => (s ? s.split(",").map((v) => v.trim()).filter(Boolean) : []);
-const EXCLUDED = `status not in (Cancelado, CANCELADO, Rejeitado, "Lista de Pendências")`;
-const STANDARD_TYPES = `(História, Story, Bug, Design, "Technical Debt", Kaizen, Task, Spike)`;
-const SUBTASK_TYPES = `(Sub-task, Subtarefa, "Sub-bug")`;
+export const EXCLUDED = `status not in (Cancelado, CANCELADO, Rejeitado, "Lista de Pendências")`;
+export const STANDARD_TYPES = `(História, Story, Bug, Design, "Technical Debt", Kaizen, Task, Spike)`;
+export const SUBTASK_TYPES = `(Sub-task, Subtarefa, "Sub-bug")`;
 
-async function searchAll(jql: string, fields: string[]): Promise<RawSearchIssue[]> {
+/** Busca paginada. Sem changelog (withChangelog = false) é bem mais leve: use quando só o estado atual importa. */
+export async function searchAll(jql: string, fields: string[], withChangelog = true): Promise<RawSearchIssue[]> {
   const client = getJiraClient();
   const raw: RawSearchIssue[] = [];
   let nextPageToken: string | undefined;
   do {
-    const body: Record<string, unknown> = { jql, fields, expand: "changelog", maxResults: 50 };
+    const body: Record<string, unknown> = { jql, fields, maxResults: withChangelog ? 50 : 100 };
+    if (withChangelog) body.expand = "changelog";
     if (nextPageToken) body.nextPageToken = nextPageToken;
     const res: SearchResponse = await client.post<SearchResponse>("/rest/api/3/search/jql", body);
     raw.push(...res.issues);
@@ -49,7 +64,7 @@ async function searchAll(jql: string, fields: string[]): Promise<RawSearchIssue[
 }
 
 /** Transições de status e momento em que o item entrou na sprint (changelog do campo Sprint). */
-async function readHistory(r: RawSearchIssue, sprintId: number) {
+export async function readHistory(r: RawSearchIssue, sprintId: number) {
   const histories = r.changelog?.histories ?? [];
   let transitions = histories.flatMap((h) =>
     h.items
@@ -88,7 +103,10 @@ export async function fetchSprintBurndown(
   if (squad.methodology !== "sprint") return null;
   const sprint = await fetchActiveSprint(squad.boardId);
   if (!sprint) return null;
-  const sprintInfo = { id: sprint.id, name: sprint.name, startDate: sprint.startDate, endDate: sprint.endDate };
+  // Nome no padrão "Sprint N - RN"
+  const sprintInfo = { id: sprint.id, name: (await getSprintNamer())(sprint.name, sprint.startDate), startDate: sprint.startDate, endDate: sprint.endDate };
+  // Mesma janela do Computador de Bordo: fechamento da sprint anterior (até 72h antes do start)
+  const windowStartMs = await resolveWindowStartMs(squad.boardId, sprint);
 
   // Standard issues: base do modo cards e, no modo horas, de quando cada card pai entrou na sprint
   const standardRaw = await searchAll(
@@ -103,7 +121,7 @@ export async function fetchSprintBurndown(
 
   if (mode === "cards") {
     const issues = issueTypeFilter ? standard.filter((i) => issueTypeFilter(i.issueType)) : standard;
-    return calculateSprintBurndown(issues, sprintInfo);
+    return calculateSprintBurndown(issues, sprintInfo, new Date(), "cards", { windowStartMs });
   }
 
   const parents = new Map(standard.map((p) => [p.key, p]));
@@ -124,6 +142,7 @@ export async function fetchSprintBurndown(
     if (seconds <= 0) unestimated.push(r.key);
     const { transitions, sprintAddedAt } = await readHistory(r, sprint.id);
     const parentAdded = parent ? parent.sprintAddedAt : undefined;
+    const parentDoneMs = parent ? doneAt(parent) : null;
     const scopeMs = Math.max(
       new Date(r.fields.created).getTime(),
       sprintAddedAt ? new Date(sprintAddedAt).getTime() : 0,
@@ -136,9 +155,10 @@ export async function fetchSprintBurndown(
       created: r.fields.created,
       transitions,
       sprintAddedAt: new Date(scopeMs).toISOString(),
+      parentDoneAt: parentDoneMs !== null ? new Date(parentDoneMs).toISOString() : undefined,
       weight: seconds / 3600,
     });
   }
 
-  return { ...calculateSprintBurndown(subs, sprintInfo, new Date(), "hours"), unestimated };
+  return { ...calculateSprintBurndown(subs, sprintInfo, new Date(), "hours", { windowStartMs }), unestimated };
 }

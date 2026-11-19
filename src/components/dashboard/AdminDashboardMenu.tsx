@@ -6,12 +6,14 @@ import dynamic from "next/dynamic";
 const MonteCarloModal = dynamic(() => import("./MonteCarloModal"), { ssr: false });
 
 // CapacityButton rendered with autoOpen triggers its modal immediately
-import CapacityButton from "./CapacityButton";
+import CapacityButton, { type CapacitySprintOption } from "./CapacityButton";
 
 interface AdminDashboardMenuProps {
   squad: string;
   teamSize: number;
   availableSprints: { id: number; name: string }[];
+  /** Sprints do modal de Capacidade: vigente (ou próxima) + concluídas */
+  capacitySprints: CapacitySprintOption[];
 }
 
 const ALL_ISSUE_TYPES = ["História", "Bug", "Tech Debt", "Task", "Kaizen", "Spike"];
@@ -20,6 +22,7 @@ export default function AdminDashboardMenu({
   squad,
   teamSize,
   availableSprints,
+  capacitySprints,
 }: AdminDashboardMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [showMonteCarlo, setShowMonteCarlo] = useState(false);
@@ -130,7 +133,7 @@ export default function AdminDashboardMenu({
 
       {/* Capacity Modal — renders CapacityButton which auto-opens via state */}
       {showCapacity && (
-        <CapacityButton squad={squad} availableSprints={availableSprints} autoOpen onAutoClose={() => setShowCapacity(false)} />
+        <CapacityButton squad={squad} availableSprints={capacitySprints.length > 0 ? capacitySprints : availableSprints} defaultTeamSize={teamSize} autoOpen onAutoClose={() => setShowCapacity(false)} />
       )}
     </div>
   );

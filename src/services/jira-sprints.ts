@@ -175,3 +175,55 @@ export async function getLatestSprints(
   // Inverter para ter ordem cronológica (antiga → recente)
   return sprints.reverse();
 }
+
+/**
+ * Sprint ainda aberta no Jira (ativa ou futura), cujas datas podem não existir (sprint em planejamento).
+ */
+export interface OpenSprint {
+  id: number;
+  name: string;
+  state: "active" | "future";
+  startDate?: string;
+  endDate?: string;
+}
+
+/**
+ * Sprint cuja Capacidade (pessoas e dias úteis) pode ser ajustada: a VIGENTE; só quando não há vigente
+ * (a anterior foi encerrada), a PRÓXIMA, que costuma estar em planejamento e por isso pode não ter datas.
+ * Sempre direto no Jira (sem cache). Retorna null se não houver sprint ativa nem futura, ou se o Jira falhar.
+ */
+export async function fetchEditableSprint(boardId: number): Promise<OpenSprint | null> {
+  const client = getJiraClient();
+  try {
+    const open: OpenSprint[] = [];
+    let startAt = 0;
+    let isLast = false;
+    do {
+      const response = await client.get<JiraSprintsResponse>(
+        `/rest/agile/1.0/board/${boardId}/sprint`,
+        { state: "active,future", startAt, maxResults: 50 }
+      );
+      isLast = response.isLast;
+      for (const raw of response.values) {
+        if (raw.state !== "active" && raw.state !== "future") continue;
+        open.push({ id: raw.id, name: raw.name, state: raw.state, startDate: raw.startDate, endDate: raw.endDate });
+      }
+      startAt += 50;
+    } while (!isLast);
+
+    const active = open.find((s) => s.state === "active");
+    if (active) return active;
+    // Próxima: a de início mais cedo; sem datas, a de menor id (criada primeiro)
+    return (
+      open
+        .filter((s) => s.state === "future")
+        .sort((a, b) => {
+          const sa = a.startDate ? new Date(a.startDate).getTime() : Number.POSITIVE_INFINITY;
+          const sb = b.startDate ? new Date(b.startDate).getTime() : Number.POSITIVE_INFINITY;
+          return sa !== sb ? sa - sb : a.id - b.id;
+        })[0] ?? null
+    );
+  } catch {
+    return null;
+  }
+}

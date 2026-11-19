@@ -5,6 +5,7 @@
   withProjectedSprints,
   type ReleaseCalendar,
 } from "@/lib/release-calendar";
+import { formatSprintName } from "@/lib/sprint-name";
 
 interface ReleaseCalendarBarProps {
   calendar: ReleaseCalendar;
@@ -112,7 +113,7 @@ export default function ReleaseCalendarBar({ calendar }: ReleaseCalendarBarProps
           return (
             <div key={s.id} className="min-w-0 flex-1 pr-2 text-[11px]">
               <p className="truncate" style={{ color: "var(--ds-color-content-title)", fontWeight: st === "current" ? 700 : 400 }}>
-                {s.name}
+                {formatSprintName(s.name, calendar.releaseName)}
               </p>
               <p className="t-muted">
                 {fmtDayMonth(s.startDate)} – {fmtDayMonth(getSprintDisplayEnd(s))}{" "}

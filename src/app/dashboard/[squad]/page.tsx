@@ -3,7 +3,9 @@ import { getSquadBySlug } from "@/config/squads";
 import { DataNotAvailableError } from "@/adapters/sprint-adapter-db";
 import { getSprintCapacity } from "@/services/capacity-store";
 import { getAuthSession } from "@/services/auth-session";
-import { fetchClosedSprints } from "@/services/jira-sprints";
+import { fetchClosedSprints, fetchEditableSprint } from "@/services/jira-sprints";
+import { getSprintNamer } from "@/services/sprint-display";
+import { displaySprintName } from "@/lib/sprint-name";
 import { loadDashboardData, DEFAULT_ISSUE_TYPES } from "@/services/dashboard-data";
 import KpiCards from "@/components/dashboard/KpiCards";
 import CycleTimeChart from "@/components/dashboard/CycleTimeChart";
@@ -12,9 +14,9 @@ import ThroughputDonuts from "@/components/dashboard/ThroughputDonuts";
 import FlowEfficiencyBars from "@/components/dashboard/FlowEfficiencyBars";
 import WipAgingChart from "@/components/dashboard/WipAgingChart";
 import SprintBurndown from "@/components/dashboard/SprintBurndown";
+import SprintExecutive from "@/components/dashboard/SprintExecutive";
 import LiveSprintMetrics from "@/components/dashboard/LiveSprintMetrics";
 import OccupationBars from "@/components/dashboard/OccupationBars";
-import R2Progress from "@/components/dashboard/R2Progress";
 import ReleaseCalendarBar from "@/components/dashboard/ReleaseCalendarBar";
 import SprintCapacityBar from "@/components/dashboard/SprintCapacityBar";
 import { refreshReleaseSprints } from "@/services/release-calendar-sync";
@@ -117,15 +119,25 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
             start <= new Date(`${v.releaseDate}T23:59:59-03:00`).getTime());
           return {
             id: sp.id,
-            name: sp.name,
+            // Padrão "Sprint N - RN" (filtro de sprints, modal de Capacidade, Monte Carlo)
+            name: displaySprintName(sp.name, sp.startDate, versions),
             startDate: sp.startDate,
             endDate: sp.completeDate || sp.endDate,
             releaseLabel: rel ? formatReleaseLabel(rel.name.split(" - ")[0] || rel.name) : undefined,
+            releaseShort: rel ? (rel.name.split(" - ")[0] || rel.name) : undefined,
           };
         });
       })()
     : [];
 
+  // Sprints do modal de Capacidade (só admin): a vigente (ou a próxima, se a vigente já foi encerrada) + as concluídas
+  const capacitySprints = squad.methodology === "sprint" && session.isAdmin
+    ? await (async () => {
+        const [open, name] = await Promise.all([fetchEditableSprint(squad.boardId), getSprintNamer()]);
+        const closed = availableSprints.map((s) => ({ id: s.id, name: s.name, state: "closed" as const, startDate: s.startDate, endDate: s.endDate, releaseLabel: s.releaseShort }));
+        return open ? [{ id: open.id, name: name(open.name, open.startDate), state: open.state, startDate: open.startDate, endDate: open.endDate }, ...closed] : closed;
+      })()
+    : [];
   // Gerar meses disponíveis (tanto para kanban quanto para sprint squads sem sprints concluídas)
   const availableMonths = generateAvailableMonths(6);
 
@@ -193,7 +205,7 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
           </h1>
           <div className="no-print flex gap-2">
             {session.isAdmin && (
-              <AdminDashboardMenu squad={slug} teamSize={displayTeamSize} availableSprints={availableSprints} />
+              <AdminDashboardMenu squad={slug} teamSize={displayTeamSize} availableSprints={availableSprints} capacitySprints={capacitySprints} />
             )}
             <ThemeToggle />
           </div>
@@ -220,7 +232,11 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
         {isBordo ? (
           <>
             {/* Computador de Bordo: tudo da sprint vigente, em tempo real */}
+            {/* Resumo executivo: Features priorizadas, avanço e bloqueios (primeira leitura do fórum) */}
             <div className="mt-5">
+              <SprintExecutive squadSlug={slug} issueType={issueTypeParam} releaseProgress={data.r2Progress} />
+            </div>
+            <div className="mt-4">
               <LiveSprintMetrics squadSlug={slug} issueType={issueTypeParam} reference={liveReference} />
             </div>
             <div className="mt-4">
@@ -278,21 +294,20 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
             {/* Engineering Mode: Visão Geral (sprints fechadas) */}
             {!isDesignMode && (
               <>
+                {/* Progresso da Release fica no Resumo executivo (Computador de Bordo) */}
+                {/* Esquerda: Cycle Time e Vazão por sprint; direita: Vazão × Cycle Time e Ocupação */}
                 <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
                   <CycleTimeChart periodMetrics={data.periodMetrics} stakeholderNote={data.stakeholderNote} />
-                  <R2Progress r2Progress={data.r2Progress} />
-                </div>
-                <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-                  <ThroughputDonuts periodMetrics={data.periodMetrics} />
                   <ThroughputVsCycleTime periodMetrics={data.periodMetrics} />
                 </div>
                 <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-                  <FlowEfficiencyBars periodMetrics={data.periodMetrics} />
+                  <ThroughputDonuts periodMetrics={data.periodMetrics} />
                   <OccupationBars periodMetrics={data.periodMetrics} teamSize={displayTeamSize} />
                 </div>
                 <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-                  {/* Esquerda: Confiança de Entrega + Forecast; direita: Transbordo, Qualidade e CT de correção */}
+                  {/* Esquerda: Eficiência de fluxo, Confiança de Entrega e Forecast; direita: Transbordo, Qualidade e CT de correção */}
                   <div className="flex flex-col gap-4">
+                    <FlowEfficiencyBars periodMetrics={data.periodMetrics} />
                     <PercentilesBars {...data.percentiles} />
                     <ForecastCards forecast={data.forecast} />
                   </div>

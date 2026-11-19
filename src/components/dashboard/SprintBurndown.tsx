@@ -255,6 +255,11 @@ export default function SprintBurndown({ squadSlug, issueType, embedded = false 
       <p className="mt-1 text-[11px] t-muted leading-relaxed">
         {reading} Linha ideal em dias corridos; atualizado às {fmtDateTime(data.asOf).slice(-5)}.
       </p>
+      {(data.priorWork ?? 0) > 0 && (
+        <p className="mt-1 text-[11px] t-muted leading-relaxed">
+          {fmtV(data.priorWork as number)} já concluídos antes desta sprint (trabalho da sprint anterior) ficam fora do Comprometido e dos Concluídos.
+        </p>
+      )}
     </div>
   );
 }
