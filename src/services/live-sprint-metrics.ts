@@ -51,7 +51,7 @@ const MAX_GAP_BEFORE_START_MS = 72 * 3_600_000;
  * Por isso a janela começa no fechamento (completeDate) da sprint anterior, limitado a 72h antes
  * do início para não varrer períodos sem sprint (ex.: squad parada por semanas).
  */
-async function resolveWindowStartMs(boardId: number, active: SprintData): Promise<number> {
+export async function resolveWindowStartMs(boardId: number, active: SprintData): Promise<number> {
   const startMs = new Date(active.startDate).getTime();
   try {
     const all = await fetchAllSprints(boardId, { fresh: true });

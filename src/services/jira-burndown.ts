@@ -3,6 +3,7 @@ import type { SquadConfig } from "@/config/squads";
 import { fetchActiveSprint } from "./jira-sprints";
 import { fetchChangelog } from "./jira-changelog";
 import { calculateSprintBurndown, type BurndownIssue, type SprintBurndownResult } from "@/metrics/sprint-burndown";
+import { resolveWindowStartMs } from "./live-sprint-metrics";
 
 interface RawSearchIssue {
   key: string;
@@ -89,6 +90,8 @@ export async function fetchSprintBurndown(
   const sprint = await fetchActiveSprint(squad.boardId);
   if (!sprint) return null;
   const sprintInfo = { id: sprint.id, name: sprint.name, startDate: sprint.startDate, endDate: sprint.endDate };
+  // Mesma janela do Computador de Bordo: fechamento da sprint anterior (até 72h antes do start)
+  const windowStartMs = await resolveWindowStartMs(squad.boardId, sprint);
 
   // Standard issues: base do modo cards e, no modo horas, de quando cada card pai entrou na sprint
   const standardRaw = await searchAll(
@@ -103,7 +106,7 @@ export async function fetchSprintBurndown(
 
   if (mode === "cards") {
     const issues = issueTypeFilter ? standard.filter((i) => issueTypeFilter(i.issueType)) : standard;
-    return calculateSprintBurndown(issues, sprintInfo);
+    return calculateSprintBurndown(issues, sprintInfo, new Date(), "cards", { windowStartMs });
   }
 
   const parents = new Map(standard.map((p) => [p.key, p]));
@@ -140,5 +143,5 @@ export async function fetchSprintBurndown(
     });
   }
 
-  return { ...calculateSprintBurndown(subs, sprintInfo, new Date(), "hours"), unestimated };
+  return { ...calculateSprintBurndown(subs, sprintInfo, new Date(), "hours", { windowStartMs }), unestimated };
 }
