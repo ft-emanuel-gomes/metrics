@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import MetricTooltip from "@/components/ui/MetricTooltip";
 import type { R2ProgressResult } from "@/metrics/r2-progress";
 import R2Progress from "./R2Progress";
@@ -36,8 +36,10 @@ const STATE_COLOR: Record<FeatureState, string> = {
   concluida: "var(--ds-color-content-positive)",
 };
 
-const HOURS_TOOLTIP =
-  "Horas alocadas da sprint: para cada card, vale o maior entre a estimativa do card e a soma das subtasks (Original Estimate), sem somar os dois. É a mesma base das Horas alocadas da Capacidade da Sprint. Concluído = horas dos itens já concluídos.";
+const SUBTASK_TOOLTIP =
+  "Subtasks (Sub-task e Sub-bug) em horas, pelo Original Estimate. Mesma base do Burndown em horas. Subtask sem estimativa não entra na conta.";
+const ALLOCATED_TOOLTIP =
+  "Horas alocadas da sprint: para cada card, vale o maior entre a estimativa do card e a soma das subtasks, sem somar os dois. Mesma base das Horas alocadas da Capacidade da Sprint.";
 
 const fmtH = (v: number) => `${Number.isInteger(v) ? v : v.toFixed(1).replace(".", ",")}h`;
 
@@ -65,58 +67,105 @@ function Bar({ pct, color = "var(--ds-color-content-primary)", height = 10 }: { 
   );
 }
 
-const CELL = "px-2.5 py-2 align-middle";
 const BORDER = "1px solid var(--ds-color-container-divider-card)";
 
-/** Linha da tabela de Features: Feature | Situação | Cards | Andamento (horas) | Horas | Bloqueio */
-function FeatureRow({ f }: { f: ExecFeature }) {
+/** Um número do detalhe da Feature: rótulo pequeno e valor */
+function Stat({ label, value, hint }: { label: string; value: ReactNode; hint?: string }) {
+  return (
+    <div className="min-w-0">
+      <p className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: "var(--ds-color-content-caption)" }}>{label}</p>
+      <p className="mt-0.5 text-[13px] tabular-nums" style={{ color: "var(--ds-color-content-title)" }}>{value}</p>
+      {hint && <p className="text-[11px]" style={{ color: "var(--ds-color-content-subdued)" }}>{hint}</p>}
+    </div>
+  );
+}
+
+/**
+ * Linha da Feature: nome inteiro (quebra em várias linhas), situação e bloqueio.
+ * Clique abre o detalhe: cards, andamento e as duas visões de horas.
+ */
+function FeatureRow({ f, open, onToggle }: { f: ExecFeature; open: boolean; onToggle: () => void }) {
   const cell = STATE_CELL[f.state];
   const shownBlockers = f.blockedCardKeys.slice(0, 2);
   const moreBlockers = f.blockedCardKeys.length - shownBlockers.length;
+  const progressPct = f.allocatedHours.total > 0 ? f.allocatedHours.pct : f.cards.total > 0 ? Math.round((f.cards.done / f.cards.total) * 100) : 0;
   return (
-    <tr style={{ borderTop: BORDER }}>
-      {/* Faixa colorida à esquerda, na cor da situação */}
-      <td className={`${CELL} min-w-0`} style={{ borderLeft: `3px solid ${STATE_COLOR[f.state]}` }}>
-        <p className="truncate text-[12px] leading-snug" style={{ color: "var(--ds-color-content-title)" }} title={`${f.key} ${f.title}`}>
-          <a href={`${JIRA_BROWSE}${f.key}`} target="_blank" rel="noopener noreferrer" className="font-semibold underline-offset-2 hover:underline" style={{ color: "var(--ds-color-content-primary)" }}>
+    <li style={{ borderTop: BORDER }}>
+      <div
+        role="button"
+        tabIndex={0}
+        aria-expanded={open}
+        onClick={onToggle}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onToggle(); } }}
+        className="grid cursor-pointer grid-cols-[minmax(0,1fr)_112px_92px_20px] items-stretch transition hover:bg-[var(--ds-color-input-surface-hover)]"
+        style={{ borderLeft: `3px solid ${STATE_COLOR[f.state]}` }}
+      >
+        <p className="px-3 py-2.5 text-[12px] leading-snug" style={{ color: "var(--ds-color-content-title)" }}>
+          <a
+            href={`${JIRA_BROWSE}${f.key}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="font-semibold underline-offset-2 hover:underline"
+            style={{ color: "var(--ds-color-content-primary)" }}
+          >
             {f.key}
           </a>{" "}
           {f.title}
         </p>
-      </td>
-      <td className="p-0 align-middle" style={{ borderLeft: BORDER }}>
-        <div className="flex h-full min-h-[34px] items-center justify-center px-2 text-[11px] font-semibold" style={{ background: cell.bg, color: cell.fg }}>
+        <div className="flex items-center justify-center px-2 text-[11px] font-semibold" style={{ background: cell.bg, color: cell.fg }}>
           {STATE_LABEL[f.state]}
         </div>
-      </td>
-      <td className={`${CELL} whitespace-nowrap text-center text-[12px] tabular-nums`} style={{ borderLeft: BORDER, color: "var(--ds-color-content-body)" }}>
-        {f.cards.done}/{f.cards.total}
-      </td>
-      <td className={CELL} style={{ borderLeft: BORDER }}>
-        <Bar pct={f.hours.total > 0 ? f.hours.pct : f.cards.total > 0 ? Math.round((f.cards.done / f.cards.total) * 100) : 0} color={STATE_COLOR[f.state]} height={6} />
-      </td>
-      <td className={`${CELL} whitespace-nowrap text-right text-[12px] tabular-nums`} style={{ borderLeft: BORDER, color: "var(--ds-color-content-body)" }}>
-        {f.hours.total > 0 ? `${fmtH(f.hours.done)} / ${fmtH(f.hours.total)}` : <span className="t-muted">sem estimativa</span>}
-      </td>
-      <td className={`${CELL} whitespace-nowrap text-[11px]`} style={{ borderLeft: BORDER }}>
-        {f.blockedCardKeys.length === 0 ? (
-          <span className="t-muted">—</span>
-        ) : (
-          <span className="font-semibold" style={{ color: "var(--ds-color-content-negative)" }} title={f.blockNote}>
-            {shownBlockers.map((k, i) => (
-              <span key={k}>
-                {i > 0 && ", "}
-                <a href={`${JIRA_BROWSE}${k}`} target="_blank" rel="noopener noreferrer" className="underline-offset-2 hover:underline">{k}</a>
-              </span>
-            ))}
-            {moreBlockers > 0 && ` +${moreBlockers}`}
-          </span>
-        )}
-      </td>
-    </tr>
+        <div className="flex items-center px-2.5 text-[11px]">
+          {f.blockedCardKeys.length === 0 ? (
+            <span className="t-muted">—</span>
+          ) : (
+            <span className="font-semibold" style={{ color: "var(--ds-color-content-negative)" }} title={f.blockNote}>
+              {shownBlockers.map((k, i) => (
+                <span key={k}>
+                  {i > 0 && ", "}
+                  <a href={`${JIRA_BROWSE}${k}`} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="underline-offset-2 hover:underline">{k}</a>
+                </span>
+              ))}
+              {moreBlockers > 0 && ` +${moreBlockers}`}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center justify-center" aria-hidden="true" style={{ color: "var(--ds-color-content-subdued)" }}>
+          <svg width="12" height="12" viewBox="0 0 12 12" style={{ transform: open ? "rotate(90deg)" : "none", transition: "transform .15s" }}>
+            <path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+      </div>
+
+      {open && (
+        <div className="grid grid-cols-2 gap-x-4 gap-y-3 px-4 pb-3 pt-1 sm:grid-cols-4" style={{ borderLeft: `3px solid ${STATE_COLOR[f.state]}`, background: "var(--ds-color-container-card-surface-default)" }}>
+          <Stat label="Cards" value={`${f.cards.done} de ${f.cards.total}`} hint="concluídos" />
+          <div className="min-w-0">
+            <p className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: "var(--ds-color-content-caption)" }}>Andamento</p>
+            <p className="mt-0.5 text-[13px] tabular-nums" style={{ color: "var(--ds-color-content-title)" }}>{progressPct}%</p>
+            <div className="mt-1"><Bar pct={progressPct} color={STATE_COLOR[f.state]} height={5} /></div>
+          </div>
+          <Stat
+            label="Horas alocadas"
+            value={f.allocatedHours.total > 0 ? `${fmtH(f.allocatedHours.done)} de ${fmtH(f.allocatedHours.total)}` : "sem estimativa"}
+            hint="cards e subtasks"
+          />
+          <Stat
+            label="Horas em subtasks"
+            value={f.subtaskHours.total > 0 ? `${fmtH(f.subtaskHours.done)} de ${fmtH(f.subtaskHours.total)}` : "sem subtasks estimadas"}
+            hint="base do Burndown"
+          />
+          {f.state === "bloqueada" && f.blockNote && (
+            <p className="col-span-2 text-[12px] font-medium sm:col-span-4" style={{ color: "var(--ds-color-content-negative)" }}>
+              Bloqueio: {f.blockNote}.
+            </p>
+          )}
+        </div>
+      )}
+    </li>
   );
 }
-
 /**
  * Resumo executivo da sprint vigente: quais Features estão priorizadas, quanto já foi concluído
  * (cards e horas alocadas) e onde há bloqueio. Hierarquia de texto do Resumo da Squad:
@@ -135,6 +184,9 @@ export default function SprintExecutive({ squadSlug, issueType, releaseProgress 
   const [data, setData] = useState<SprintExecutiveResult | null>(null);
   const [state, setState] = useState<"loading" | "ok" | "empty" | "error">("loading");
   const [message, setMessage] = useState("");
+  // Features abertas no drilldown
+  const [openKeys, setOpenKeys] = useState<Set<string>>(new Set());
+  const toggle = (key: string) => setOpenKeys((prev) => { const next = new Set(prev); if (next.has(key)) next.delete(key); else next.add(key); return next; });
 
   const load = useCallback(async () => {
     try {
@@ -186,7 +238,8 @@ export default function SprintExecutive({ squadSlug, issueType, releaseProgress 
   const n = buildExecutiveNarrative(data);
   const t = data.totals;
   const attentionColor = n.attentionTone === "negative" ? "var(--ds-color-content-negative)" : n.attentionTone === "positive" ? "var(--ds-color-content-positive)" : "var(--ds-color-content-body)";
-  const head = "px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wide";
+  const head = "px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide";
+  const allOpen = data.features.length > 0 && data.features.every((f) => openKeys.has(f.key));
 
   return (
     <section className="theme-section" aria-label="Resumo executivo da sprint">
@@ -234,23 +287,33 @@ export default function SprintExecutive({ squadSlug, issueType, releaseProgress 
 
             <div>
               <p className="mb-2 flex items-center gap-1.5 text-[15px]" style={{ color: "var(--ds-color-content-title)" }}>
-                {fmtH(t.hours.done)} de {fmtH(t.hours.total)} alocadas concluídas
-                <MetricTooltip text={HOURS_TOOLTIP} />
+                {fmtH(t.subtaskHours.done)} de {fmtH(t.subtaskHours.total)} em subtasks concluídas
+                <MetricTooltip text={SUBTASK_TOOLTIP} />
               </p>
-              <Bar pct={t.hours.pct} height={12} />
+              <Bar pct={t.subtaskHours.pct} height={12} />
               <p className="mt-1.5 text-[12px]">
-                <span style={{ color: "var(--ds-color-content-positive)" }}>{t.hours.pct}% concluído</span>
-                <span className="t-muted"> | cards e subtasks</span>
-                {t.hours.unestimatedSubtasks > 0 && (
+                <span style={{ color: "var(--ds-color-content-positive)" }}>{t.subtaskHours.pct}% concluído</span>
+                {t.subtaskHours.unestimatedSubtasks > 0 && (
                   <>
                     <span className="t-muted"> | </span>
-                    <span style={{ color: "var(--ds-color-content-alert)" }}>{t.hours.unestimatedSubtasks === 1 ? "1 subtask sem estimativa" : `${t.hours.unestimatedSubtasks} subtasks sem estimativa`}</span>
+                    <span style={{ color: "var(--ds-color-content-alert)" }}>{t.subtaskHours.unestimatedSubtasks === 1 ? "1 subtask sem estimativa" : `${t.subtaskHours.unestimatedSubtasks} subtasks sem estimativa`}</span>
                   </>
                 )}
               </p>
             </div>
-          </div>
 
+            <div>
+              <p className="mb-2 flex items-center gap-1.5 text-[15px]" style={{ color: "var(--ds-color-content-title)" }}>
+                {fmtH(t.allocatedHours.done)} de {fmtH(t.allocatedHours.total)} alocadas concluídas
+                <MetricTooltip text={ALLOCATED_TOOLTIP} />
+              </p>
+              <Bar pct={t.allocatedHours.pct} height={12} />
+              <p className="mt-1.5 text-[12px]">
+                <span style={{ color: "var(--ds-color-content-positive)" }}>{t.allocatedHours.pct}% concluído</span>
+                <span className="t-muted"> | cards e subtasks, mesma base da Capacidade</span>
+              </p>
+            </div>
+          </div>
           {/* Progresso da release ativa: Épicos e Features */}
           {release}
         </div>
@@ -263,36 +326,30 @@ export default function SprintExecutive({ squadSlug, issueType, releaseProgress 
           {data.features.length === 0 ? (
             <p className="py-3 text-[12px] t-muted">Nenhum card da sprint está ligado a uma Feature.</p>
           ) : (
-            <div className="overflow-hidden rounded-xl" style={{ border: BORDER }}>
-              <table className="w-full table-fixed border-collapse">
-                <colgroup>
-                  <col />
-                  <col style={{ width: 108 }} />
-                  <col style={{ width: 56 }} />
-                  <col style={{ width: 84 }} />
-                  <col style={{ width: 92 }} />
-                  <col style={{ width: 96 }} />
-                </colgroup>
-                <thead>
-                  <tr style={{ background: "var(--ds-color-container-card-surface-default)", color: "var(--ds-color-content-caption)" }}>
-                    <th className={`${head} text-left`}>Feature</th>
-                    <th className={`${head} text-center`} style={{ borderLeft: BORDER }}>Situação</th>
-                    <th className={`${head} text-center`} style={{ borderLeft: BORDER }}>Cards</th>
-                    <th className={`${head} text-left`} style={{ borderLeft: BORDER }}>Andamento</th>
-                    <th className={`${head} text-right`} style={{ borderLeft: BORDER }}>
-                      <span className="inline-flex items-center justify-end gap-1">Horas <MetricTooltip text={HOURS_TOOLTIP} /></span>
-                    </th>
-                    <th className={`${head} text-left`} style={{ borderLeft: BORDER }}>Bloqueio</th>
-                  </tr>
-                </thead>
-                <tbody>
+            <>
+              <div className="overflow-hidden rounded-xl" style={{ border: BORDER }}>
+                <div className="grid grid-cols-[minmax(0,1fr)_112px_92px_20px]" style={{ background: "var(--ds-color-container-card-surface-default)", color: "var(--ds-color-content-caption)" }}>
+                  <p className={head}>Feature</p>
+                  <p className={`${head} text-center`}>Situação</p>
+                  <p className={head}>Bloqueio</p>
+                  <span />
+                </div>
+                <ul>
                   {data.features.map((f) => (
-                    <FeatureRow key={f.key} f={f} />
+                    <FeatureRow key={f.key} f={f} open={openKeys.has(f.key)} onToggle={() => toggle(f.key)} />
                   ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                </ul>
+              </div>
+              <button
+                type="button"
+                onClick={() => setOpenKeys(allOpen ? new Set() : new Set(data.features.map((f) => f.key)))}
+                className="mt-2 text-[11px] font-medium"
+                style={{ color: "var(--ds-color-content-primary)" }}
+              >
+                {allOpen ? "Recolher todas" : "Abrir o detalhe de todas"}
+              </button>
+              <span className="ml-2 text-[11px] t-muted">Clique na Feature para ver cards, andamento e horas.</span>
+            </>          )}
         </div>
       </div>
 

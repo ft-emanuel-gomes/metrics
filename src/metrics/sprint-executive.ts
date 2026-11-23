@@ -8,9 +8,11 @@ import { resolveOccupationEstimates } from "./occupation";
  * - Escopo = standard issues na sprint agora (filtro de tipos da tela); a subtask segue o tipo do card pai.
  * - Concluído = status atual Concluído. Concluído ANTES da janela da sprint (fechamento da anterior) é trabalho
  *   da sprint anterior: fica fora de totais e percentuais (mesma regra do Burndown).
- * - Horas = ALOCAÇÃO (mesma regra e mesma base da Ocupação e da Capacidade da Sprint): por card, o MAIOR entre a
- *   estimativa do card e a soma das subtasks (nunca soma os dois); itens da sprint agora, concluídos ou não.
- *   Concluído = horas dos itens com status Concluído; o total bate com as "Horas alocadas" da Capacidade da Sprint.
+ * - Duas visões de horas, lado a lado para transparência:
+ *   · Subtasks: Original Estimate das subtasks (Sub-task e Sub-bug), mesma base do Burndown em horas
+ *     (concluído antes da janela da sprint fica fora).
+ *   · Alocadas (cards + subtasks): regra da Ocupação: por card, o MAIOR entre a estimativa do card e a soma das
+ *     subtasks (nunca soma os dois); todos os itens da sprint agora. Bate com as "Horas alocadas" da Capacidade.
  * - Bloqueio = card ainda NÃO concluído marcado como impedimento no Jira (bandeira "Flagged" = Impediment).
  *   Links entre issues ("bloqueia", "é bloqueado por", pré-requisito) NÃO contam como bloqueio.
  *   O bloqueio é do card, mas a Feature dele fica bloqueada.
@@ -52,8 +54,10 @@ export interface ExecFeature {
   status: string;
   state: FeatureState;
   cards: { total: number; done: number };
-  /** Horas alocadas da Feature (cards + subtasks, regra do maior) e quanto já foi concluído */
-  hours: { total: number; done: number; pct: number };
+  /** Horas das subtasks da Feature (base do Burndown em horas) */
+  subtaskHours: { total: number; done: number; pct: number };
+  /** Horas alocadas da Feature (cards + subtasks, regra do maior; base da Capacidade) */
+  allocatedHours: { total: number; done: number; pct: number };
   /** Cards da Feature com bloqueio ativo */
   blockedCardKeys: string[];
   /** Texto curto do motivo do bloqueio (vazio se não bloqueada) */
@@ -66,8 +70,10 @@ export interface SprintExecutiveResult {
   totals: {
     features: { total: number; concluded: number; blocked: number; inProgress: number; notStarted: number };
     cards: { total: number; done: number; pct: number; blocked: number; /** Cards bloqueados sem Feature como pai (chaves) */ blockedWithoutFeature: string[] };
+    /** Horas das subtasks (Sub-task e Sub-bug), mesma base do Burndown em horas */
+    subtaskHours: { total: number; done: number; pct: number; unestimatedSubtasks: number };
     /** Horas alocadas (cards + subtasks), mesma base das "Horas alocadas" da Capacidade da Sprint */
-    hours: { total: number; done: number; pct: number; unestimatedSubtasks: number };
+    allocatedHours: { total: number; done: number; pct: number };
     /** Cards já concluídos antes da sprint (fora das contagens de cards) */
     priorWork: { cards: number };
   };
@@ -126,7 +132,20 @@ export function buildSprintExecutive(input: {
 
   // Trabalho concluído antes da janela da sprint fica fora
   const cards = input.cards.filter((c) => !isPrior(c.doneAtMs));
+  const subs = input.subs.filter((s) => !isPrior(s.doneAtMs));
   const priorCards = input.cards.length - cards.length;
+
+  // Horas das subtasks por Feature (base do Burndown em horas), pelo card pai da subtask
+  const cardByKey = new Map(cards.map((c) => [c.key, c]));
+  const subHoursByFeature = new Map<string, { total: number; done: number }>();
+  for (const s of subs) {
+    const fk = s.parentKey ? cardByKey.get(s.parentKey)?.featureKey : null;
+    if (!fk) continue;
+    const h = subHoursByFeature.get(fk) ?? { total: 0, done: 0 };
+    h.total += s.hours;
+    if (s.doneAtMs !== null) h.done += s.hours;
+    subHoursByFeature.set(fk, h);
+  }
 
   const isBlocked = isBlockedCard;
 
@@ -157,13 +176,15 @@ export function buildSprintExecutive(input: {
     const started = list.some((c) => c.doneAtMs !== null || !NOT_STARTED.has(c.status));
     const state: FeatureState = concluded ? "concluida" : blocked.length > 0 ? "bloqueada" : started ? "em-andamento" : "nao-iniciada";
     const h = allocationHours(input.cards.filter((c) => c.featureKey === key), subsByFeature.get(key) ?? []);
+    const sh = subHoursByFeature.get(key) ?? { total: 0, done: 0 };
     return {
       key,
       title: head.featureTitle || key,
       status: head.featureStatus || "",
       state,
       cards: { total: list.length, done: list.filter((c) => c.doneAtMs !== null).length },
-      hours: { total: round1(h.total), done: round1(h.done), pct: pct(h.done, h.total) },
+      subtaskHours: { total: round1(sh.total), done: round1(sh.done), pct: pct(sh.done, sh.total) },
+      allocatedHours: { total: round1(h.total), done: round1(h.done), pct: pct(h.done, h.total) },
       blockedCardKeys: blocked.map((c) => c.key),
       blockNote: state === "bloqueada" ? buildBlockNote(blocked) : "",
     };
@@ -183,6 +204,8 @@ export function buildSprintExecutive(input: {
   const alloc = allocationHours(input.cards, input.subs);
   const hoursTotal = Math.round(alloc.total);
   const hoursDone = Math.max(0, hoursTotal - Math.round(alloc.total - alloc.done));
+  const subTotal = round1(subs.reduce((a, s) => a + s.hours, 0));
+  const subDone = round1(subs.filter((s) => s.doneAtMs !== null).reduce((a, s) => a + s.hours, 0));
 
   return {
     sprint,
@@ -196,7 +219,8 @@ export function buildSprintExecutive(input: {
         blocked: cards.filter(isBlocked).length,
         blockedWithoutFeature: cards.filter((c) => !c.featureKey && isBlocked(c)).map((c) => c.key),
       },
-      hours: { total: hoursTotal, done: hoursDone, pct: pct(hoursDone, hoursTotal), unestimatedSubtasks: input.subs.filter((s) => s.hours <= 0).length },
+      subtaskHours: { total: subTotal, done: subDone, pct: pct(subDone, subTotal), unestimatedSubtasks: subs.filter((s) => s.hours <= 0).length },
+      allocatedHours: { total: hoursTotal, done: hoursDone, pct: pct(hoursDone, hoursTotal) },
       priorWork: { cards: priorCards },
     },
     features,
