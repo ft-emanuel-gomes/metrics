@@ -27,6 +27,8 @@ interface Dot {
   summary: string;
   status: string;
   daysInStatus?: number;
+  /** Impedimento marcado no Jira: bolinha circulada em vermelho */
+  blocked: boolean;
 }
 
 /**
@@ -85,13 +87,16 @@ export default function WipAgingChart({ wipAging, percentiles, embedded = false 
         }
         x = Math.min(Math.max(x, ci - 0.4), ci + 0.4);
         placed.push({ x, y: c.agingDays });
-        dots.push({ x, y: c.agingDays, key: c.key, summary: c.summary, status: c.status, daysInStatus: (c as { daysInCurrentStatus?: number }).daysInCurrentStatus });
+        dots.push({ x, y: c.agingDays, key: c.key, summary: c.summary, status: c.status, daysInStatus: (c as { daysInCurrentStatus?: number }).daysInCurrentStatus, blocked: c.blocked === true });
       }
     });
+    // Bloqueados por último: o círculo vermelho fica por cima dos halos vizinhos
+    dots.sort((a, b) => Number(a.blocked) - Number(b.blocked));
     return { columns, dots, yMax };
   }, [wipAging.issues, p95]);
 
   const counts = columns.map((c) => wipAging.issues.filter((i) => i.status === c).length);
+  const blockedCount = wipAging.issues.filter((i) => i.blocked).length;
   const over85 = wipAging.issues.filter((i) => i.agingDays > p85).length;
   const oldest = wipAging.issues.reduce<(typeof wipAging.issues)[number] | null>((m, i) => (!m || i.agingDays > m.agingDays ? i : m), null);
   const pos = (v: number) => `${(1 - v / yMax) * 100}%`;
@@ -189,6 +194,7 @@ export default function WipAgingChart({ wipAging, percentiles, embedded = false 
                       <div style={{ fontWeight: 600 }}>{d.key}</div>
                       <div style={{ color: t.body, margin: "2px 0 4px" }}>{d.summary}</div>
                       <div><strong>{d.y}</strong> dias no fluxo{d.daysInStatus !== undefined && <span style={{ color: t.muted }}> · {d.daysInStatus}d em {d.status}</span>}</div>
+                      {d.blocked && <div style={{ color: t.negative, fontWeight: 600, marginTop: 2 }}>Bloqueado: impedimento marcado no Jira</div>}
                       <div style={{ color: t.muted, fontSize: 10, marginTop: 2 }}>Clique para abrir no Jira</div>
                     </div>
                   );
@@ -210,6 +216,10 @@ export default function WipAgingChart({ wipAging, percentiles, embedded = false 
                     >
                       <circle cx={cx} cy={cy} r={active ? 16 : 12} fill={t.mode === "light" ? t.series[0] : "#ffffff"} fillOpacity={active ? 0.3 : 0.2} style={{ transition: "all .15s" }} />
                       <circle cx={cx} cy={cy} r={active ? 7.5 : 6} fill={t.surface} stroke={t.title} strokeWidth={2.5} style={{ transition: "all .15s" }} />
+                      {/* Bloqueado (impedimento no Jira): círculo vermelho em volta da bolinha */}
+                      {payload.blocked && (
+                        <circle cx={cx} cy={cy} r={active ? 12 : 10.5} fill="none" stroke={t.negative} strokeWidth={2.5} style={{ transition: "all .15s" }} />
+                      )}
                     </g>
                   );
                 }}
@@ -226,6 +236,14 @@ export default function WipAgingChart({ wipAging, percentiles, embedded = false 
             ? `Nenhum card passou do P85 (${p85}d).`
             : `${over85} de ${wipAging.totalWip} cards já passaram do P85 do Cycle Time (${p85}d).`}{" "}
           Mais antigo: {oldest.key}, {oldest.agingDays}d no fluxo (em {oldest.status}).
+        </p>
+      )}
+      {blockedCount > 0 && (
+        <p className="mt-1 flex items-center gap-1.5 text-[11px] font-medium" style={{ color: "var(--ds-color-content-negative)" }}>
+          <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
+            <circle cx="7" cy="7" r="5.5" fill="none" stroke="currentColor" strokeWidth="2" />
+          </svg>
+          {blockedCount === 1 ? "1 card bloqueado" : `${blockedCount} cards bloqueados`} (impedimento marcado no Jira), circulados em vermelho.
         </p>
       )}
     </div>

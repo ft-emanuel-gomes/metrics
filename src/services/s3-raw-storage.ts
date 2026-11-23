@@ -49,6 +49,8 @@ export interface RawWipData {
     issueType?: string;
     /** Data de criação (ISO 8601): início do aging para cards que nasceram em To Do. */
     created?: string;
+    /** Impedimento marcado no Jira (Flagged). Ausente em dados gravados antes deste campo. */
+    flagged?: boolean;
     transitions: StatusTransition[];
   }[];
   fetchedAt: string;

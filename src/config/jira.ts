@@ -50,3 +50,14 @@ export const CACHE_TTLS = {
   issues: parseInt(process.env.CACHE_TTL_ISSUES || "21600", 10),        // 6 horas
   boards: parseInt(process.env.CACHE_TTL_BOARDS || "86400", 10),        // 24 horas
 };
+
+/**
+ * Campo "Flagged" (impedimento) do Jira da Monte Bravo. Card com valor ("Impediment") = bloqueado.
+ * Regra única de bloqueio do app (Resumo executivo e WIP Aging). Pode ser trocado por env se o campo mudar.
+ */
+export const JIRA_FLAGGED_FIELD = process.env.JIRA_FLAGGED_FIELD || "customfield_10021";
+
+/** Card marcado como impedimento: o campo Flagged vem como lista não vazia. */
+export function isFlaggedValue(value: unknown): boolean {
+  return Array.isArray(value) && value.length > 0;
+}

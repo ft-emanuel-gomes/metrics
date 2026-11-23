@@ -1,6 +1,6 @@
 import { getJiraClient } from "./jira-client";
 import { getCacheManager } from "@/cache/cache-manager";
-import { CACHE_TTLS } from "@/config/jira";
+import { CACHE_TTLS, JIRA_FLAGGED_FIELD, isFlaggedValue } from "@/config/jira";
 import { hashString } from "@/lib/utils";
 
 /**
@@ -13,6 +13,8 @@ export interface JiraIssue {
   status: string;
   created: string;
   resolutionDate?: string;
+  /** Impedimento marcado no Jira (Flagged). Só preenchido nas buscas que pedem o campo (ex.: WIP). */
+  flagged?: boolean;
 }
 
 /**
@@ -33,6 +35,8 @@ interface JiraRawIssue {
     status: { name: string };
     created: string;
     resolutiondate?: string;
+    /** Campos pedidos por quem chama (ex.: Flagged) */
+    [field: string]: unknown;
   };
   changelog?: {
     histories: {
@@ -566,7 +570,8 @@ export async function fetchWipIssues(project: string, activeSprintId?: number): 
   do {
     const body: Record<string, unknown> = {
       jql,
-      fields: ["summary", "status", "issuetype", "created", "resolutiondate"],
+      // Inclui o impedimento (Flagged): bolinha do WIP Aging circulada em vermelho
+      fields: ["summary", "status", "issuetype", "created", "resolutiondate", JIRA_FLAGGED_FIELD],
       maxResults: 100,
     };
     if (nextPageToken) {
@@ -674,5 +679,7 @@ function mapRawIssue(raw: JiraRawIssue): JiraIssue {
     status: raw.fields.status.name,
     created: raw.fields.created,
     resolutionDate: raw.fields.resolutiondate || undefined,
+    // Só quando a busca pediu o campo de impedimento (ausente = não informado)
+    ...(JIRA_FLAGGED_FIELD in raw.fields ? { flagged: isFlaggedValue(raw.fields[JIRA_FLAGGED_FIELD]) } : {}),
   };
 }

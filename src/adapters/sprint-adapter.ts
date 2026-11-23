@@ -259,6 +259,7 @@ export async function fetchSprintDashboard(
     summary: i.summary,
     status: i.status,
     created: i.created,
+    flagged: i.flagged,
     transitions: wipChangelogs.get(i.key) || [],
   }));
   const wipAging = calculateWipAging(wipWithChangelogs);
