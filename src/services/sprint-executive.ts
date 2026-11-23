@@ -27,7 +27,8 @@ export async function fetchSprintExecutive(
   // Cards (standard issues): com histórico, só para saber quando cada um foi concluído
   const standardRaw = await searchAll(
     `project = "${squad.project}" AND sprint = ${sprint.id} AND issuetype in ${STANDARD_TYPES} AND ${EXCLUDED}`,
-    ["summary", "issuetype", "status", "created", "parent", JIRA_FLAGGED_FIELD]
+    // timetracking: estimativa do card, para as horas alocadas (regra do maior entre card e subtasks)
+    ["summary", "issuetype", "status", "created", "parent", "timetracking", JIRA_FLAGGED_FIELD]
   );
   const cards: ExecCardInput[] = [];
   const cardAsBurndown = new Map<string, BurndownIssue>();
@@ -46,6 +47,7 @@ export async function fetchSprintExecutive(
       featureTitle: r.fields.parent?.fields?.summary,
       featureStatus: r.fields.parent?.fields?.status?.name,
       flagged,
+      estimateHours: (Number(r.fields.timetracking?.originalEstimateSeconds) || 0) / 3600,
       doneAtMs: doneAt(bd),
     });
   }
