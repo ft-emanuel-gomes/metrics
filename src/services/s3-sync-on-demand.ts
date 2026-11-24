@@ -14,7 +14,7 @@ import {
   fetchR2Epics,
   fetchR2Features,
 } from "@/services/jira-search";
-import { fetchChangelogsBatch } from "@/services/jira-changelog";
+import { fetchChangelogsBatch, fetchFlaggedSinceBatch } from "@/services/jira-changelog";
 import { fetchProjectVersions, findActiveRelease } from "@/services/jira-versions";
 import { buildReleaseCalendarFields } from "@/services/release-calendar-sync";
 import { getLatestSprints } from "@/services/jira-sprints";
@@ -170,6 +170,7 @@ export async function ensureWipAndR2(
   const wipIssues = await fetchWipIssues(squad.project);
   const wipKeys = wipIssues.map((i) => i.key);
   const wipChangelogs = await fetchChangelogsBatch(wipKeys);
+  const wipFlaggedSince = await fetchFlaggedSinceBatch(wipIssues);
 
   const wipRaw: RawWipData = {
     issues: wipIssues.map((i) => ({
@@ -179,6 +180,7 @@ export async function ensureWipAndR2(
       issueType: i.issueType,
       created: i.created,
       flagged: i.flagged,
+      flaggedSince: wipFlaggedSince.get(i.key),
       transitions: wipChangelogs.get(i.key) || [],
     })),
     fetchedAt: new Date().toISOString(),

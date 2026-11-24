@@ -51,6 +51,8 @@ export interface RawWipData {
     created?: string;
     /** Impedimento marcado no Jira (Flagged). Ausente em dados gravados antes deste campo. */
     flagged?: boolean;
+    /** Desde quando o impedimento está ativo (ISO 8601). Ausente = sem bandeira ou dado antigo. */
+    flaggedSince?: string;
     transitions: StatusTransition[];
   }[];
   fetchedAt: string;

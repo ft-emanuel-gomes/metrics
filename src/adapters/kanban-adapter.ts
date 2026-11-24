@@ -7,7 +7,7 @@ import {
   fetchR2Epics,
   fetchR2Features,
 } from "@/services/jira-search";
-import { fetchChangelogsBatch } from "@/services/jira-changelog";
+import { fetchChangelogsBatch, fetchFlaggedSinceBatch } from "@/services/jira-changelog";
 import { fetchProjectVersions, findActiveRelease } from "@/services/jira-versions";
 import { calculateCycleTimeP85, generateCycleTimeNote } from "@/metrics/cycle-time";
 import { calculateThroughput } from "@/metrics/throughput";
@@ -205,12 +205,14 @@ export async function fetchKanbanDashboard(
   }
   const wipKeys = wipIssues.map((i) => i.key);
   const wipChangelogs = await fetchChangelogsBatch(wipKeys);
+  const wipFlaggedSince = await fetchFlaggedSinceBatch(wipIssues);
   const wipWithChangelogs = wipIssues.map((i) => ({
     key: i.key,
     summary: i.summary,
     status: i.status,
     created: i.created,
     flagged: i.flagged,
+    flaggedSince: wipFlaggedSince.get(i.key),
     transitions: wipChangelogs.get(i.key) || [],
   }));
   const wipAging = calculateWipAging(wipWithChangelogs);

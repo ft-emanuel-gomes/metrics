@@ -11,7 +11,7 @@ import {
   fetchR2Features,
   fetchWipIssues,
 } from "@/services/jira-search";
-import { fetchChangelogsBatch, fetchSprintAdditionDates } from "@/services/jira-changelog";
+import { fetchChangelogsBatch, fetchFlaggedSinceBatch, fetchSprintAdditionDates } from "@/services/jira-changelog";
 import { getSprintCapacity, getSprintBusinessDays } from "@/services/capacity-store";
 import { fetchProjectVersions, findActiveRelease } from "@/services/jira-versions";
 import { calculateCycleTimeP85, generateCycleTimeNote } from "@/metrics/cycle-time";
@@ -254,12 +254,14 @@ export async function fetchSprintDashboard(
   }
   const wipKeys = wipIssues.map((i) => i.key);
   const wipChangelogs = await fetchChangelogsBatch(wipKeys);
+  const wipFlaggedSince = await fetchFlaggedSinceBatch(wipIssues);
   const wipWithChangelogs = wipIssues.map((i) => ({
     key: i.key,
     summary: i.summary,
     status: i.status,
     created: i.created,
     flagged: i.flagged,
+    flaggedSince: wipFlaggedSince.get(i.key),
     transitions: wipChangelogs.get(i.key) || [],
   }));
   const wipAging = calculateWipAging(wipWithChangelogs);
