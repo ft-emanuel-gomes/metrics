@@ -70,7 +70,7 @@ export default function SprintBurndown({ squadSlug, issueType, embedded = false 
         Burndown{data ? ` — ${data.sprint.name}` : " da sprint"}
       </h3>
       <div className="flex shrink-0 items-center gap-3">
-        {/* Chave: desligada = standard issues (cards); ligada = Sub-task e Sub-bug (horas) */}
+        {/* Chave: desligada = quantidade de cards; ligada = horas alocadas (mesma base do Resumo executivo) */}
         <button
           type="button"
           role="switch"
@@ -89,7 +89,7 @@ export default function SprintBurndown({ squadSlug, issueType, embedded = false 
               style={{ left: 2, background: "#ffffff", transform: hoursMode ? "translateX(16px)" : "translateX(0)" }}
             />
           </span>
-          Sub-task e Sub-bug (horas)
+          Em horas
         </button>
         <span className="rounded-full px-2.5 py-1 text-[10px] font-semibold" style={{ background: "var(--ds-color-feedback-primary-surface)", color: "var(--ds-color-feedback-primary-label)" }}>
           Tempo real
@@ -255,11 +255,6 @@ export default function SprintBurndown({ squadSlug, issueType, embedded = false 
       <p className="mt-1 text-[11px] t-muted leading-relaxed">
         {reading} Linha ideal em dias corridos; atualizado às {fmtDateTime(data.asOf).slice(-5)}.
       </p>
-      {(data.priorWork ?? 0) > 0 && (
-        <p className="mt-1 text-[11px] t-muted leading-relaxed">
-          {fmtV(data.priorWork as number)} já concluídos antes desta sprint (trabalho da sprint anterior) ficam fora do Comprometido e dos Concluídos.
-        </p>
-      )}
     </div>
   );
 }
