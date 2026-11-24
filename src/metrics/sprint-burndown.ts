@@ -109,6 +109,12 @@ export interface BurndownOptions {
    * Ausente = comportamento antigo (nada é excluído).
    */
   windowStartMs?: number;
+  /**
+   * Modo horas: função que devolve o comprometido e o concluído (horas) no instante `t`, com a MESMA regra do
+   * Resumo executivo e da Capacidade (sprintAllocationHours). Quando informada, substitui a soma por peso dos itens.
+   * `t = Infinity` devolve o escopo total (comprometido + adicionados).
+   */
+  allocationAt?: (t: number) => { total: number; done: number };
 }
 
 export function calculateSprintBurndown(
@@ -140,13 +146,16 @@ export function calculateSprintBurndown(
   // Soma de pesos: 1 por card, ou horas estimadas por subtask (arredondado em 0,1)
   const w = (i: BurndownIssue) => (i.weight === undefined ? 1 : i.weight);
   const sum = (list: BurndownIssue[]) => Math.round(list.reduce((a, i) => a + w(i), 0) * 10) / 10;
-  const remainingAt = (t: number) =>
-    sum(issues.filter((i) => scopeAt(i) <= t && !(doneMs(i) !== null && (doneMs(i) as number) <= t)));
+  const round1 = (v: number) => Math.round(v * 10) / 10;
+  const alloc = options.allocationAt;
+  const remainingAt = alloc
+    ? (t: number) => { const a = alloc(t); return round1(Math.max(0, a.total - a.done)); }
+    : (t: number) => sum(issues.filter((i) => scopeAt(i) <= t && !(doneMs(i) !== null && (doneMs(i) as number) <= t)));
 
-  const committed = sum(issues.filter((i) => scopeAt(i) <= startMs));
-  const added = sum(issues.filter((i) => scopeAt(i) > startMs));
-  const completed = sum(issues.filter((i) => doneMs(i) !== null));
-  const priorWork = sum(all.filter(isPrior));
+  const committed = alloc ? round1(alloc(startMs).total) : sum(issues.filter((i) => scopeAt(i) <= startMs));
+  const added = alloc ? round1(Math.max(0, alloc(Infinity).total - alloc(startMs).total)) : sum(issues.filter((i) => scopeAt(i) > startMs));
+  const completed = alloc ? round1(alloc(nowMs).done) : sum(issues.filter((i) => doneMs(i) !== null));
+  const priorWork = alloc ? 0 : sum(all.filter(isPrior));
   const remainingNow = remainingAt(nowMs);
   const ideal = (x: number) => Math.max(committed * (1 - x / totalDays), 0);
   const xOf = (t: number) => (t - startMs) / DAY_MS;

@@ -5,6 +5,7 @@ import { fetchChangelog } from "./jira-changelog";
 import { calculateSprintBurndown, doneAt, type BurndownIssue, type SprintBurndownResult } from "@/metrics/sprint-burndown";
 import { resolveWindowStartMs } from "./live-sprint-metrics";
 import { getSprintNamer } from "./sprint-display";
+import { sprintAllocationHours } from "@/metrics/sprint-executive";
 
 /** Link entre issues como o Jira devolve (só o que o app usa). */
 export interface RawIssueLink {
@@ -111,12 +112,14 @@ export async function fetchSprintBurndown(
   // Standard issues: base do modo cards e, no modo horas, de quando cada card pai entrou na sprint
   const standardRaw = await searchAll(
     `project = "${squad.project}" AND sprint = ${sprint.id} AND issuetype in ${STANDARD_TYPES} AND ${EXCLUDED}`,
-    ["issuetype", "status", "created"]
+    ["issuetype", "status", "created", "timetracking"]
   );
   const standard: BurndownIssue[] = [];
+  const cardEstimate = new Map<string, number>();
   for (const r of standardRaw) {
     const { transitions, sprintAddedAt } = await readHistory(r, sprint.id);
     standard.push({ key: r.key, issueType: r.fields.issuetype.name, status: r.fields.status.name, created: r.fields.created, transitions, sprintAddedAt });
+    cardEstimate.set(r.key, (Number(r.fields.timetracking?.originalEstimateSeconds) || 0) / 3600);
   }
 
   if (mode === "cards") {
@@ -130,6 +133,7 @@ export async function fetchSprintBurndown(
     ["issuetype", "status", "created", "parent", "timetracking"]
   );
   const subs: BurndownIssue[] = [];
+  const subParent = new Map<string, string>();
   const unestimated: string[] = [];
   for (const r of subsRaw) {
     const parentKey = r.fields.parent?.key;
@@ -148,6 +152,7 @@ export async function fetchSprintBurndown(
       sprintAddedAt ? new Date(sprintAddedAt).getTime() : 0,
       parentAdded ? new Date(parentAdded).getTime() : 0
     );
+    if (parentKey) subParent.set(r.key, parentKey);
     subs.push({
       key: r.key,
       issueType: r.fields.issuetype.name,
@@ -160,5 +165,37 @@ export async function fetchSprintBurndown(
     });
   }
 
-  return { ...calculateSprintBurndown(subs, sprintInfo, new Date(), "hours", { windowStartMs }), unestimated };
+  // Mesma base do Resumo executivo e da Capacidade: comprometido DESTA sprint (sprintAllocationHours).
+  // Em cada instante t entram só os itens que já estavam no escopo, e "concluído" só o que já tinha sido concluído.
+  const startMs = new Date(sprint.startDate).getTime();
+  const winMs = Math.min(windowStartMs, startMs);
+  const isPrior = (d: number | null) => d !== null && d < winMs;
+  // Concluído na lacuna (janela até o start) conta na nova sprint, queimando logo após o início
+  const norm = (d: number | null) => (d !== null && d <= startMs ? startMs + 1 : d);
+  const scopeOf = (i: BurndownIssue) => new Date(i.sprintAddedAt || i.created).getTime();
+  const cardItems = standard
+    .map((c) => ({ c, doneMs: doneAt(c) }))
+    .filter((x) => !isPrior(x.doneMs))
+    .map((x) => ({ scope: scopeOf(x.c), card: { key: x.c.key, estimateHours: cardEstimate.get(x.c.key) ?? 0, doneAtMs: norm(x.doneMs) } }));
+  const subItems = subs.map((s) => ({
+    scope: scopeOf(s),
+    sub: { key: s.key, parentKey: subParent.get(s.key) ?? null, hours: s.weight ?? 0, doneAtMs: doneAt(s) },
+  }));
+  const allocationAt = (t: number) => {
+    const cardsT = cardItems
+      .filter((x) => x.scope <= t)
+      .map((x) => ({ ...x.card, doneAtMs: x.card.doneAtMs !== null && x.card.doneAtMs <= t ? x.card.doneAtMs : null }));
+    // Subtask feita antes da janela (sprint anterior) sempre entra: só serve para descontar da estimativa do card
+    const subsT = subItems
+      .filter((x) => isPrior(x.sub.doneAtMs) || x.scope <= t)
+      .map((x) => {
+        const d = x.sub.doneAtMs;
+        if (d === null || isPrior(d)) return x.sub;
+        const n = norm(d) as number;
+        return { ...x.sub, doneAtMs: n <= t ? n : null };
+      });
+    return sprintAllocationHours(cardsT, subsT, isPrior);
+  };
+
+  return { ...calculateSprintBurndown(subs, sprintInfo, new Date(), "hours", { windowStartMs, allocationAt }), unestimated };
 }
