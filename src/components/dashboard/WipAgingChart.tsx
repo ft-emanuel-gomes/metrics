@@ -1,6 +1,6 @@
 "use client";
-import { useMemo, useState } from "react";
-import { CartesianGrid, ComposedChart, ReferenceArea, ReferenceLine, ResponsiveContainer, Scatter, Tooltip, XAxis, YAxis } from "recharts";
+import { useMemo, useRef, useState } from "react";
+import { CartesianGrid, ComposedChart, ReferenceArea, ReferenceLine, ResponsiveContainer, Scatter, XAxis, YAxis } from "recharts";
 import type { WipAgingResult } from "@/metrics/wip-aging";
 import { useChartTheme } from "@/lib/use-chart-theme";
 
@@ -29,6 +29,13 @@ interface Dot {
   daysInStatus?: number;
   /** Impedimento marcado no Jira: bolinha circulada em vermelho */
   blocked: boolean;
+  /** Dias corridos com o impedimento ativo (quando o histórico do Jira informa) */
+  blockedDays?: number;
+}
+
+/** "há 1 dia" / "há 12 dias" / "desde hoje" */
+function blockedLabel(days: number): string {
+  return days === 0 ? "desde hoje" : days === 1 ? "há 1 dia" : `há ${days} dias`;
 }
 
 /**
@@ -56,7 +63,9 @@ function readRamp(mode: "light" | "dark"): { c: string; o: number }[] {
  */
 export default function WipAgingChart({ wipAging, percentiles, embedded = false }: WipAgingChartProps) {
   const t = useChartTheme();
-  const [hover, setHover] = useState<string | null>(null);
+  // Bolinha sob o mouse e posição dela no gráfico (px): o tooltip é desenhado a partir disso, nunca de outro card
+  const [hover, setHover] = useState<{ dot: Dot; cx: number; cy: number } | null>(null);
+  const plotRef = useRef<HTMLDivElement | null>(null);
   const ramp = useMemo(() => readRamp(t.mode), [t.mode]);
 
   const p50 = percentiles?.p50 ?? 7;
@@ -87,7 +96,7 @@ export default function WipAgingChart({ wipAging, percentiles, embedded = false 
         }
         x = Math.min(Math.max(x, ci - 0.4), ci + 0.4);
         placed.push({ x, y: c.agingDays });
-        dots.push({ x, y: c.agingDays, key: c.key, summary: c.summary, status: c.status, daysInStatus: (c as { daysInCurrentStatus?: number }).daysInCurrentStatus, blocked: c.blocked === true });
+        dots.push({ x, y: c.agingDays, key: c.key, summary: c.summary, status: c.status, daysInStatus: (c as { daysInCurrentStatus?: number }).daysInCurrentStatus, blocked: c.blocked === true, blockedDays: c.blockedDays });
       }
     });
     // Bloqueados por último: o círculo vermelho fica por cima dos halos vizinhos
@@ -116,7 +125,7 @@ export default function WipAgingChart({ wipAging, percentiles, embedded = false 
         <p className="py-10 text-center text-[11px] t-muted">Nenhum item em andamento no momento.</p>
       ) : (
         <div style={{ position: "relative", width: "100%", flex: "1 1 auto", minHeight: CHART_H, maxHeight: Math.round(CHART_H * 1.7) }}>
-          <div style={{ position: "absolute", inset: 0 }}>
+          <div ref={plotRef} style={{ position: "absolute", inset: 0 }} onMouseLeave={() => setHover(null)}>
           <ResponsiveContainer>
             <ComposedChart margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
               <defs>
@@ -184,48 +193,78 @@ export default function WipAgingChart({ wipAging, percentiles, embedded = false 
                   label={{ value: `${r.l} · ${r.v}d`, position: "insideTopRight", fill: t.mode === "light" ? t.title : t.body, fontSize: 9, fillOpacity: 0.8 }}
                 />
               ))}
-              <Tooltip
-                cursor={false}
-                content={({ active, payload }) => {
-                  if (!active || !payload || payload.length === 0) return null;
-                  const d = payload[0].payload as Dot;
-                  return (
-                    <div style={{ background: t.surface, border: `1px solid ${t.grid}`, borderRadius: 12, padding: "8px 12px", fontSize: 12, color: t.title, maxWidth: 260 }}>
-                      <div style={{ fontWeight: 600 }}>{d.key}</div>
-                      <div style={{ color: t.body, margin: "2px 0 4px" }}>{d.summary}</div>
-                      <div><strong>{d.y}</strong> dias no fluxo{d.daysInStatus !== undefined && <span style={{ color: t.muted }}> · {d.daysInStatus}d em {d.status}</span>}</div>
-                      {d.blocked && <div style={{ color: t.negative, fontWeight: 600, marginTop: 2 }}>Bloqueado: impedimento marcado no Jira</div>}
-                      <div style={{ color: t.muted, fontSize: 10, marginTop: 2 }}>Clique para abrir no Jira</div>
-                    </div>
-                  );
-                }}
-              />
+              {/*
+                Sem o Tooltip do Recharts: ele escolhe o card pela posição do mouse no eixo e podia mostrar outro card
+                (de baixo ou de outra coluna). Aqui cada bolinha controla o próprio hover e o tooltip é desenhado fora do SVG.
+                Halos e anel vermelho não capturam o mouse (pointerEvents="none"); só a área do próprio card responde.
+              */}
               <Scatter
                 data={dots}
                 isAnimationActive={false}
                 shape={(p: unknown) => {
                   const { cx, cy, payload } = p as { cx: number; cy: number; payload: Dot };
-                  const active = hover === payload.key;
+                  const active = hover?.dot.key === payload.key;
                   return (
-                    <g
-                      key={payload.key}
-                      style={{ cursor: "pointer" }}
-                      onMouseEnter={() => setHover(payload.key)}
-                      onMouseLeave={() => setHover(null)}
-                      onClick={() => window.open(`https://montebravo.atlassian.net/browse/${payload.key}`, "_blank", "noopener,noreferrer")}
-                    >
-                      <circle cx={cx} cy={cy} r={active ? 16 : 12} fill={t.mode === "light" ? t.series[0] : "#ffffff"} fillOpacity={active ? 0.3 : 0.2} style={{ transition: "all .15s" }} />
-                      <circle cx={cx} cy={cy} r={active ? 7.5 : 6} fill={t.surface} stroke={t.title} strokeWidth={2.5} style={{ transition: "all .15s" }} />
+                    <g key={payload.key}>
+                      <circle cx={cx} cy={cy} r={active ? 16 : 12} fill={t.mode === "light" ? t.series[0] : "#ffffff"} fillOpacity={active ? 0.3 : 0.2} pointerEvents="none" style={{ transition: "all .15s" }} />
+                      <circle cx={cx} cy={cy} r={active ? 7.5 : 6} fill={t.surface} stroke={t.title} strokeWidth={2.5} pointerEvents="none" style={{ transition: "all .15s" }} />
                       {/* Bloqueado (impedimento no Jira): círculo vermelho em volta da bolinha */}
                       {payload.blocked && (
-                        <circle cx={cx} cy={cy} r={active ? 12 : 10.5} fill="none" stroke={t.negative} strokeWidth={2.5} style={{ transition: "all .15s" }} />
+                        <circle cx={cx} cy={cy} r={active ? 12 : 10.5} fill="none" stroke={t.negative} strokeWidth={2.5} pointerEvents="none" style={{ transition: "all .15s" }} />
                       )}
+                      {/* Área sensível: só a bolinha (raio 9px), transparente, por cima do desenho */}
+                      <circle
+                        cx={cx}
+                        cy={cy}
+                        r={9}
+                        fill="transparent"
+                        style={{ cursor: "pointer" }}
+                        onMouseEnter={() => setHover({ dot: payload, cx, cy })}
+                        onMouseLeave={() => setHover((h) => (h?.dot.key === payload.key ? null : h))}
+                        onClick={() => window.open(`https://montebravo.atlassian.net/browse/${payload.key}`, "_blank", "noopener,noreferrer")}
+                      />
                     </g>
                   );
                 }}
               />
             </ComposedChart>
           </ResponsiveContainer>
+          {hover && (() => {
+            const d = hover.dot;
+            const w = plotRef.current?.clientWidth ?? 0;
+            const h = plotRef.current?.clientHeight ?? 0;
+            // Abre para o lado com mais espaço; acima da bolinha quando ela está na metade de baixo
+            const toLeft = hover.cx > w / 2;
+            const above = hover.cy > h / 2;
+            return (
+              <div
+                role="tooltip"
+                style={{
+                  position: "absolute",
+                  left: toLeft ? undefined : hover.cx + 16,
+                  right: toLeft ? w - hover.cx + 16 : undefined,
+                  top: above ? undefined : hover.cy - 8,
+                  bottom: above ? h - hover.cy - 8 : undefined,
+                  pointerEvents: "none",
+                  zIndex: 10,
+                  background: t.surface,
+                  border: `1px solid ${t.grid}`,
+                  borderRadius: 12,
+                  padding: "8px 12px",
+                  fontSize: 12,
+                  color: t.title,
+                  width: 260,
+                  boxShadow: "0 4px 16px rgba(0,0,0,.12)",
+                }}
+              >
+                <div style={{ fontWeight: 600 }}>{d.key}</div>
+                <div style={{ color: t.body, margin: "2px 0 4px" }}>{d.summary}</div>
+                <div><strong>{d.y}</strong> dias no fluxo{d.daysInStatus !== undefined && <span style={{ color: t.muted }}> · {d.daysInStatus}d em {d.status}</span>}</div>
+                {d.blocked && <div style={{ color: t.negative, fontWeight: 600, marginTop: 2 }}>Bloqueado{d.blockedDays !== undefined ? ` ${blockedLabel(d.blockedDays)}` : ""}: impedimento marcado no Jira</div>}
+                <div style={{ color: t.muted, fontSize: 10, marginTop: 2 }}>Clique para abrir no Jira</div>
+              </div>
+            );
+          })()}
           </div>
         </div>
       )}

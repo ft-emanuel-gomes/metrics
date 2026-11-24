@@ -10,7 +10,7 @@ import {
   fetchR2Features,
   fetchWipIssues,
 } from "@/services/jira-search";
-import { fetchChangelogsBatch } from "@/services/jira-changelog";
+import { fetchChangelogsBatch, fetchFlaggedSinceBatch } from "@/services/jira-changelog";
 import { fetchProjectVersions, findActiveRelease } from "@/services/jira-versions";
 import { buildReleaseCalendarFields } from "@/services/release-calendar-sync";
 import {
@@ -243,6 +243,7 @@ async function syncWip(squad: SquadConfig): Promise<void> {
   const wipIssues = await fetchWipIssues(squad.project);
   const wipKeys = wipIssues.map((i) => i.key);
   const wipChangelogs = await fetchChangelogsBatch(wipKeys);
+  const wipFlaggedSince = await fetchFlaggedSinceBatch(wipIssues);
 
   const wipData: RawWipData = {
     issues: wipIssues.map((i) => ({
@@ -251,6 +252,7 @@ async function syncWip(squad: SquadConfig): Promise<void> {
       status: i.status,
       created: i.created,
       flagged: i.flagged,
+      flaggedSince: wipFlaggedSince.get(i.key),
       transitions: wipChangelogs.get(i.key) || [],
     })),
     fetchedAt: new Date().toISOString(),

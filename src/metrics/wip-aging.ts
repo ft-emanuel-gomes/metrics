@@ -86,6 +86,8 @@ export interface WipIssueAging {
    * Links "bloqueia"/"é bloqueado por" não contam. No gráfico, a bolinha é circulada em vermelho.
    */
   blocked: boolean;
+  /** Dias corridos com o impedimento ativo (desde a última vez que a bandeira foi colocada). Só quando bloqueado e com histórico. */
+  blockedDays?: number;
 }
 
 /**
@@ -152,7 +154,7 @@ export function calculateIssueAging(
  * @param referenceDate - Data de referência (default: agora)
  */
 export function calculateWipAging(
-  issues: { key: string; summary: string; status: string; created?: string; flagged?: boolean; transitions: StatusTransition[] }[],
+  issues: { key: string; summary: string; status: string; created?: string; flagged?: boolean; flaggedSince?: string; transitions: StatusTransition[] }[],
   referenceDate: Date = new Date()
 ): WipAgingResult {
   if (issues.length === 0) {
@@ -182,6 +184,9 @@ export function calculateWipAging(
       daysInCurrentStatus: lastTransition ? Math.max(0, calendarDaysBetween(new Date(lastTransition.timestamp), referenceDate)) : agingDays,
       lastTransitionDate: lastTransition?.timestamp || "",
       blocked: issue.flagged === true,
+      ...(issue.flagged === true && issue.flaggedSince
+        ? { blockedDays: Math.max(0, calendarDaysBetween(new Date(issue.flaggedSince), referenceDate)) }
+        : {}),
     };
   });
 
