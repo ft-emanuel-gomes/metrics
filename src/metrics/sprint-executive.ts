@@ -7,13 +7,61 @@ import { CYCLE_TIME_END_STATUSES } from "@/config/status-mapping";
  * - Escopo = standard issues na sprint agora (filtro de tipos da tela); a subtask segue o tipo do card pai.
  * - Concluído = status atual Concluído. Concluído ANTES da janela da sprint (fechamento da anterior) é trabalho
  *   da sprint anterior: fica fora de totais e percentuais (mesma regra do Burndown).
- * - Subtasks: % em HORAS pelo Original Estimate, como no Burndown; sem estimativa não entram no total e são contadas à parte.
+ * - Horas alocadas (cards + subtasks) = o comprometido DESTA sprint (ver sprintAllocationHours): regra do maior entre
+ *   card e subtasks, sem o que já foi concluído antes da janela da sprint. A Capacidade da Sprint usa a mesma função.
  * - Bloqueio = card ainda NÃO concluído marcado como impedimento no Jira (bandeira "Flagged" = Impediment).
  *   Links entre issues ("bloqueia", "é bloqueado por", pré-requisito) NÃO contam como bloqueio.
  *   O bloqueio é do card, mas a Feature dele fica bloqueada.
  * - Estado da Feature (nesta ordem): Concluída (status Concluído) > Bloqueada (algum card com bloqueio ativo)
  *   > Em andamento (algum card já iniciado ou concluído) > Por começar.
  */
+
+/**
+ * Alerta de estimativa: o Original Estimate do card é muito maior que a soma das subtasks dele.
+ * Pela regra do maior (card × subtasks), um erro de digitação no card (ex.: 245h no lugar de 24,5h) infla as
+ * horas alocadas e, se o card for concluído, as horas concluídas. O alerta não muda a conta: só sinaliza.
+ */
+export interface EstimateAlert {
+  /**
+   * acima-subtasks = estimativa do card muito maior que as subtasks (infla as horas pela regra do maior);
+   * invalida = estimativa acima do teto da Ocupação (480h), ignorada na conta, mas errada no Jira.
+   */
+  kind: "acima-subtasks" | "invalida";
+  cardKey: string;
+  /** Original Estimate do card (h) */
+  cardHours: number;
+  /** Soma das subtasks do card, de todas as sprints (h) */
+  subtaskHours: number;
+}
+
+/** Card com estimativa acima de RATIO × soma das subtasks e acima de MIN_HOURS dispara o alerta. */
+export const ESTIMATE_ALERT_RATIO = 3;
+export const ESTIMATE_ALERT_MIN_HOURS = 40;
+
+/**
+ * Cards com estimativa a revisar:
+ * - invalida: acima do teto de 480h (ignorada na conta), com ou sem subtasks;
+ * - acima-subtasks: mais de RATIO × a soma das subtasks e acima de MIN_HOURS. Só compara cards que TÊM
+ *   subtasks estimadas (sem subtasks, a estimativa do card é a única referência). Soma subtasks de todas as sprints.
+ */
+export function findEstimateAlerts(cards: { key: string; estimateHours: number }[], subs: { parentKey: string | null; hours: number }[]): EstimateAlert[] {
+  const sumByParent = new Map<string, number>();
+  for (const s of subs) {
+    if (!s.parentKey || !(s.hours > 0)) continue;
+    sumByParent.set(s.parentKey, (sumByParent.get(s.parentKey) ?? 0) + s.hours);
+  }
+  const alerts: EstimateAlert[] = [];
+  for (const c of cards) {
+    const cardHours = Math.round(c.estimateHours * 10) / 10;
+    const subtaskHours = Math.round((sumByParent.get(c.key) ?? 0) * 10) / 10;
+    if (cardHours > MAX_ESTIMATE_HOURS) alerts.push({ kind: "invalida", cardKey: c.key, cardHours, subtaskHours });
+    else if (subtaskHours > 0 && cardHours > ESTIMATE_ALERT_MIN_HOURS && cardHours > subtaskHours * ESTIMATE_ALERT_RATIO) {
+      alerts.push({ kind: "acima-subtasks", cardKey: c.key, cardHours, subtaskHours });
+    }
+  }
+  // Primeiro os que inflam as horas (maior diferença primeiro), depois os inválidos
+  return alerts.sort((a, b) => (a.kind === b.kind ? b.cardHours - b.subtaskHours - (a.cardHours - a.subtaskHours) : a.kind === "acima-subtasks" ? -1 : 1));
+}
 
 export type FeatureState = "concluida" | "bloqueada" | "em-andamento" | "nao-iniciada";
 
@@ -28,6 +76,8 @@ export interface ExecCardInput {
   featureStatus?: string;
   /** Marcado como impedimento no Jira (Flagged) */
   flagged: boolean;
+  /** Original Estimate do card em horas (0 = sem estimativa) */
+  estimateHours: number;
   /** Momento da conclusão (última transição para Concluído); null = não concluído */
   doneAtMs: number | null;
 }
@@ -47,9 +97,12 @@ export interface ExecFeature {
   status: string;
   state: FeatureState;
   cards: { total: number; done: number };
-  hours: { total: number; done: number };
+  /** Horas alocadas da Feature nesta sprint (cards + subtasks, regra do maior, sem o trabalho de sprints anteriores) */
+  allocatedHours: { total: number; done: number; pct: number };
   /** Cards da Feature com bloqueio ativo */
   blockedCardKeys: string[];
+  /** Cards da Feature com estimativa muito acima das subtasks (provável erro de cadastro) */
+  estimateAlerts: EstimateAlert[];
   /** Texto curto do motivo do bloqueio (vazio se não bloqueada) */
   blockNote: string;
 }
@@ -60,9 +113,12 @@ export interface SprintExecutiveResult {
   totals: {
     features: { total: number; concluded: number; blocked: number; inProgress: number; notStarted: number };
     cards: { total: number; done: number; pct: number; blocked: number; /** Cards bloqueados sem Feature como pai (chaves) */ blockedWithoutFeature: string[] };
-    hours: { total: number; done: number; pct: number; unestimatedSubtasks: number };
-    /** Já concluído antes da sprint (fora dos totais) */
-    priorWork: { cards: number; hours: number };
+    /** Horas alocadas desta sprint (cards + subtasks), sem o trabalho concluído antes da janela da sprint */
+    allocatedHours: { total: number; done: number; pct: number; /** Subtasks desta sprint sem Original Estimate */ unestimatedSubtasks: number };
+    /** Cards já concluídos antes da sprint (fora das contagens de cards) */
+    priorWork: { cards: number };
+    /** Todos os cards da sprint com estimativa muito acima das subtasks */
+    estimateAlerts: EstimateAlert[];
   };
   features: ExecFeature[];
 }
@@ -92,6 +148,77 @@ function buildBlockNote(blocked: ExecCardInput[]): string {
   return `${list} com impedimento marcado no Jira`;
 }
 
+/** Mesmo teto da Ocupação: estimativa acima de 12 semanas (480h) é tratada como erro de cadastro. */
+const MAX_ESTIMATE_HOURS = 12 * 5 * 8;
+const validHours = (h: number) => (h > 0 && h <= MAX_ESTIMATE_HOURS ? h : 0);
+
+/**
+ * Horas alocadas DA SPRINT VIGENTE (comprometido) e quanto já foi concluído nela.
+ *
+ * Regra de negócio: só entra o que corresponde a esta sprint.
+ * - Trabalho concluído ANTES da janela da sprint (sprint anterior) fica fora do total e do concluído.
+ *   Ex.: card de 5h com 5 subtasks de 1h, 4 concluídas na sprint anterior → comprometido = 1h.
+ * - Por card: o MAIOR entre (estimativa do card − horas de subtasks concluídas antes da sprint) e a soma das
+ *   subtasks desta sprint. Nunca soma os dois (regra da Ocupação).
+ * - Concluído: card concluído na sprint → todas as horas dele; card em andamento → horas das subtasks
+ *   concluídas nesta sprint, até o limite do card.
+ * - Subtasks sem card na lista entram pela soma delas (só as desta sprint).
+ */
+/** Card mínimo para a conta de horas (o Resumo executivo e a Capacidade da Sprint usam a mesma função). */
+export interface AllocationCard {
+  key: string;
+  /** Original Estimate do card em horas */
+  estimateHours: number;
+  /** Conclusão (última transição para Concluído); null = aberto */
+  doneAtMs: number | null;
+}
+/** Subtask mínima para a conta de horas. */
+export interface AllocationSub {
+  key: string;
+  parentKey: string | null;
+  hours: number;
+  doneAtMs: number | null;
+}
+
+export function sprintAllocationHours(
+  cards: AllocationCard[],
+  subs: AllocationSub[],
+  isPrior: (doneAtMs: number | null) => boolean
+): { total: number; done: number } {
+  const byParent = new Map<string, { total: number; done: number; prior: number }>();
+  let looseTotal = 0;
+  let looseDone = 0;
+  const cardKeys = new Set(cards.map((c) => c.key));
+  for (const s of subs) {
+    const h = validHours(s.hours);
+    if (h === 0) continue;
+    const prior = isPrior(s.doneAtMs);
+    if (s.parentKey && cardKeys.has(s.parentKey)) {
+      const agg = byParent.get(s.parentKey) ?? { total: 0, done: 0, prior: 0 };
+      if (prior) agg.prior += h;
+      else {
+        agg.total += h;
+        if (s.doneAtMs !== null) agg.done += h;
+      }
+      byParent.set(s.parentKey, agg);
+    } else if (!prior) {
+      looseTotal += h;
+      if (s.doneAtMs !== null) looseDone += h;
+    }
+  }
+  let total = looseTotal;
+  let done = looseDone;
+  for (const c of cards) {
+    const sub = byParent.get(c.key) ?? { total: 0, done: 0, prior: 0 };
+    // Estimativa do card descontada do que já foi feito antes desta sprint
+    const cardLeft = Math.max(0, validHours(c.estimateHours) - sub.prior);
+    const alloc = Math.max(cardLeft, sub.total);
+    total += alloc;
+    done += c.doneAtMs !== null ? alloc : Math.min(alloc, sub.done);
+  }
+  return { total, done: Math.min(done, total) };
+}
+
 export function buildSprintExecutive(input: {
   sprint: SprintExecutiveResult["sprint"];
   cards: ExecCardInput[];
@@ -106,21 +233,21 @@ export function buildSprintExecutive(input: {
   const cards = input.cards.filter((c) => !isPrior(c.doneAtMs));
   const subs = input.subs.filter((s) => !isPrior(s.doneAtMs));
   const priorCards = input.cards.length - cards.length;
-  const priorHours = round1(input.subs.filter((s) => isPrior(s.doneAtMs)).reduce((a, s) => a + s.hours, 0));
 
-  const cardByKey = new Map(cards.map((c) => [c.key, c]));
+
   const isBlocked = isBlockedCard;
+  // Estimativas suspeitas: cards desta sprint × todas as subtasks deles
+  const estimateAlerts = findEstimateAlerts(cards, input.subs);
 
-  // Horas por Feature, pelo card pai da subtask
-  const featureOfCard = (key: string | null) => (key ? cardByKey.get(key)?.featureKey ?? null : null);
-  const hoursByFeature = new Map<string, { total: number; done: number }>();
-  for (const s of subs) {
-    const fk = featureOfCard(s.parentKey);
+  // Horas: base da ALOCAÇÃO (todos os itens da sprint agora, como a Capacidade da Sprint)
+  const allCardByKey = new Map(input.cards.map((c) => [c.key, c]));
+  const subsByFeature = new Map<string, ExecSubInput[]>();
+  for (const s of input.subs) {
+    const fk = s.parentKey ? allCardByKey.get(s.parentKey)?.featureKey : null;
     if (!fk) continue;
-    const h = hoursByFeature.get(fk) ?? { total: 0, done: 0 };
-    h.total += s.hours;
-    if (s.doneAtMs !== null) h.done += s.hours;
-    hoursByFeature.set(fk, h);
+    const list = subsByFeature.get(fk) ?? [];
+    list.push(s);
+    subsByFeature.set(fk, list);
   }
 
   // Agrupa os cards por Feature
@@ -138,15 +265,16 @@ export function buildSprintExecutive(input: {
     const concluded = head.featureStatus ? CYCLE_TIME_END_STATUSES.has(head.featureStatus) : false;
     const started = list.some((c) => c.doneAtMs !== null || !NOT_STARTED.has(c.status));
     const state: FeatureState = concluded ? "concluida" : blocked.length > 0 ? "bloqueada" : started ? "em-andamento" : "nao-iniciada";
-    const h = hoursByFeature.get(key) ?? { total: 0, done: 0 };
+    const h = sprintAllocationHours(list, subsByFeature.get(key) ?? [], isPrior);
     return {
       key,
       title: head.featureTitle || key,
       status: head.featureStatus || "",
       state,
       cards: { total: list.length, done: list.filter((c) => c.doneAtMs !== null).length },
-      hours: { total: round1(h.total), done: round1(h.done) },
+      allocatedHours: { total: round1(h.total), done: round1(h.done), pct: pct(h.done, h.total) },
       blockedCardKeys: blocked.map((c) => c.key),
+      estimateAlerts: estimateAlerts.filter((a) => list.some((c) => c.key === a.cardKey)),
       blockNote: state === "bloqueada" ? buildBlockNote(blocked) : "",
     };
   });
@@ -161,8 +289,10 @@ export function buildSprintExecutive(input: {
 
   const count = (s: FeatureState) => features.filter((f) => f.state === s).length;
   const cardsDone = cards.filter((c) => c.doneAtMs !== null).length;
-  const hoursTotal = round1(subs.reduce((a, s) => a + s.hours, 0));
-  const hoursDone = round1(subs.filter((s) => s.doneAtMs !== null).reduce((a, s) => a + s.hours, 0));
+  // Comprometido desta sprint (horas inteiras): sem o que foi concluído antes da janela da sprint
+  const alloc = sprintAllocationHours(cards, input.subs, isPrior);
+  const hoursTotal = Math.round(alloc.total);
+  const hoursDone = Math.min(hoursTotal, Math.round(alloc.done));
 
   return {
     sprint,
@@ -176,8 +306,9 @@ export function buildSprintExecutive(input: {
         blocked: cards.filter(isBlocked).length,
         blockedWithoutFeature: cards.filter((c) => !c.featureKey && isBlocked(c)).map((c) => c.key),
       },
-      hours: { total: hoursTotal, done: hoursDone, pct: pct(hoursDone, hoursTotal), unestimatedSubtasks: subs.filter((s) => s.hours <= 0).length },
-      priorWork: { cards: priorCards, hours: priorHours },
+      allocatedHours: { total: hoursTotal, done: hoursDone, pct: pct(hoursDone, hoursTotal), unestimatedSubtasks: subs.filter((s) => s.hours <= 0).length },
+      priorWork: { cards: priorCards },
+      estimateAlerts,
     },
     features,
   };

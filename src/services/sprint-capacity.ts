@@ -1,16 +1,18 @@
 import type { SquadConfig } from "@/config/squads";
-import { getJiraClient } from "./jira-client";
 import { fetchActiveSprint, fetchAllSprints, type SprintData } from "./jira-sprints";
 import { loadCapacityConfig } from "./capacity-store";
 import { getSprintNamer } from "./sprint-display";
-import type { SubtaskWithEstimate } from "./jira-search";
-import { resolveOccupationEstimates } from "@/metrics/occupation";
+import { EXCLUDED, STANDARD_TYPES, SUBTASK_TYPES, readHistory, searchAll, type RawSearchIssue } from "./jira-burndown";
+import { resolveWindowStartMs } from "./live-sprint-metrics";
+import { doneAt } from "@/metrics/sprint-burndown";
+import { sprintAllocationHours, type AllocationCard, type AllocationSub } from "@/metrics/sprint-executive";
 import { businessDaysListBrt } from "@/lib/utils";
 import { CYCLE_TIME_END_STATUSES } from "@/config/status-mapping";
 
 /** Regra de negócio da Ocupação: 6 horas produtivas por pessoa por dia útil. */
 const HOURS_PER_DAY = 6;
-const SUBTASK_TYPES = new Set(["Sub-task", "Subtarefa", "Sub-bug"]);
+const SUBTASK_TYPE_NAMES = new Set(["Sub-task", "Subtarefa", "Sub-bug"]);
+const DONE_LIST = [...CYCLE_TIME_END_STATUSES].map((s) => `"${s}"`).join(", ");
 
 export interface SprintCapacityResult {
   sprint: { id: number; name: string; startDate: string; endDate: string };
@@ -20,23 +22,16 @@ export interface SprintCapacityResult {
   /** Dias úteis considerados na capacidade (configurados em Capacidade ou calculados pelas datas) */
   businessDays: number;
   availableHours: number;
-  /** Original Estimate (regra da Ocupação: maior entre soma das subtasks e estimativa da história) */
+  /**
+   * Horas comprometidas DESTA sprint (regra do maior entre card e subtasks, sem o trabalho concluído em
+   * sprints anteriores). Mesma conta do Resumo executivo (sprintAllocationHours).
+   */
   allocatedHours: number;
-  /** Original Estimate dos itens ainda NÃO concluídos (mesma regra de agregação). Não depende do Remaining Estimate. */
+  /** Comprometido ainda não concluído nesta sprint (alocado − concluído). Não depende do Remaining Estimate. */
   remainingHours: number;
   /** Dias úteis da sprint (YYYY-MM-DD, fuso de Brasília) para a faixa do tempo */
   days: string[];
   asOf: string;
-}
-
-interface RawIssue {
-  key: string;
-  fields: {
-    issuetype?: { name?: string };
-    status?: { name?: string };
-    parent?: { key?: string };
-    timetracking?: { originalEstimateSeconds?: number; remainingEstimateSeconds?: number };
-  };
 }
 
 /** Sprint a acompanhar: a ativa no Jira; só quando não houver ativa, a próxima (futura) de início mais cedo. */
@@ -64,50 +59,41 @@ export async function fetchSprintCapacity(
   if (!picked) return null;
   const { sprint, state } = picked;
 
-  const client = getJiraClient();
-  const jql =
-    `project = "${squad.project}" AND sprint = ${sprint.id} ` +
-    `AND issuetype in (História, Story, Bug, Design, "Technical Debt", Kaizen, Task, Spike, Sub-task, Subtarefa, "Sub-bug") ` +
-    `AND status not in (Cancelado, CANCELADO, Rejeitado, "Lista de Pendências")`;
-  const raw: RawIssue[] = [];
-  let nextPageToken: string | undefined;
-  do {
-    const body: Record<string, unknown> = { jql, fields: ["timetracking", "parent", "issuetype", "status"], maxResults: 100 };
-    if (nextPageToken) body.nextPageToken = nextPageToken;
-    const res = await client.post<{ issues: RawIssue[]; nextPageToken?: string; isLast?: boolean }>("/rest/api/3/search/jql", body);
-    raw.push(...res.issues);
-    nextPageToken = res.isLast ? undefined : res.nextPageToken;
-  } while (nextPageToken);
+  // Regra: só o comprometido DESTA sprint (mesma função do Resumo executivo).
+  // - Trabalho concluído antes da janela da sprint (sprint anterior) fica fora.
+  // - Por card: o maior entre (estimativa do card − subtasks concluídas antes da sprint) e as subtasks desta sprint.
+  // - Concluído: card concluído = todas as horas dele; card em andamento = subtasks concluídas nesta sprint.
+  // O time não preenche o Remaining Estimate: restante = comprometido − concluído.
+  const windowStartMs = await resolveWindowStartMs(squad.boardId, sprint);
+  const isPrior = (d: number | null) => d !== null && d < windowStartMs;
+  const base = `project = "${squad.project}" AND sprint = ${sprint.id} AND issuetype in (${STANDARD_TYPES.slice(1, -1)}, ${SUBTASK_TYPES.slice(1, -1)}) AND ${EXCLUDED}`;
+  const fields = ["timetracking", "parent", "issuetype", "status", "created"];
+  // Abertos: só o estado atual; concluídos: com histórico (quando foram concluídos)
+  const [openRaw, doneRaw] = await Promise.all([
+    searchAll(`${base} AND status not in (${DONE_LIST})`, fields, false),
+    searchAll(`${base} AND status in (${DONE_LIST})`, fields),
+  ]);
+  const doneMs = new Map<string, number | null>();
+  for (const r of doneRaw) {
+    const { transitions } = await readHistory(r, sprint.id);
+    doneMs.set(r.key, doneAt({ key: r.key, issueType: r.fields.issuetype.name, status: r.fields.status.name, created: r.fields.created, transitions }));
+  }
 
-  // Regra: o time não preenche o Remaining Estimate. O restante é o Original Estimate dos itens
-  // ainda não concluídos no Jira; item concluído (status Concluído/Done) conta como entregue.
-  const split = (onlyOpen: boolean) => {
-    const standard: SubtaskWithEstimate[] = [];
-    const subtasks: SubtaskWithEstimate[] = [];
-    for (const r of raw) {
-      const done = CYCLE_TIME_END_STATUSES.has(r.fields.status?.name || "");
-      const item: SubtaskWithEstimate = {
-        key: r.key,
-        originalEstimateSeconds: onlyOpen && done ? 0 : Number(r.fields.timetracking?.originalEstimateSeconds) || 0,
-        issueType: r.fields.issuetype?.name,
-        parentKey: r.fields.parent?.key,
-      };
-      if (SUBTASK_TYPES.has(item.issueType || "")) subtasks.push(item);
-      else standard.push(item);
-    }
-    return { standard, subtasks };
-  };
-  // Mesmo filtro de tipos da Ocupação: cards pelo tipo; subtask entra se não tem pai ou se o card pai entrou. A regra do maior entre a estimativa do card e a soma das subtasks vem de resolveOccupationEstimates.
-  const applyTypes = (s: { standard: SubtaskWithEstimate[]; subtasks: SubtaskWithEstimate[] }) => {
-    if (!typeFilter) return s;
-    const standard = s.standard.filter((x) => x.issueType && typeFilter(x.issueType));
-    const keys = new Set(standard.map((x) => x.key));
-    const subtasks = s.subtasks.filter((x) => !x.parentKey || keys.has(x.parentKey));
-    return { standard, subtasks };
-  };  const all = applyTypes(split(false));
-  const open = applyTypes(split(true));
-  const allocatedHours = Math.round(resolveOccupationEstimates(all.standard, all.subtasks) / 3600);
-  const remainingHours = Math.round(resolveOccupationEstimates(open.standard, open.subtasks) / 3600);
+  const hours = (r: RawSearchIssue) => (Number(r.fields.timetracking?.originalEstimateSeconds) || 0) / 3600;
+  const allRaw = [...openRaw, ...doneRaw];
+  // Mesmo filtro de tipos da Ocupação: cards pelo tipo; subtask entra se não tem pai ou se o card pai entrou
+  const standardRaw = allRaw.filter((r) => !SUBTASK_TYPE_NAMES.has(r.fields.issuetype.name) && (!typeFilter || typeFilter(r.fields.issuetype.name)));
+  const keptKeys = new Set(standardRaw.map((r) => r.key));
+  const cards: AllocationCard[] = standardRaw
+    .map((r) => ({ key: r.key, estimateHours: hours(r), doneAtMs: doneMs.get(r.key) ?? null }))
+    .filter((c) => !isPrior(c.doneAtMs)); // card concluído antes da sprint não é desta sprint
+  const subs: AllocationSub[] = allRaw
+    .filter((r) => SUBTASK_TYPE_NAMES.has(r.fields.issuetype.name))
+    .filter((r) => !r.fields.parent?.key || keptKeys.has(r.fields.parent.key))
+    .map((r) => ({ key: r.key, parentKey: r.fields.parent?.key ?? null, hours: hours(r), doneAtMs: doneMs.get(r.key) ?? null }));
+  const alloc = sprintAllocationHours(cards, subs, isPrior);
+  const allocatedHours = Math.round(alloc.total);
+  const remainingHours = Math.max(0, allocatedHours - Math.min(allocatedHours, Math.round(alloc.done)));
   // Pessoas e dias úteis: configuração de Capacidade da sprint; sem configuração, padrão da squad e datas do Jira
   const config = await loadCapacityConfig(squad.slug).catch(() => ({} as Record<string, { teamSize: number; businessDays?: number }>));
   const entry = config[String(sprint.id)];

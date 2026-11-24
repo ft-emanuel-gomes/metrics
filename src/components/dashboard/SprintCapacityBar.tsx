@@ -141,7 +141,7 @@ export default function SprintCapacityBar({ squadSlug, issueType }: SprintCapaci
     { label: "Pessoas", value: String(data.teamSize) },
     { label: "Horas disponíveis", value: fmtHours(data.availableHours), hint: `${data.teamSize} × 6h × ${data.businessDays} dias úteis` },
     { label: "Horas alocadas", value: fmtHours(data.allocatedHours), hint: `${occupation}% da capacidade` },
-    { label: "Horas restantes", value: fmtHours(data.remainingHours), hint: "Itens ainda não concluídos" },
+    { label: "Horas restantes", value: fmtHours(data.remainingHours), hint: "Comprometido desta sprint ainda não concluído" },
   ];
 
   return (

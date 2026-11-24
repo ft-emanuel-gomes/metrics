@@ -36,6 +36,18 @@ export function releaseForDate(startIso: string | undefined, versions: ReleaseWi
   return rel ? rel.name.split(" - ")[0] || rel.name : undefined;
 }
 
+/** Release curta da sprint ("R4"): a do nome; sem release no nome, a da data de início. Mesma regra do nome exibido. */
+export function sprintReleaseShort(name: string, startIso: string | undefined, versions: ReleaseWindow[]): string | undefined {
+  const rel = name.match(/\bR\s*(\d+)\b/i);
+  return rel ? `R${rel[1]}` : releaseForDate(startIso, versions);
+}
+
+/** Número da release ("R4" = 4); undefined sem release. */
+export function releaseNumber(releaseShort: string | undefined): number | undefined {
+  const m = releaseShort?.match(/^R(\d+)/i);
+  return m ? Number(m[1]) : undefined;
+}
+
 /** "Sprint N - RN" a partir do nome do Jira; sem release no nome, pela data de início. */
 export function displaySprintName(name: string, startIso: string | undefined, versions: ReleaseWindow[]): string {
   return formatSprintName(name, /\bR\s*\d+\b/i.test(name) ? undefined : releaseForDate(startIso, versions));

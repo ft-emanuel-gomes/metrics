@@ -1,5 +1,6 @@
 import type { SquadConfig } from "@/config/squads";
 import { CYCLE_TIME_END_STATUSES } from "@/config/status-mapping";
+import { JIRA_FLAGGED_FIELD, isFlaggedValue } from "@/config/jira";
 import { fetchActiveSprint } from "./jira-sprints";
 import { getSprintNamer } from "./sprint-display";
 import { EXCLUDED, STANDARD_TYPES, SUBTASK_TYPES, readHistory, searchAll } from "./jira-burndown";
@@ -7,8 +8,6 @@ import { resolveWindowStartMs } from "./live-sprint-metrics";
 import { doneAt, type BurndownIssue } from "@/metrics/sprint-burndown";
 import { buildSprintExecutive, type ExecCardInput, type ExecSubInput, type SprintExecutiveResult } from "@/metrics/sprint-executive";
 
-/** Campo "Flagged" (impedimento) do Jira da Monte Bravo. Pode ser trocado por env se o campo mudar. */
-const FLAGGED_FIELD = process.env.JIRA_FLAGGED_FIELD || "customfield_10021";
 
 const DONE_LIST = [...CYCLE_TIME_END_STATUSES].map((s) => `"${s}"`).join(", ");
 
@@ -28,7 +27,8 @@ export async function fetchSprintExecutive(
   // Cards (standard issues): com histórico, só para saber quando cada um foi concluído
   const standardRaw = await searchAll(
     `project = "${squad.project}" AND sprint = ${sprint.id} AND issuetype in ${STANDARD_TYPES} AND ${EXCLUDED}`,
-    ["summary", "issuetype", "status", "created", "parent", FLAGGED_FIELD]
+    // timetracking: estimativa do card, para as horas alocadas (regra do maior entre card e subtasks)
+    ["summary", "issuetype", "status", "created", "parent", "timetracking", JIRA_FLAGGED_FIELD]
   );
   const cards: ExecCardInput[] = [];
   const cardAsBurndown = new Map<string, BurndownIssue>();
@@ -38,7 +38,7 @@ export async function fetchSprintExecutive(
     const bd: BurndownIssue = { key: r.key, issueType: r.fields.issuetype.name, status: r.fields.status.name, created: r.fields.created, transitions };
     cardAsBurndown.set(r.key, bd);
     // Bloqueio = só a bandeira de impedimento do Jira (links "bloqueia"/"é bloqueado por" não contam)
-    const flagged = Array.isArray(r.fields[FLAGGED_FIELD]) && (r.fields[FLAGGED_FIELD] as unknown[]).length > 0;
+    const flagged = isFlaggedValue(r.fields[JIRA_FLAGGED_FIELD]);
     cards.push({
       key: r.key,
       summary: r.fields.summary ?? r.key,
@@ -47,6 +47,7 @@ export async function fetchSprintExecutive(
       featureTitle: r.fields.parent?.fields?.summary,
       featureStatus: r.fields.parent?.fields?.status?.name,
       flagged,
+      estimateHours: (Number(r.fields.timetracking?.originalEstimateSeconds) || 0) / 3600,
       doneAtMs: doneAt(bd),
     });
   }

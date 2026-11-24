@@ -78,7 +78,7 @@ export async function loadDashboardData(squad: SquadConfig, options: DashboardDa
         return null;
       })
     );
-    const validPeriods = await withSprintNames(periodsRaw.filter(Boolean) as RawPeriodData[]);
+    const validPeriods = await withSprintNames(squad, periodsRaw.filter(Boolean) as RawPeriodData[]);
     if (validPeriods.length > 0) {
       const { wipRaw, r2Raw } = await ensureWipAndR2(squad);
       data = buildDashboardFromRaw(squad, validPeriods, wipRaw, r2Raw, issueTypeFilter);
@@ -102,12 +102,17 @@ export async function loadDashboardData(squad: SquadConfig, options: DashboardDa
  * Rótulos das sprints no padrão "Sprint N - RN" (regra em src/lib/sprint-name.ts), antes do cálculo:
  * eixos dos gráficos, comparações dos KPIs, Evolução e insights usam o mesmo nome. Não altera o S3.
  */
-async function withSprintNames(periods: RawPeriodData[]): Promise<RawPeriodData[]> {
+async function withSprintNames(squad: SquadConfig, periods: RawPeriodData[]): Promise<RawPeriodData[]> {
   if (!periods.some((p) => p.period.type === "sprint")) return periods;
-  const name = await getSprintNamer();
+  // Nome ATUAL da sprint no Jira (pode ter sido renomeada depois de gravada no S3); sem Jira, o nome gravado
+  const [name, closed] = await Promise.all([
+    getSprintNamer(),
+    fetchClosedSprints(squad.boardId, Number.MAX_SAFE_INTEGER).catch(() => []),
+  ]);
+  const jiraName = new Map(closed.map((s) => [s.id, s.name]));
   return periods.map((p) => {
     if (p.period.type !== "sprint") return p;
-    const display = name(p.period.label, p.period.startDate);
+    const display = name((p.period.id !== undefined && jiraName.get(p.period.id)) || p.period.label, p.period.startDate);
     return { ...p, period: { ...p.period, label: display, shortName: display } };
   });
 }

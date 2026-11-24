@@ -81,6 +81,11 @@ export interface WipIssueAging {
   /** Dias na coluna atual (informativo; NÃO é o aging). */
   daysInCurrentStatus: number;
   lastTransitionDate: string;
+  /**
+   * Bloqueado = impedimento marcado no Jira (Flagged), a mesma regra do Resumo executivo.
+   * Links "bloqueia"/"é bloqueado por" não contam. No gráfico, a bolinha é circulada em vermelho.
+   */
+  blocked: boolean;
 }
 
 /**
@@ -147,7 +152,7 @@ export function calculateIssueAging(
  * @param referenceDate - Data de referência (default: agora)
  */
 export function calculateWipAging(
-  issues: { key: string; summary: string; status: string; created?: string; transitions: StatusTransition[] }[],
+  issues: { key: string; summary: string; status: string; created?: string; flagged?: boolean; transitions: StatusTransition[] }[],
   referenceDate: Date = new Date()
 ): WipAgingResult {
   if (issues.length === 0) {
@@ -176,6 +181,7 @@ export function calculateWipAging(
       flowStartDate: flowStart || lastTransition?.timestamp || "",
       daysInCurrentStatus: lastTransition ? Math.max(0, calendarDaysBetween(new Date(lastTransition.timestamp), referenceDate)) : agingDays,
       lastTransitionDate: lastTransition?.timestamp || "",
+      blocked: issue.flagged === true,
     };
   });
 

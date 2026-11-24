@@ -5,7 +5,10 @@ import { getSprintCapacity } from "@/services/capacity-store";
 import { getAuthSession } from "@/services/auth-session";
 import { fetchClosedSprints, fetchEditableSprint } from "@/services/jira-sprints";
 import { getSprintNamer } from "@/services/sprint-display";
-import { displaySprintName } from "@/lib/sprint-name";
+import { displaySprintName, releaseNumber, sprintReleaseShort } from "@/lib/sprint-name";
+
+/** Primeira release cujas sprints aparecem no filtro (R2 em diante: R2, R3, R4…). */
+const FIRST_FILTER_RELEASE = 2;
 import { loadDashboardData, DEFAULT_ISSUE_TYPES } from "@/services/dashboard-data";
 import KpiCards from "@/components/dashboard/KpiCards";
 import CycleTimeChart from "@/components/dashboard/CycleTimeChart";
@@ -103,30 +106,29 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
     throw error;
   }
 
-  // Buscar sprints disponíveis para o seletor (somente sprint squads)
-  // Sprints para o filtro: datas do Jira e release a que pertencem (pelo início da sprint dentro da janela da version)
+  // Sprints para o filtro (somente sprint squads). Regra: TODAS as sprints concluídas da R2 em diante
+  // (R2, R3, R4…), sem limite de quantidade; R1 e sprints fora de release ficam de fora.
+  // Release da sprint = a do nome; sem release no nome, a da data de início (mesma regra do nome exibido).
   const availableSprints = squad.methodology === "sprint"
     ? await (async () => {
         const [sprints, versions] = await Promise.all([
-          fetchClosedSprints(squad.boardId, 10).catch(() => []),
+          fetchClosedSprints(squad.boardId, Number.MAX_SAFE_INTEGER).catch(() => []),
           fetchProjectVersions("EP").catch(() => []),
         ]);
-        const TOLERANCE_MS = 3 * 86_400_000; // sprint iniciada até 3 dias antes da version (mesma regra do calendário)
-        return sprints.map((sp) => {
-          const start = new Date(sp.startDate).getTime();
-          const rel = versions.find((v) => v.startDate && v.releaseDate &&
-            start >= new Date(`${v.startDate}T00:00:00-03:00`).getTime() - TOLERANCE_MS &&
-            start <= new Date(`${v.releaseDate}T23:59:59-03:00`).getTime());
-          return {
-            id: sp.id,
-            // Padrão "Sprint N - RN" (filtro de sprints, modal de Capacidade, Monte Carlo)
-            name: displaySprintName(sp.name, sp.startDate, versions),
-            startDate: sp.startDate,
-            endDate: sp.completeDate || sp.endDate,
-            releaseLabel: rel ? formatReleaseLabel(rel.name.split(" - ")[0] || rel.name) : undefined,
-            releaseShort: rel ? (rel.name.split(" - ")[0] || rel.name) : undefined,
-          };
-        });
+        return sprints
+          .map((sp) => {
+            const rel = sprintReleaseShort(sp.name, sp.startDate, versions);
+            return {
+              id: sp.id,
+              // Padrão "Sprint N - RN" (filtro de sprints, modal de Capacidade, Monte Carlo)
+              name: displaySprintName(sp.name, sp.startDate, versions),
+              startDate: sp.startDate,
+              endDate: sp.completeDate || sp.endDate,
+              releaseLabel: rel ? formatReleaseLabel(rel) : undefined,
+              releaseShort: rel,
+            };
+          })
+          .filter((sp) => (releaseNumber(sp.releaseShort) ?? 0) >= FIRST_FILTER_RELEASE);
       })()
     : [];
 

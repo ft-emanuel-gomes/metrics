@@ -250,6 +250,7 @@ async function syncWip(squad: SquadConfig): Promise<void> {
       summary: i.summary,
       status: i.status,
       created: i.created,
+      flagged: i.flagged,
       transitions: wipChangelogs.get(i.key) || [],
     })),
     fetchedAt: new Date().toISOString(),
