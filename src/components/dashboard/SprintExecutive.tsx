@@ -84,8 +84,6 @@ function Stat({ label, value, hint }: { label: string; value: ReactNode; hint?: 
  */
 function FeatureRow({ f, open, onToggle }: { f: ExecFeature; open: boolean; onToggle: () => void }) {
   const cell = STATE_CELL[f.state];
-  const shownBlockers = f.blockedCardKeys.slice(0, 2);
-  const moreBlockers = f.blockedCardKeys.length - shownBlockers.length;
   const progressPct = f.allocatedHours.total > 0 ? f.allocatedHours.pct : f.cards.total > 0 ? Math.round((f.cards.done / f.cards.total) * 100) : 0;
   return (
     <li style={{ borderTop: BORDER }}>
@@ -95,7 +93,7 @@ function FeatureRow({ f, open, onToggle }: { f: ExecFeature; open: boolean; onTo
         aria-expanded={open}
         onClick={onToggle}
         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onToggle(); } }}
-        className="grid cursor-pointer grid-cols-[minmax(0,1fr)_112px_92px_20px] items-stretch transition hover:bg-[var(--ds-color-input-surface-hover)]"
+        className="grid cursor-pointer grid-cols-[minmax(0,1fr)_112px_128px_20px] items-stretch transition hover:bg-[var(--ds-color-input-surface-hover)]"
         style={{ borderLeft: `3px solid ${STATE_COLOR[f.state]}` }}
       >
         <p className="px-3 py-2.5 text-[12px] leading-snug" style={{ color: "var(--ds-color-content-title)" }}>
@@ -117,20 +115,10 @@ function FeatureRow({ f, open, onToggle }: { f: ExecFeature; open: boolean; onTo
         <div className="flex items-center justify-center px-2 text-[11px] font-semibold" style={{ background: cell.bg, color: cell.fg }}>
           {STATE_LABEL[f.state]}
         </div>
-        <div className="flex items-center px-2.5 text-[11px]">
-          {f.blockedCardKeys.length === 0 ? (
-            <span className="t-muted">—</span>
-          ) : (
-            <span className="font-semibold" style={{ color: "var(--ds-color-content-negative)" }} title={f.blockNote}>
-              {shownBlockers.map((k, i) => (
-                <span key={k}>
-                  {i > 0 && ", "}
-                  <a href={`${JIRA_BROWSE}${k}`} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="underline-offset-2 hover:underline">{k}</a>
-                </span>
-              ))}
-              {moreBlockers > 0 && ` +${moreBlockers}`}
-            </span>
-          )}
+        {/* Andamento: % das horas alocadas (avanço de cards e subtasks) */}
+        <div className="flex items-center gap-2 px-2.5" title={`${fmtH(f.allocatedHours.done)} de ${fmtH(f.allocatedHours.total)} alocadas`}>
+          <span className="w-9 shrink-0 text-right text-[11px] font-semibold tabular-nums" style={{ color: "var(--ds-color-content-title)" }}>{progressPct}%</span>
+          <div className="min-w-0 flex-1"><Bar pct={progressPct} color={STATE_COLOR[f.state]} height={5} /></div>
         </div>
         <div className="flex items-center justify-center" aria-hidden="true" style={{ color: "var(--ds-color-content-subdued)" }}>
           <svg width="12" height="12" viewBox="0 0 12 12" style={{ transform: open ? "rotate(90deg)" : "none", transition: "transform .15s" }}>
@@ -143,20 +131,28 @@ function FeatureRow({ f, open, onToggle }: { f: ExecFeature; open: boolean; onTo
         <div className="grid grid-cols-3 gap-x-4 gap-y-3 px-4 pb-3 pt-1" style={{ borderLeft: `3px solid ${STATE_COLOR[f.state]}`, background: "var(--ds-color-container-card-surface-default)" }}>
           <Stat label="Cards" value={`${f.cards.done} de ${f.cards.total}`} hint="concluídos" />
           <div className="min-w-0">
-            <p className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: "var(--ds-color-content-caption)" }}>Andamento</p>
-            <p className="mt-0.5 text-[13px] tabular-nums" style={{ color: "var(--ds-color-content-title)" }}>{progressPct}%</p>
-            <div className="mt-1"><Bar pct={progressPct} color={STATE_COLOR[f.state]} height={5} /></div>
+            <p className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: "var(--ds-color-content-caption)" }}>Bloqueio</p>
+            {f.blockedCardKeys.length === 0 ? (
+              <p className="mt-0.5 text-[13px]" style={{ color: "var(--ds-color-content-title)" }}>Sem bloqueio</p>
+            ) : (
+              <>
+                <p className="mt-0.5 text-[13px] font-semibold" style={{ color: "var(--ds-color-content-negative)" }}>
+                  {f.blockedCardKeys.map((k, i) => (
+                    <span key={k}>
+                      {i > 0 && ", "}
+                      <a href={`${JIRA_BROWSE}${k}`} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="underline-offset-2 hover:underline">{k}</a>
+                    </span>
+                  ))}
+                </p>
+                <p className="text-[11px]" style={{ color: "var(--ds-color-content-subdued)" }}>impedimento marcado no Jira</p>
+              </>
+            )}
           </div>
           <Stat
             label="Horas alocadas"
             value={f.allocatedHours.total > 0 ? `${fmtH(f.allocatedHours.done)} de ${fmtH(f.allocatedHours.total)}` : "sem estimativa"}
             hint="avanço de cards e subtasks"
           />
-          {f.state === "bloqueada" && f.blockNote && (
-            <p className="col-span-3 text-[12px] font-medium" style={{ color: "var(--ds-color-content-negative)" }}>
-              Bloqueio: {f.blockNote}.
-            </p>
-          )}
           {f.estimateAlerts.map((a) => (
             <p key={a.cardKey} className="col-span-3 text-[12px] font-medium" style={{ color: "var(--ds-color-content-alert)" }}>
               Estimativa a revisar:{" "}
@@ -341,10 +337,10 @@ export default function SprintExecutive({ squadSlug, issueType, releaseProgress 
           ) : (
             <>
               <div className="overflow-hidden rounded-xl" style={{ border: BORDER }}>
-                <div className="grid grid-cols-[minmax(0,1fr)_112px_92px_20px]" style={{ background: "var(--ds-color-container-card-surface-default)", color: "var(--ds-color-content-caption)" }}>
+                <div className="grid grid-cols-[minmax(0,1fr)_112px_128px_20px]" style={{ background: "var(--ds-color-container-card-surface-default)", color: "var(--ds-color-content-caption)" }}>
                   <p className={head}>Feature</p>
                   <p className={`${head} text-center`}>Situação</p>
-                  <p className={head}>Bloqueio</p>
+                  <p className={head}>Andamento</p>
                   <span />
                 </div>
                 <ul>
@@ -361,7 +357,7 @@ export default function SprintExecutive({ squadSlug, issueType, releaseProgress 
               >
                 {allOpen ? "Recolher todas" : "Abrir o detalhe de todas"}
               </button>
-              <span className="ml-2 text-[11px] t-muted">Clique na Feature para ver cards, andamento e horas.</span>
+              <span className="ml-2 text-[11px] t-muted">Clique na Feature para ver cards, bloqueio e horas.</span>
             </>          )}
         </div>
       </div>
