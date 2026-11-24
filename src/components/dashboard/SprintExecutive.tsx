@@ -36,8 +36,6 @@ const STATE_COLOR: Record<FeatureState, string> = {
   concluida: "var(--ds-color-content-positive)",
 };
 
-const SUBTASK_TOOLTIP =
-  "Subtasks (Sub-task e Sub-bug) em horas, pelo Original Estimate. Mesma base do Burndown em horas. Subtask sem estimativa não entra na conta.";
 const ALLOCATED_TOOLTIP =
   "Horas comprometidas nesta sprint: para cada card, vale o maior entre a estimativa do card e a soma das subtasks, sem somar os dois. O que foi concluído em sprints anteriores fica fora (ex.: card de 5h com 4h de subtasks feitas na sprint anterior = 1h comprometida). Concluído: card concluído conta todas as horas dele; card em andamento conta as subtasks concluídas nesta sprint.";
 
@@ -282,23 +280,6 @@ export default function SprintExecutive({ squadSlug, issueType, releaseProgress 
 
             <div>
               <p className="mb-2 flex items-center gap-1.5 text-[15px]" style={{ color: "var(--ds-color-content-title)" }}>
-                {fmtH(t.subtaskHours.done)} de {fmtH(t.subtaskHours.total)} em subtasks concluídas
-                <MetricTooltip text={SUBTASK_TOOLTIP} />
-              </p>
-              <Bar pct={t.subtaskHours.pct} height={12} />
-              <p className="mt-1.5 text-[12px]">
-                <span style={{ color: "var(--ds-color-content-positive)" }}>{t.subtaskHours.pct}% concluído</span>
-                {t.subtaskHours.unestimatedSubtasks > 0 && (
-                  <>
-                    <span className="t-muted"> | </span>
-                    <span style={{ color: "var(--ds-color-content-alert)" }}>{t.subtaskHours.unestimatedSubtasks === 1 ? "1 subtask sem estimativa" : `${t.subtaskHours.unestimatedSubtasks} subtasks sem estimativa`}</span>
-                  </>
-                )}
-              </p>
-            </div>
-
-            <div>
-              <p className="mb-2 flex items-center gap-1.5 text-[15px]" style={{ color: "var(--ds-color-content-title)" }}>
                 {fmtH(t.allocatedHours.done)} de {fmtH(t.allocatedHours.total)} alocadas concluídas
                 <MetricTooltip text={ALLOCATED_TOOLTIP} />
               </p>
@@ -306,6 +287,12 @@ export default function SprintExecutive({ squadSlug, issueType, releaseProgress 
               <p className="mt-1.5 text-[12px]">
                 <span style={{ color: "var(--ds-color-content-positive)" }}>{t.allocatedHours.pct}% concluído</span>
                 <span className="t-muted"> | avanço de cards e subtasks</span>
+                {t.allocatedHours.unestimatedSubtasks > 0 && (
+                  <>
+                    <span className="t-muted"> | </span>
+                    <span style={{ color: "var(--ds-color-content-alert)" }}>{t.allocatedHours.unestimatedSubtasks === 1 ? "1 subtask sem estimativa" : `${t.allocatedHours.unestimatedSubtasks} subtasks sem estimativa`}</span>
+                  </>
+                )}
               </p>
             </div>
           </div>
