@@ -16,6 +16,53 @@ import { CYCLE_TIME_END_STATUSES } from "@/config/status-mapping";
  *   > Em andamento (algum card já iniciado ou concluído) > Por começar.
  */
 
+/**
+ * Alerta de estimativa: o Original Estimate do card é muito maior que a soma das subtasks dele.
+ * Pela regra do maior (card × subtasks), um erro de digitação no card (ex.: 245h no lugar de 24,5h) infla as
+ * horas alocadas e, se o card for concluído, as horas concluídas. O alerta não muda a conta: só sinaliza.
+ */
+export interface EstimateAlert {
+  /**
+   * acima-subtasks = estimativa do card muito maior que as subtasks (infla as horas pela regra do maior);
+   * invalida = estimativa acima do teto da Ocupação (480h), ignorada na conta, mas errada no Jira.
+   */
+  kind: "acima-subtasks" | "invalida";
+  cardKey: string;
+  /** Original Estimate do card (h) */
+  cardHours: number;
+  /** Soma das subtasks do card, de todas as sprints (h) */
+  subtaskHours: number;
+}
+
+/** Card com estimativa acima de RATIO × soma das subtasks e acima de MIN_HOURS dispara o alerta. */
+export const ESTIMATE_ALERT_RATIO = 3;
+export const ESTIMATE_ALERT_MIN_HOURS = 40;
+
+/**
+ * Cards com estimativa a revisar:
+ * - invalida: acima do teto de 480h (ignorada na conta), com ou sem subtasks;
+ * - acima-subtasks: mais de RATIO × a soma das subtasks e acima de MIN_HOURS. Só compara cards que TÊM
+ *   subtasks estimadas (sem subtasks, a estimativa do card é a única referência). Soma subtasks de todas as sprints.
+ */
+export function findEstimateAlerts(cards: { key: string; estimateHours: number }[], subs: { parentKey: string | null; hours: number }[]): EstimateAlert[] {
+  const sumByParent = new Map<string, number>();
+  for (const s of subs) {
+    if (!s.parentKey || !(s.hours > 0)) continue;
+    sumByParent.set(s.parentKey, (sumByParent.get(s.parentKey) ?? 0) + s.hours);
+  }
+  const alerts: EstimateAlert[] = [];
+  for (const c of cards) {
+    const cardHours = Math.round(c.estimateHours * 10) / 10;
+    const subtaskHours = Math.round((sumByParent.get(c.key) ?? 0) * 10) / 10;
+    if (cardHours > MAX_ESTIMATE_HOURS) alerts.push({ kind: "invalida", cardKey: c.key, cardHours, subtaskHours });
+    else if (subtaskHours > 0 && cardHours > ESTIMATE_ALERT_MIN_HOURS && cardHours > subtaskHours * ESTIMATE_ALERT_RATIO) {
+      alerts.push({ kind: "acima-subtasks", cardKey: c.key, cardHours, subtaskHours });
+    }
+  }
+  // Primeiro os que inflam as horas (maior diferença primeiro), depois os inválidos
+  return alerts.sort((a, b) => (a.kind === b.kind ? b.cardHours - b.subtaskHours - (a.cardHours - a.subtaskHours) : a.kind === "acima-subtasks" ? -1 : 1));
+}
+
 export type FeatureState = "concluida" | "bloqueada" | "em-andamento" | "nao-iniciada";
 
 /** Card (standard issue) da sprint, já lido do Jira. */
@@ -54,6 +101,8 @@ export interface ExecFeature {
   allocatedHours: { total: number; done: number; pct: number };
   /** Cards da Feature com bloqueio ativo */
   blockedCardKeys: string[];
+  /** Cards da Feature com estimativa muito acima das subtasks (provável erro de cadastro) */
+  estimateAlerts: EstimateAlert[];
   /** Texto curto do motivo do bloqueio (vazio se não bloqueada) */
   blockNote: string;
 }
@@ -68,6 +117,8 @@ export interface SprintExecutiveResult {
     allocatedHours: { total: number; done: number; pct: number; /** Subtasks desta sprint sem Original Estimate */ unestimatedSubtasks: number };
     /** Cards já concluídos antes da sprint (fora das contagens de cards) */
     priorWork: { cards: number };
+    /** Todos os cards da sprint com estimativa muito acima das subtasks */
+    estimateAlerts: EstimateAlert[];
   };
   features: ExecFeature[];
 }
@@ -185,6 +236,8 @@ export function buildSprintExecutive(input: {
 
 
   const isBlocked = isBlockedCard;
+  // Estimativas suspeitas: cards desta sprint × todas as subtasks deles
+  const estimateAlerts = findEstimateAlerts(cards, input.subs);
 
   // Horas: base da ALOCAÇÃO (todos os itens da sprint agora, como a Capacidade da Sprint)
   const allCardByKey = new Map(input.cards.map((c) => [c.key, c]));
@@ -221,6 +274,7 @@ export function buildSprintExecutive(input: {
       cards: { total: list.length, done: list.filter((c) => c.doneAtMs !== null).length },
       allocatedHours: { total: round1(h.total), done: round1(h.done), pct: pct(h.done, h.total) },
       blockedCardKeys: blocked.map((c) => c.key),
+      estimateAlerts: estimateAlerts.filter((a) => list.some((c) => c.key === a.cardKey)),
       blockNote: state === "bloqueada" ? buildBlockNote(blocked) : "",
     };
   });
@@ -254,6 +308,7 @@ export function buildSprintExecutive(input: {
       },
       allocatedHours: { total: hoursTotal, done: hoursDone, pct: pct(hoursDone, hoursTotal), unestimatedSubtasks: subs.filter((s) => s.hours <= 0).length },
       priorWork: { cards: priorCards },
+      estimateAlerts,
     },
     features,
   };

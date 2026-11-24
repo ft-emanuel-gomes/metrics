@@ -110,6 +110,9 @@ function FeatureRow({ f, open, onToggle }: { f: ExecFeature; open: boolean; onTo
             {f.key}
           </a>{" "}
           {f.title}
+          {f.estimateAlerts.length > 0 && (
+            <span className="ds-badge ds-badge-alert ml-1.5 align-middle" title="Estimativa de card a revisar no Jira. Abra o detalhe.">Revisar estimativa</span>
+          )}
         </p>
         <div className="flex items-center justify-center px-2 text-[11px] font-semibold" style={{ background: cell.bg, color: cell.fg }}>
           {STATE_LABEL[f.state]}
@@ -154,6 +157,15 @@ function FeatureRow({ f, open, onToggle }: { f: ExecFeature; open: boolean; onTo
               Bloqueio: {f.blockNote}.
             </p>
           )}
+          {f.estimateAlerts.map((a) => (
+            <p key={a.cardKey} className="col-span-3 text-[12px] font-medium" style={{ color: "var(--ds-color-content-alert)" }}>
+              Estimativa a revisar:{" "}
+              <a href={`${JIRA_BROWSE}${a.cardKey}`} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="underline underline-offset-2">{a.cardKey}</a>{" "}
+              {a.kind === "invalida"
+                ? <>tem uma estimativa inválida no Jira (acima de 480h). Ela foi ignorada na conta, mas precisa ser corrigida.</>
+                : <>tem {fmtH(a.cardHours)} no card, mas as subtasks somam {fmtH(a.subtaskHours)}. Como vale o maior valor, as horas desta Feature podem estar infladas.</>}
+            </p>
+          ))}
         </div>
       )}
     </li>
@@ -294,6 +306,25 @@ export default function SprintExecutive({ squadSlug, issueType, releaseProgress 
                   </>
                 )}
               </p>
+              {t.estimateAlerts.length > 0 && (
+                <p className="mt-1.5 flex items-start gap-1.5 text-[12px] leading-snug" style={{ color: "var(--ds-color-content-alert)" }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" className="mt-[1px] shrink-0" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                    <path d="M12 3l9.5 17H2.5L12 3z" strokeLinejoin="round" />
+                    <path d="M12 10v4M12 17h.01" strokeLinecap="round" />
+                  </svg>
+                  <span>
+                    {t.estimateAlerts.length === 1 ? "1 card com estimativa a revisar" : `${t.estimateAlerts.length} cards com estimativa a revisar`}:{" "}
+                    {t.estimateAlerts.slice(0, 3).map((a, i) => (
+                      <span key={a.cardKey}>
+                        {i > 0 && ", "}
+                        <a href={`${JIRA_BROWSE}${a.cardKey}`} target="_blank" rel="noopener noreferrer" className="font-semibold underline underline-offset-2">{a.cardKey}</a>{" "}
+                        ({a.kind === "invalida" ? "estimativa inválida, ignorada na conta" : `${fmtH(a.cardHours)} no card, ${fmtH(a.subtaskHours)} nas subtasks`})
+                      </span>
+                    ))}
+                    {t.estimateAlerts.length > 3 && ` e mais ${t.estimateAlerts.length - 3}`}. Revise no Jira{t.estimateAlerts.some((a) => a.kind === "acima-subtasks") ? ": as horas alocadas podem estar infladas" : ""}.
+                  </span>
+                </p>
+              )}
             </div>
           </div>
           {/* Progresso da release ativa: Épicos e Features */}
