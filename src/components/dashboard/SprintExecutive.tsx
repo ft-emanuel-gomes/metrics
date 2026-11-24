@@ -39,7 +39,7 @@ const STATE_COLOR: Record<FeatureState, string> = {
 const SUBTASK_TOOLTIP =
   "Subtasks (Sub-task e Sub-bug) em horas, pelo Original Estimate. Mesma base do Burndown em horas. Subtask sem estimativa não entra na conta.";
 const ALLOCATED_TOOLTIP =
-  "Horas alocadas da sprint: para cada card, vale o maior entre a estimativa do card e a soma das subtasks, sem somar os dois. Mesma base das Horas alocadas da Capacidade da Sprint.";
+  "Horas alocadas: para cada card, vale o maior entre a estimativa do card e a soma das subtasks, sem somar os dois (o total é o mesmo das Horas alocadas da Capacidade da Sprint). Concluído reflete o avanço de cards e subtasks: card concluído conta todas as horas dele; card em andamento conta as horas das subtasks já concluídas.";
 
 const fmtH = (v: number) => `${Number.isInteger(v) ? v : v.toFixed(1).replace(".", ",")}h`;
 
@@ -139,7 +139,7 @@ function FeatureRow({ f, open, onToggle }: { f: ExecFeature; open: boolean; onTo
       </div>
 
       {open && (
-        <div className="grid grid-cols-2 gap-x-4 gap-y-3 px-4 pb-3 pt-1 sm:grid-cols-4" style={{ borderLeft: `3px solid ${STATE_COLOR[f.state]}`, background: "var(--ds-color-container-card-surface-default)" }}>
+        <div className="grid grid-cols-3 gap-x-4 gap-y-3 px-4 pb-3 pt-1" style={{ borderLeft: `3px solid ${STATE_COLOR[f.state]}`, background: "var(--ds-color-container-card-surface-default)" }}>
           <Stat label="Cards" value={`${f.cards.done} de ${f.cards.total}`} hint="concluídos" />
           <div className="min-w-0">
             <p className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: "var(--ds-color-content-caption)" }}>Andamento</p>
@@ -149,15 +149,10 @@ function FeatureRow({ f, open, onToggle }: { f: ExecFeature; open: boolean; onTo
           <Stat
             label="Horas alocadas"
             value={f.allocatedHours.total > 0 ? `${fmtH(f.allocatedHours.done)} de ${fmtH(f.allocatedHours.total)}` : "sem estimativa"}
-            hint="cards e subtasks"
-          />
-          <Stat
-            label="Horas em subtasks"
-            value={f.subtaskHours.total > 0 ? `${fmtH(f.subtaskHours.done)} de ${fmtH(f.subtaskHours.total)}` : "sem subtasks estimadas"}
-            hint="base do Burndown"
+            hint="avanço de cards e subtasks"
           />
           {f.state === "bloqueada" && f.blockNote && (
-            <p className="col-span-2 text-[12px] font-medium sm:col-span-4" style={{ color: "var(--ds-color-content-negative)" }}>
+            <p className="col-span-3 text-[12px] font-medium" style={{ color: "var(--ds-color-content-negative)" }}>
               Bloqueio: {f.blockNote}.
             </p>
           )}
@@ -310,7 +305,7 @@ export default function SprintExecutive({ squadSlug, issueType, releaseProgress 
               <Bar pct={t.allocatedHours.pct} height={12} />
               <p className="mt-1.5 text-[12px]">
                 <span style={{ color: "var(--ds-color-content-positive)" }}>{t.allocatedHours.pct}% concluído</span>
-                <span className="t-muted"> | cards e subtasks, mesma base da Capacidade</span>
+                <span className="t-muted"> | avanço de cards e subtasks</span>
               </p>
             </div>
           </div>

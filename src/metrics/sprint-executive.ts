@@ -105,19 +105,51 @@ function buildBlockNote(blocked: ExecCardInput[]): string {
   return `${list} com impedimento marcado no Jira`;
 }
 
+/** Mesmo teto da Ocupação: estimativa acima de 12 semanas (480h) é tratada como erro de cadastro. */
+const MAX_ESTIMATE_HOURS = 12 * 5 * 8;
+const validHours = (h: number) => (h > 0 && h <= MAX_ESTIMATE_HOURS ? h : 0);
+
 /**
- * Horas alocadas e concluídas de um conjunto de cards e subtasks, pela regra da Ocupação
- * (resolveOccupationEstimates: por card, o maior entre a estimativa dele e a soma das subtasks).
- * Concluído = alocado − restante, sendo restante a mesma regra aplicada só aos itens não concluídos
- * (mesma conta da Capacidade da Sprint).
+ * Horas alocadas e concluídas de um conjunto de cards e subtasks.
+ *
+ * Regra de negócio:
+ * - Alocado (regra da Ocupação): por card, o MAIOR entre a estimativa do card e a soma das subtasks dele
+ *   (nunca soma os dois); subtasks sem card na lista entram pela soma delas. O total bate com as
+ *   "Horas alocadas" da Capacidade da Sprint (resolveOccupationEstimates).
+ * - Concluído reflete o avanço de cards E subtasks:
+ *   · card concluído → todas as horas alocadas dele;
+ *   · card em andamento → as horas das subtasks já concluídas, até o limite alocado do card.
+ *   Assim, subtask concluída aparece no avanço mesmo quando a estimativa do card é maior que as subtasks.
  */
 function allocationHours(cards: ExecCardInput[], subs: ExecSubInput[]): { total: number; done: number } {
+  const byParent = new Map<string, { total: number; done: number }>();
+  let looseDone = 0;
+  const cardKeys = new Set(cards.map((c) => c.key));
+  for (const s of subs) {
+    const h = validHours(s.hours);
+    if (h === 0) continue;
+    if (s.parentKey && cardKeys.has(s.parentKey)) {
+      const agg = byParent.get(s.parentKey) ?? { total: 0, done: 0 };
+      agg.total += h;
+      if (s.doneAtMs !== null) agg.done += h;
+      byParent.set(s.parentKey, agg);
+    } else if (s.doneAtMs !== null) {
+      looseDone += h;
+    }
+  }
+  let done = looseDone;
+  for (const c of cards) {
+    const sub = byParent.get(c.key) ?? { total: 0, done: 0 };
+    const alloc = Math.max(validHours(c.estimateHours), sub.total);
+    done += c.doneAtMs !== null ? alloc : Math.min(alloc, sub.done);
+  }
+  // Total = regra da Ocupação (mesma função da Capacidade da Sprint)
   const sec = (h: number) => Math.round(h * 3600);
-  const std = (onlyOpen: boolean) => cards.map((c) => ({ key: c.key, originalEstimateSeconds: onlyOpen && c.doneAtMs !== null ? 0 : sec(c.estimateHours) }));
-  const sb = (onlyOpen: boolean) => subs.map((s) => ({ key: s.key, parentKey: s.parentKey ?? undefined, originalEstimateSeconds: onlyOpen && s.doneAtMs !== null ? 0 : sec(s.hours) }));
-  const total = resolveOccupationEstimates(std(false), sb(false)) / 3600;
-  const remaining = resolveOccupationEstimates(std(true), sb(true)) / 3600;
-  return { total, done: Math.max(0, total - remaining) };
+  const occupation = resolveOccupationEstimates(
+    cards.map((c) => ({ key: c.key, originalEstimateSeconds: sec(c.estimateHours) })),
+    subs.map((s) => ({ key: s.key, parentKey: s.parentKey ?? undefined, originalEstimateSeconds: sec(s.hours) }))
+  ) / 3600;
+  return { total: occupation, done: Math.min(done, occupation) };
 }
 
 export function buildSprintExecutive(input: {
