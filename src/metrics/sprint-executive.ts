@@ -1,5 +1,4 @@
 import { CYCLE_TIME_END_STATUSES } from "@/config/status-mapping";
-import { resolveOccupationEstimates } from "./occupation";
 
 /**
  * Resumo executivo da sprint vigente, organizado pelas FEATURES (pai dos standard issues).
@@ -11,8 +10,8 @@ import { resolveOccupationEstimates } from "./occupation";
  * - Duas visões de horas, lado a lado para transparência:
  *   · Subtasks: Original Estimate das subtasks (Sub-task e Sub-bug), mesma base do Burndown em horas
  *     (concluído antes da janela da sprint fica fora).
- *   · Alocadas (cards + subtasks): regra da Ocupação: por card, o MAIOR entre a estimativa do card e a soma das
- *     subtasks (nunca soma os dois); todos os itens da sprint agora. Bate com as "Horas alocadas" da Capacidade.
+ *   · Alocadas (cards + subtasks): o comprometido DESTA sprint (ver allocationHours): regra do maior entre card
+ *     e subtasks, sem o que já foi concluído antes da janela da sprint.
  * - Bloqueio = card ainda NÃO concluído marcado como impedimento no Jira (bandeira "Flagged" = Impediment).
  *   Links entre issues ("bloqueia", "é bloqueado por", pré-requisito) NÃO contam como bloqueio.
  *   O bloqueio é do card, mas a Feature dele fica bloqueada.
@@ -56,7 +55,7 @@ export interface ExecFeature {
   cards: { total: number; done: number };
   /** Horas das subtasks da Feature (base do Burndown em horas) */
   subtaskHours: { total: number; done: number; pct: number };
-  /** Horas alocadas da Feature (cards + subtasks, regra do maior; base da Capacidade) */
+  /** Horas alocadas da Feature nesta sprint (cards + subtasks, regra do maior, sem o trabalho de sprints anteriores) */
   allocatedHours: { total: number; done: number; pct: number };
   /** Cards da Feature com bloqueio ativo */
   blockedCardKeys: string[];
@@ -72,7 +71,7 @@ export interface SprintExecutiveResult {
     cards: { total: number; done: number; pct: number; blocked: number; /** Cards bloqueados sem Feature como pai (chaves) */ blockedWithoutFeature: string[] };
     /** Horas das subtasks (Sub-task e Sub-bug), mesma base do Burndown em horas */
     subtaskHours: { total: number; done: number; pct: number; unestimatedSubtasks: number };
-    /** Horas alocadas (cards + subtasks), mesma base das "Horas alocadas" da Capacidade da Sprint */
+    /** Horas alocadas desta sprint (cards + subtasks), sem o trabalho concluído antes da janela da sprint */
     allocatedHours: { total: number; done: number; pct: number };
     /** Cards já concluídos antes da sprint (fora das contagens de cards) */
     priorWork: { cards: number };
@@ -110,46 +109,54 @@ const MAX_ESTIMATE_HOURS = 12 * 5 * 8;
 const validHours = (h: number) => (h > 0 && h <= MAX_ESTIMATE_HOURS ? h : 0);
 
 /**
- * Horas alocadas e concluídas de um conjunto de cards e subtasks.
+ * Horas alocadas DA SPRINT VIGENTE (comprometido) e quanto já foi concluído nela.
  *
- * Regra de negócio:
- * - Alocado (regra da Ocupação): por card, o MAIOR entre a estimativa do card e a soma das subtasks dele
- *   (nunca soma os dois); subtasks sem card na lista entram pela soma delas. O total bate com as
- *   "Horas alocadas" da Capacidade da Sprint (resolveOccupationEstimates).
- * - Concluído reflete o avanço de cards E subtasks:
- *   · card concluído → todas as horas alocadas dele;
- *   · card em andamento → as horas das subtasks já concluídas, até o limite alocado do card.
- *   Assim, subtask concluída aparece no avanço mesmo quando a estimativa do card é maior que as subtasks.
+ * Regra de negócio: só entra o que corresponde a esta sprint.
+ * - Trabalho concluído ANTES da janela da sprint (sprint anterior) fica fora do total e do concluído.
+ *   Ex.: card de 5h com 5 subtasks de 1h, 4 concluídas na sprint anterior → comprometido = 1h.
+ * - Por card: o MAIOR entre (estimativa do card − horas de subtasks concluídas antes da sprint) e a soma das
+ *   subtasks desta sprint. Nunca soma os dois (regra da Ocupação).
+ * - Concluído: card concluído na sprint → todas as horas dele; card em andamento → horas das subtasks
+ *   concluídas nesta sprint, até o limite do card.
+ * - Subtasks sem card na lista entram pela soma delas (só as desta sprint).
  */
-function allocationHours(cards: ExecCardInput[], subs: ExecSubInput[]): { total: number; done: number } {
-  const byParent = new Map<string, { total: number; done: number }>();
+function allocationHours(
+  cards: ExecCardInput[],
+  subs: ExecSubInput[],
+  isPrior: (doneAtMs: number | null) => boolean
+): { total: number; done: number } {
+  const byParent = new Map<string, { total: number; done: number; prior: number }>();
+  let looseTotal = 0;
   let looseDone = 0;
   const cardKeys = new Set(cards.map((c) => c.key));
   for (const s of subs) {
     const h = validHours(s.hours);
     if (h === 0) continue;
+    const prior = isPrior(s.doneAtMs);
     if (s.parentKey && cardKeys.has(s.parentKey)) {
-      const agg = byParent.get(s.parentKey) ?? { total: 0, done: 0 };
-      agg.total += h;
-      if (s.doneAtMs !== null) agg.done += h;
+      const agg = byParent.get(s.parentKey) ?? { total: 0, done: 0, prior: 0 };
+      if (prior) agg.prior += h;
+      else {
+        agg.total += h;
+        if (s.doneAtMs !== null) agg.done += h;
+      }
       byParent.set(s.parentKey, agg);
-    } else if (s.doneAtMs !== null) {
-      looseDone += h;
+    } else if (!prior) {
+      looseTotal += h;
+      if (s.doneAtMs !== null) looseDone += h;
     }
   }
+  let total = looseTotal;
   let done = looseDone;
   for (const c of cards) {
-    const sub = byParent.get(c.key) ?? { total: 0, done: 0 };
-    const alloc = Math.max(validHours(c.estimateHours), sub.total);
+    const sub = byParent.get(c.key) ?? { total: 0, done: 0, prior: 0 };
+    // Estimativa do card descontada do que já foi feito antes desta sprint
+    const cardLeft = Math.max(0, validHours(c.estimateHours) - sub.prior);
+    const alloc = Math.max(cardLeft, sub.total);
+    total += alloc;
     done += c.doneAtMs !== null ? alloc : Math.min(alloc, sub.done);
   }
-  // Total = regra da Ocupação (mesma função da Capacidade da Sprint)
-  const sec = (h: number) => Math.round(h * 3600);
-  const occupation = resolveOccupationEstimates(
-    cards.map((c) => ({ key: c.key, originalEstimateSeconds: sec(c.estimateHours) })),
-    subs.map((s) => ({ key: s.key, parentKey: s.parentKey ?? undefined, originalEstimateSeconds: sec(s.hours) }))
-  ) / 3600;
-  return { total: occupation, done: Math.min(done, occupation) };
+  return { total, done: Math.min(done, total) };
 }
 
 export function buildSprintExecutive(input: {
@@ -207,7 +214,7 @@ export function buildSprintExecutive(input: {
     const concluded = head.featureStatus ? CYCLE_TIME_END_STATUSES.has(head.featureStatus) : false;
     const started = list.some((c) => c.doneAtMs !== null || !NOT_STARTED.has(c.status));
     const state: FeatureState = concluded ? "concluida" : blocked.length > 0 ? "bloqueada" : started ? "em-andamento" : "nao-iniciada";
-    const h = allocationHours(input.cards.filter((c) => c.featureKey === key), subsByFeature.get(key) ?? []);
+    const h = allocationHours(list, subsByFeature.get(key) ?? [], isPrior);
     const sh = subHoursByFeature.get(key) ?? { total: 0, done: 0 };
     return {
       key,
@@ -232,10 +239,10 @@ export function buildSprintExecutive(input: {
 
   const count = (s: FeatureState) => features.filter((f) => f.state === s).length;
   const cardsDone = cards.filter((c) => c.doneAtMs !== null).length;
-  // Mesmo arredondamento da Capacidade da Sprint (horas inteiras), para os totais baterem
-  const alloc = allocationHours(input.cards, input.subs);
+  // Comprometido desta sprint (horas inteiras): sem o que foi concluído antes da janela da sprint
+  const alloc = allocationHours(cards, input.subs, isPrior);
   const hoursTotal = Math.round(alloc.total);
-  const hoursDone = Math.max(0, hoursTotal - Math.round(alloc.total - alloc.done));
+  const hoursDone = Math.min(hoursTotal, Math.round(alloc.done));
   const subTotal = round1(subs.reduce((a, s) => a + s.hours, 0));
   const subDone = round1(subs.filter((s) => s.doneAtMs !== null).reduce((a, s) => a + s.hours, 0));
 

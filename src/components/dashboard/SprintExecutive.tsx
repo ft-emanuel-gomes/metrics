@@ -39,7 +39,7 @@ const STATE_COLOR: Record<FeatureState, string> = {
 const SUBTASK_TOOLTIP =
   "Subtasks (Sub-task e Sub-bug) em horas, pelo Original Estimate. Mesma base do Burndown em horas. Subtask sem estimativa não entra na conta.";
 const ALLOCATED_TOOLTIP =
-  "Horas alocadas: para cada card, vale o maior entre a estimativa do card e a soma das subtasks, sem somar os dois (o total é o mesmo das Horas alocadas da Capacidade da Sprint). Concluído reflete o avanço de cards e subtasks: card concluído conta todas as horas dele; card em andamento conta as horas das subtasks já concluídas.";
+  "Horas comprometidas nesta sprint: para cada card, vale o maior entre a estimativa do card e a soma das subtasks, sem somar os dois. O que foi concluído em sprints anteriores fica fora (ex.: card de 5h com 4h de subtasks feitas na sprint anterior = 1h comprometida). Concluído: card concluído conta todas as horas dele; card em andamento conta as subtasks concluídas nesta sprint.";
 
 const fmtH = (v: number) => `${Number.isInteger(v) ? v : v.toFixed(1).replace(".", ",")}h`;
 
