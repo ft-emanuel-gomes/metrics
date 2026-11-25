@@ -62,6 +62,21 @@ export const CYCLE_TIME_START_STATUSES = new Set([
 ]);
 
 /**
+ * Status ANTES do fluxo (backlog, refinamento, selecionado para desenvolvimento).
+ * WIP Aging: se o card volta para um destes depois de ter entrado no fluxo, a contagem zera e recomeça
+ * na próxima entrada em To Do (ex.: To Do → Selected for Development → To Do conta da segunda entrada).
+ */
+export const PRE_FLOW_STATUSES = new Set([
+  "Backlog",
+  "Lista de Pendências",
+  "Business Definition",
+  "Refinamento de Negócio",
+  "Refinamento Técnico",
+  "Selected for Development",
+  "Selecionado para Desenvolvimento",
+]);
+
+/**
  * Nomes de status que indicam fim do Cycle Time
  * (última transição PARA um desses = ponto de chegada)
  */

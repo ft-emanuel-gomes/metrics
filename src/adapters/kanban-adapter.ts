@@ -3,6 +3,7 @@ import {
   fetchCompletedIssuesWithChangelogs,
   fetchStandardIssuesWithEstimates,
   fetchSubtasksWithParent,
+  fetchCanceledSubtasksWithParent,
   fetchWipIssues,
   fetchR2Epics,
   fetchR2Features,
@@ -177,12 +178,17 @@ export async function fetchKanbanDashboard(
         return standardEstimates.some((std) => std.key === s.parentKey);
       });
     }
+    // Canceladas/rejeitadas: descontadas da estimativa do card pai
+    const canceledForOccupation = await fetchCanceledSubtasksWithParent(squad.project, null, period.startDate, period.endDate);
     const occupation = calculateOccupation(
       standardEstimates,
       subtasksForOccupation,
       squad.teamSize,
       period.startDate,
-      period.endDate
+      period.endDate,
+      6,
+      undefined,
+      canceledForOccupation
     );
 
     periodMetrics.push({

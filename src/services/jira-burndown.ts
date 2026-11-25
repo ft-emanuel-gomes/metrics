@@ -5,7 +5,7 @@ import { fetchChangelog } from "./jira-changelog";
 import { calculateSprintBurndown, doneAt, type BurndownIssue, type SprintBurndownResult } from "@/metrics/sprint-burndown";
 import { resolveWindowStartMs } from "./live-sprint-metrics";
 import { getSprintNamer } from "./sprint-display";
-import { sprintAllocationHours } from "@/metrics/sprint-executive";
+import { sprintAllocationHours, type AllocationSub } from "@/metrics/sprint-executive";
 
 /** Link entre issues como o Jira devolve (só o que o app usa). */
 export interface RawIssueLink {
@@ -47,6 +47,20 @@ const IDS = (s?: string | null) => (s ? s.split(",").map((v) => v.trim()).filter
 export const EXCLUDED = `status not in (Cancelado, CANCELADO, Rejeitado, "Lista de Pendências")`;
 export const STANDARD_TYPES = `(História, Story, Bug, Design, "Technical Debt", Kaizen, Task, Spike)`;
 export const SUBTASK_TYPES = `(Sub-task, Subtarefa, "Sub-bug")`;
+/**
+ * Subtasks canceladas/rejeitadas: não contam como trabalho, mas as horas delas são descontadas da estimativa do
+ * card pai (a estimativa do card costuma incluir subtasks que depois foram canceladas).
+ */
+export const CANCELED = `status in (Cancelado, CANCELADO, Rejeitado)`;
+const CANCELED_STATUSES = new Set(["Cancelado", "CANCELADO", "Rejeitado"]);
+/**
+ * Subtask cujo card pai foi cancelado/rejeitado: também não é trabalho da sprint, mesmo que a subtask siga aberta
+ * (ex.: CS-1300 cancelado com 9 subtasks abertas). Usa o status do pai que vem no campo "parent".
+ */
+export function hasCanceledParent(r: RawSearchIssue): boolean {
+  const st = r.fields.parent?.fields?.status?.name;
+  return !!st && CANCELED_STATUSES.has(st);
+}
 
 /** Busca paginada. Sem changelog (withChangelog = false) é bem mais leve: use quando só o estado atual importa. */
 export async function searchAll(jql: string, fields: string[], withChangelog = true): Promise<RawSearchIssue[]> {
@@ -136,6 +150,8 @@ export async function fetchSprintBurndown(
   const subParent = new Map<string, string>();
   const unestimated: string[] = [];
   for (const r of subsRaw) {
+    // Card pai cancelado/rejeitado: a subtask não conta (nem na lista de sem estimativa)
+    if (hasCanceledParent(r)) continue;
     const parentKey = r.fields.parent?.key;
     const parent = parentKey ? parents.get(parentKey) : undefined;
     // Mesmo filtro de tipos da tela: a subtask segue o tipo do card pai
@@ -177,10 +193,24 @@ export async function fetchSprintBurndown(
     .map((c) => ({ c, doneMs: doneAt(c) }))
     .filter((x) => !isPrior(x.doneMs))
     .map((x) => ({ scope: scopeOf(x.c), card: { key: x.c.key, estimateHours: cardEstimate.get(x.c.key) ?? 0, doneAtMs: norm(x.doneMs) } }));
-  const subItems = subs.map((s) => ({
+  const subItems: { scope: number; sub: AllocationSub }[] = subs.map((s) => ({
     scope: scopeOf(s),
     sub: { key: s.key, parentKey: subParent.get(s.key) ?? null, hours: s.weight ?? 0, doneAtMs: doneAt(s) },
   }));
+  // Canceladas/rejeitadas: entram em todo instante, só para descontar da estimativa do card pai
+  const canceledRaw = await searchAll(
+    `project = "${squad.project}" AND sprint = ${sprint.id} AND issuetype in ${SUBTASK_TYPES} AND ${CANCELED}`,
+    ["parent", "timetracking"],
+    false
+  );
+  for (const r of canceledRaw) {
+    const parentKey = r.fields.parent?.key;
+    if (!parentKey || !parents.has(parentKey)) continue;
+    subItems.push({
+      scope: -Infinity,
+      sub: { key: r.key, parentKey, hours: (Number(r.fields.timetracking?.originalEstimateSeconds) || 0) / 3600, doneAtMs: null, canceled: true },
+    });
+  }
   const allocationAt = (t: number) => {
     const cardsT = cardItems
       .filter((x) => x.scope <= t)

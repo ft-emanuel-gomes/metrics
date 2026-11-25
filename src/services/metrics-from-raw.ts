@@ -129,7 +129,9 @@ export function buildDashboardFromRaw(
       raw.period.startDate,
       raw.period.endDate,
       6,
-      customBusinessDays
+      customBusinessDays,
+      // Canceladas/rejeitadas: descontadas da estimativa do card pai (só pesam para os cards da conta)
+      raw.canceledSubtasks ?? []
     );
 
     // Bugs (não filtra por issueType — sempre mostra qualidade)
