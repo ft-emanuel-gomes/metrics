@@ -289,7 +289,10 @@ export function sprintAllocationHours(
  *   a diferença vai para o responsável do card.
  * - Concluído: card concluído → todas as horas dele (de todas as pessoas) contam como concluídas;
  *   card em andamento → as subtasks concluídas nesta sprint.
- * - Itens = cards + subtasks desta sprint com a pessoa como responsável (inclusive sem estimativa).
+ * - Itens = cards + subtasks com trabalho NESTA sprint para a pessoa: com horas nesta sprint, ou sem nenhuma
+ *   estimativa (item a estimar). Regra de negócio: só aparece quem está atuando na sprint agora.
+ *   Ex.: RF-1202 (card do Filipe, 20h) com 12h de subtasks feitas antes da sprint e as 8h restantes numa subtask
+ *   do Caique → só o Caique aparece; o card coberto pelas subtasks de outra pessoa não conta como item do Filipe.
  */
 export function peopleAllocation(
   cards: (AllocationCard & { assignee?: ExecPerson | null })[],
@@ -306,6 +309,12 @@ export function peopleAllocation(
     }
     return e;
   };
+  /** Item conta para a pessoa só se tem horas nesta sprint ou se não tem estimativa nenhuma (precisa ser estimado). */
+  const addItem = (p: ExecFeaturePerson, key: string, done: boolean, hours: number, unestimated: boolean) => {
+    if (hours <= 0 && !unestimated) return;
+    p.items += 1;
+    p.itemKeys.push({ key, done });
+  };
   const cardByKey = new Map(cards.map((c) => [c.key, c]));
   const subsByCard = new Map<string, (typeof subs)[number][]>();
   const priorByCard = new Map<string, number>();
@@ -317,24 +326,21 @@ export function peopleAllocation(
       if (card) priorByCard.set(card.key, (priorByCard.get(card.key) ?? 0) + validHours(s.hours));
       continue;
     }
-    const p = get(s.assignee);
-    p.items += 1;
-    p.itemKeys.push({ key: s.key, done: s.doneAtMs !== null || (card?.doneAtMs ?? null) !== null });
     if (card) {
       const list = subsByCard.get(card.key) ?? [];
       list.push(s);
       subsByCard.set(card.key, list);
     } else {
       // Subtask sem o card na lista: entra pela própria estimativa
+      const p = get(s.assignee);
       const h = validHours(s.hours);
       p.allocatedHours += h;
       if (s.doneAtMs !== null) p.doneHours += h;
+      addItem(p, s.key, s.doneAtMs !== null, h, h === 0);
     }
   }
   for (const c of cards) {
     const owner = get(c.assignee);
-    owner.items += 1;
-    owner.itemKeys.push({ key: c.key, done: c.doneAtMs !== null });
     const list = subsByCard.get(c.key) ?? [];
     const cardDone = c.doneAtMs !== null;
     let subTotal = 0;
@@ -344,13 +350,18 @@ export function peopleAllocation(
       const p = get(s.assignee);
       p.allocatedHours += h;
       if (cardDone || s.doneAtMs !== null) p.doneHours += h;
+      addItem(p, s.key, cardDone || s.doneAtMs !== null, h, h === 0);
     }
     const cardLeft = Math.max(0, validHours(c.estimateHours) - (priorByCard.get(c.key) ?? 0));
     const extra = Math.max(0, cardLeft - subTotal);
     owner.allocatedHours += extra;
     if (cardDone) owner.doneHours += extra;
+    // Card sem estimativa e sem subtasks estimadas: é item a estimar; card coberto pelas subtasks: não é item do dono
+    addItem(owner, c.key, cardDone, extra, validHours(c.estimateHours) === 0 && subTotal === 0);
   }
   return [...acc.values()]
+    // Só quem está atuando nesta sprint (com horas ou com item a estimar)
+    .filter((p) => p.items > 0)
     .map((p) => {
       const allocatedHours = round1(p.allocatedHours);
       const doneHours = Math.min(allocatedHours, round1(p.doneHours));
