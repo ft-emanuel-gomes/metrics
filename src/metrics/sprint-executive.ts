@@ -23,15 +23,17 @@ import { CYCLE_TIME_END_STATUSES } from "@/config/status-mapping";
  */
 export interface EstimateAlert {
   /**
-   * acima-subtasks = estimativa do card muito maior que as subtasks (infla as horas pela regra do maior);
+   * acima-subtasks = estimativa do card (já sem as canceladas) muito maior que as subtasks (infla as horas pela regra do maior);
    * invalida = estimativa acima do teto da Ocupação (480h), ignorada na conta, mas errada no Jira.
    */
   kind: "acima-subtasks" | "invalida";
   cardKey: string;
   /** Original Estimate do card (h) */
   cardHours: number;
-  /** Soma das subtasks do card, de todas as sprints (h) */
+  /** Soma das subtasks ativas do card (sem canceladas/rejeitadas) (h) */
   subtaskHours: number;
+  /** Soma das subtasks canceladas/rejeitadas do card (h) */
+  canceledHours: number;
 }
 
 /** Card com estimativa acima de RATIO × soma das subtasks e acima de MIN_HOURS dispara o alerta. */
@@ -44,26 +46,62 @@ export const ESTIMATE_ALERT_MIN_HOURS = 40;
  * - acima-subtasks: mais de RATIO × a soma das subtasks e acima de MIN_HOURS. Só compara cards que TÊM
  *   subtasks estimadas (sem subtasks, a estimativa do card é a única referência). Soma subtasks de todas as sprints.
  */
-export function findEstimateAlerts(cards: { key: string; estimateHours: number }[], subs: { parentKey: string | null; hours: number }[]): EstimateAlert[] {
-  const sumByParent = new Map<string, number>();
+export function findEstimateAlerts(
+  cards: { key: string; estimateHours: number }[],
+  subs: { parentKey: string | null; hours: number; canceled?: boolean }[]
+): EstimateAlert[] {
+  const liveByParent = new Map<string, number>();
+  const canceledByParent = new Map<string, number>();
   for (const s of subs) {
-    if (!s.parentKey || !(s.hours > 0)) continue;
-    sumByParent.set(s.parentKey, (sumByParent.get(s.parentKey) ?? 0) + s.hours);
+    if (!s.parentKey || !(s.hours > 0) || s.hours > MAX_ESTIMATE_HOURS) continue;
+    const m = s.canceled ? canceledByParent : liveByParent;
+    m.set(s.parentKey, (m.get(s.parentKey) ?? 0) + s.hours);
   }
   const alerts: EstimateAlert[] = [];
   for (const c of cards) {
-    const cardHours = Math.round(c.estimateHours * 10) / 10;
-    const subtaskHours = Math.round((sumByParent.get(c.key) ?? 0) * 10) / 10;
-    if (cardHours > MAX_ESTIMATE_HOURS) alerts.push({ kind: "invalida", cardKey: c.key, cardHours, subtaskHours });
-    else if (subtaskHours > 0 && cardHours > ESTIMATE_ALERT_MIN_HOURS && cardHours > subtaskHours * ESTIMATE_ALERT_RATIO) {
-      alerts.push({ kind: "acima-subtasks", cardKey: c.key, cardHours, subtaskHours });
+    const cardHours = round1(c.estimateHours);
+    const subtaskHours = round1(liveByParent.get(c.key) ?? 0);
+    const canceledHours = round1(canceledByParent.get(c.key) ?? 0);
+    // Estimativa que entra na conta: sem as subtasks canceladas/rejeitadas
+    const effective = Math.max(0, cardHours - canceledHours);
+    // Um alerta por card, do mais grave para o mais leve
+    if (cardHours > MAX_ESTIMATE_HOURS) alerts.push({ kind: "invalida", cardKey: c.key, cardHours, subtaskHours, canceledHours });
+    else if (subtaskHours > 0 && effective > ESTIMATE_ALERT_MIN_HOURS && effective > subtaskHours * ESTIMATE_ALERT_RATIO) {
+      alerts.push({ kind: "acima-subtasks", cardKey: c.key, cardHours, subtaskHours, canceledHours });
     }
+    // Subtasks canceladas/rejeitadas não geram alerta: a conta já desconta essas horas da estimativa do card
   }
   // Primeiro os que inflam as horas (maior diferença primeiro), depois os inválidos
-  return alerts.sort((a, b) => (a.kind === b.kind ? b.cardHours - b.subtaskHours - (a.cardHours - a.subtaskHours) : a.kind === "acima-subtasks" ? -1 : 1));
+  const rank: Record<EstimateAlert["kind"], number> = { "acima-subtasks": 0, invalida: 1 };
+  const weight = (a: EstimateAlert) => a.cardHours - a.canceledHours - a.subtaskHours;
+  return alerts.sort((a, b) => rank[a.kind] - rank[b.kind] || weight(b) - weight(a));
 }
 
 export type FeatureState = "concluida" | "bloqueada" | "em-andamento" | "nao-iniciada";
+
+/** Responsável (assignee) de um card ou subtask no Jira. */
+export interface ExecPerson {
+  accountId: string;
+  name: string;
+  /** Foto do Jira (avatarUrls 48x48) */
+  avatarUrl?: string;
+}
+
+/** Engenheiro da Feature: itens e horas que estão com ele nesta sprint. */
+export interface ExecFeaturePerson extends ExecPerson {
+  /** Cards + subtasks desta sprint com essa pessoa como responsável */
+  items: number;
+  /** Horas alocadas dela (mesma regra do comprometido da sprint) */
+  allocatedHours: number;
+  doneHours: number;
+  /** Alocado − concluído */
+  remainingHours: number;
+  /** Chaves dos itens (cards e subtasks) desta Feature na sprint com essa pessoa, em ordem. Em "Sem responsável", são os itens a alocar. */
+  itemKeys: { key: string; done: boolean }[];
+}
+
+/** Chave de quem não tem responsável no Jira */
+export const UNASSIGNED_ID = "";
 
 /** Card (standard issue) da sprint, já lido do Jira. */
 export interface ExecCardInput {
@@ -80,6 +118,8 @@ export interface ExecCardInput {
   estimateHours: number;
   /** Momento da conclusão (última transição para Concluído); null = não concluído */
   doneAtMs: number | null;
+  /** Responsável no Jira (null = sem responsável) */
+  assignee?: ExecPerson | null;
 }
 
 export interface ExecSubInput {
@@ -88,6 +128,10 @@ export interface ExecSubInput {
   /** Original Estimate em horas (0 = sem estimativa) */
   hours: number;
   doneAtMs: number | null;
+  /** Responsável no Jira (null = sem responsável) */
+  assignee?: ExecPerson | null;
+  /** Cancelada ou Rejeitada: só desconta da estimativa do card pai (ver AllocationSub.canceled) */
+  canceled?: boolean;
 }
 
 export interface ExecFeature {
@@ -105,6 +149,11 @@ export interface ExecFeature {
   estimateAlerts: EstimateAlert[];
   /** Texto curto do motivo do bloqueio (vazio se não bloqueada) */
   blockNote: string;
+  /**
+   * Engenheiros da Feature (responsáveis dos cards e subtasks desta sprint), mais itens primeiro.
+   * Quem não tem responsável no Jira aparece com accountId = UNASSIGNED_ID, sempre por último.
+   */
+  people: ExecFeaturePerson[];
 }
 
 export interface SprintExecutiveResult {
@@ -178,6 +227,11 @@ export interface AllocationSub {
   parentKey: string | null;
   hours: number;
   doneAtMs: number | null;
+  /**
+   * Cancelada ou Rejeitada no Jira. Não conta como trabalho: as horas dela só são DESCONTADAS da estimativa do
+   * card pai (a estimativa do card costuma incluir as subtasks que depois foram canceladas).
+   */
+  canceled?: boolean;
 }
 
 export function sprintAllocationHours(
@@ -192,6 +246,15 @@ export function sprintAllocationHours(
   for (const s of subs) {
     const h = validHours(s.hours);
     if (h === 0) continue;
+    // Cancelada/Rejeitada: só desconta da estimativa do card (soma em "prior", que já é descontado)
+    if (s.canceled) {
+      if (s.parentKey && cardKeys.has(s.parentKey)) {
+        const agg = byParent.get(s.parentKey) ?? { total: 0, done: 0, prior: 0 };
+        agg.prior += h;
+        byParent.set(s.parentKey, agg);
+      }
+      continue;
+    }
     const prior = isPrior(s.doneAtMs);
     if (s.parentKey && cardKeys.has(s.parentKey)) {
       const agg = byParent.get(s.parentKey) ?? { total: 0, done: 0, prior: 0 };
@@ -210,13 +273,96 @@ export function sprintAllocationHours(
   let done = looseDone;
   for (const c of cards) {
     const sub = byParent.get(c.key) ?? { total: 0, done: 0, prior: 0 };
-    // Estimativa do card descontada do que já foi feito antes desta sprint
+    // Estimativa do card descontada do que já foi feito antes desta sprint e das subtasks canceladas/rejeitadas
     const cardLeft = Math.max(0, validHours(c.estimateHours) - sub.prior);
     const alloc = Math.max(cardLeft, sub.total);
     total += alloc;
     done += c.doneAtMs !== null ? alloc : Math.min(alloc, sub.done);
   }
   return { total, done: Math.min(done, total) };
+}
+
+/**
+ * Horas alocadas POR PESSOA, com a mesma regra de sprintAllocationHours (a soma das pessoas = total da Feature).
+ * - Subtask desta sprint: as horas dela vão para o responsável da subtask.
+ * - Card: se a estimativa do card (descontado o feito antes da sprint) passa da soma das subtasks desta sprint,
+ *   a diferença vai para o responsável do card.
+ * - Concluído: card concluído → todas as horas dele (de todas as pessoas) contam como concluídas;
+ *   card em andamento → as subtasks concluídas nesta sprint.
+ * - Itens = cards + subtasks desta sprint com a pessoa como responsável (inclusive sem estimativa).
+ */
+export function peopleAllocation(
+  cards: (AllocationCard & { assignee?: ExecPerson | null })[],
+  subs: (AllocationSub & { assignee?: ExecPerson | null })[],
+  isPrior: (doneAtMs: number | null) => boolean
+): ExecFeaturePerson[] {
+  const acc = new Map<string, ExecFeaturePerson>();
+  const get = (p?: ExecPerson | null): ExecFeaturePerson => {
+    const id = p?.accountId || UNASSIGNED_ID;
+    let e = acc.get(id);
+    if (!e) {
+      e = { accountId: id, name: p?.name || "Sem responsável", avatarUrl: p?.avatarUrl, items: 0, allocatedHours: 0, doneHours: 0, remainingHours: 0, itemKeys: [] };
+      acc.set(id, e);
+    }
+    return e;
+  };
+  const cardByKey = new Map(cards.map((c) => [c.key, c]));
+  const subsByCard = new Map<string, (typeof subs)[number][]>();
+  const priorByCard = new Map<string, number>();
+  for (const s of subs) {
+    // Feita antes da sprint ou cancelada/rejeitada: não é item de ninguém, só desconta da estimativa do card
+    const prior = isPrior(s.doneAtMs) || s.canceled === true;
+    const card = s.parentKey ? cardByKey.get(s.parentKey) : undefined;
+    if (prior) {
+      if (card) priorByCard.set(card.key, (priorByCard.get(card.key) ?? 0) + validHours(s.hours));
+      continue;
+    }
+    const p = get(s.assignee);
+    p.items += 1;
+    p.itemKeys.push({ key: s.key, done: s.doneAtMs !== null || (card?.doneAtMs ?? null) !== null });
+    if (card) {
+      const list = subsByCard.get(card.key) ?? [];
+      list.push(s);
+      subsByCard.set(card.key, list);
+    } else {
+      // Subtask sem o card na lista: entra pela própria estimativa
+      const h = validHours(s.hours);
+      p.allocatedHours += h;
+      if (s.doneAtMs !== null) p.doneHours += h;
+    }
+  }
+  for (const c of cards) {
+    const owner = get(c.assignee);
+    owner.items += 1;
+    owner.itemKeys.push({ key: c.key, done: c.doneAtMs !== null });
+    const list = subsByCard.get(c.key) ?? [];
+    const cardDone = c.doneAtMs !== null;
+    let subTotal = 0;
+    for (const s of list) {
+      const h = validHours(s.hours);
+      subTotal += h;
+      const p = get(s.assignee);
+      p.allocatedHours += h;
+      if (cardDone || s.doneAtMs !== null) p.doneHours += h;
+    }
+    const cardLeft = Math.max(0, validHours(c.estimateHours) - (priorByCard.get(c.key) ?? 0));
+    const extra = Math.max(0, cardLeft - subTotal);
+    owner.allocatedHours += extra;
+    if (cardDone) owner.doneHours += extra;
+  }
+  return [...acc.values()]
+    .map((p) => {
+      const allocatedHours = round1(p.allocatedHours);
+      const doneHours = Math.min(allocatedHours, round1(p.doneHours));
+      // Abertos primeiro (são os que precisam de alocação), depois em ordem natural da chave (CS-9 antes de CS-10)
+      const itemKeys = [...p.itemKeys].sort((a, b) => Number(a.done) - Number(b.done) || a.key.localeCompare(b.key, "en", { numeric: true }));
+      return { ...p, allocatedHours, doneHours, remainingHours: round1(allocatedHours - doneHours), itemKeys };
+    })
+    .sort((a, b) => {
+      // Sem responsável sempre por último
+      if ((a.accountId === UNASSIGNED_ID) !== (b.accountId === UNASSIGNED_ID)) return a.accountId === UNASSIGNED_ID ? 1 : -1;
+      return b.items - a.items || b.allocatedHours - a.allocatedHours || a.name.localeCompare(b.name, "pt-BR");
+    });
 }
 
 export function buildSprintExecutive(input: {
@@ -229,9 +375,9 @@ export function buildSprintExecutive(input: {
   const { sprint, windowStartMs } = input;
   const isPrior = (d: number | null) => d !== null && d < windowStartMs;
 
-  // Trabalho concluído antes da janela da sprint fica fora
+  // Trabalho concluído antes da janela da sprint fica fora; canceladas/rejeitadas não são trabalho desta sprint
   const cards = input.cards.filter((c) => !isPrior(c.doneAtMs));
-  const subs = input.subs.filter((s) => !isPrior(s.doneAtMs));
+  const subs = input.subs.filter((s) => !isPrior(s.doneAtMs) && !s.canceled);
   const priorCards = input.cards.length - cards.length;
 
 
@@ -276,6 +422,7 @@ export function buildSprintExecutive(input: {
       blockedCardKeys: blocked.map((c) => c.key),
       estimateAlerts: estimateAlerts.filter((a) => list.some((c) => c.key === a.cardKey)),
       blockNote: state === "bloqueada" ? buildBlockNote(blocked) : "",
+      people: peopleAllocation(list, subsByFeature.get(key) ?? [], isPrior),
     };
   });
 

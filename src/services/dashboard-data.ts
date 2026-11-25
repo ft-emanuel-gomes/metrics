@@ -5,7 +5,7 @@ import { createDashboardAdapter } from "@/adapters/adapter-factory";
 import { fetchClosedSprints } from "@/services/jira-sprints";
 import { loadRawMeta, loadRawPeriod, type RawPeriodData } from "@/services/s3-raw-storage";
 import { buildDashboardFromRaw } from "@/services/metrics-from-raw";
-import { fetchAndSaveSprintPeriod, fetchAndSaveMonthPeriod, ensureWipAndR2 } from "@/services/s3-sync-on-demand";
+import { fetchAndSaveSprintPeriod, fetchAndSaveMonthPeriod, ensureWipAndR2, ensureCanceledSubtasks } from "@/services/s3-sync-on-demand";
 
 /** Tipos de issue padrão do dashboard (quando não há filtro explícito). */
 export const DEFAULT_ISSUE_TYPES = ["História", "Bug", "Task", "Tech Debt"];
@@ -72,7 +72,8 @@ export async function loadDashboardData(squad: SquadConfig, options: DashboardDa
     const periodsRaw = await Promise.all(
       periodIds.map(async (id, idx) => {
         const existing = await loadRawPeriod(slug, id).catch(() => null);
-        if (existing) return existing;
+        // Períodos antigos: completa as subtasks canceladas (Ocupação)
+        if (existing) return ensureCanceledSubtasks(squad, id, existing);
         if (sprintIdsToFetch[idx]) return fetchAndSaveSprintPeriod(squad, sprintIdsToFetch[idx]);
         if (monthsToFetch[idx]) return fetchAndSaveMonthPeriod(squad, monthsToFetch[idx]);
         return null;

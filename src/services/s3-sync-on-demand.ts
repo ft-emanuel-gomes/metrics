@@ -9,6 +9,7 @@ import {
   fetchSpilledIssues,
   fetchStandardIssuesWithEstimates,
   fetchSubtasksWithParent,
+  fetchCanceledSubtasksWithParent,
   fetchCompletedBugs,
   fetchWipIssues,
   fetchR2Epics,
@@ -71,6 +72,7 @@ export async function fetchAndSaveSprintPeriod(
   // Estimates
   const standardEstimates = await fetchStandardIssuesWithEstimates(squad.project, sprint.id);
   const subtasksWithParent = await fetchSubtasksWithParent(squad.project, sprint.id);
+  const canceledSubtasks = await fetchCanceledSubtasksWithParent(squad.project, sprint.id);
 
   // Bugs
   const { bugs, subBugs } = await fetchCompletedBugs(
@@ -91,6 +93,7 @@ export async function fetchAndSaveSprintPeriod(
     completedIssues,
     standardEstimates,
     subtasksWithParent,
+    canceledSubtasks,
     spilledIssues,
     bugs,
     subBugs,
@@ -135,6 +138,7 @@ export async function fetchAndSaveMonthPeriod(
   const subtasksWithParent = await fetchSubtasksWithParent(
     squad.project, null, startDate, endDate
   );
+  const canceledSubtasks = await fetchCanceledSubtasksWithParent(squad.project, null, startDate, endDate);
 
   const { bugs, subBugs } = await fetchCompletedBugs(
     squad.project, null, startDate, endDate
@@ -151,6 +155,7 @@ export async function fetchAndSaveMonthPeriod(
     completedIssues,
     standardEstimates,
     subtasksWithParent,
+    canceledSubtasks,
     bugs,
     subBugs,
   };
@@ -158,6 +163,26 @@ export async function fetchAndSaveMonthPeriod(
   await saveRawPeriod(squad.slug, `month-${monthKey}`, rawPeriod);
 
   return rawPeriod;
+}
+
+/**
+ * Períodos gravados antes da regra das subtasks canceladas não têm `canceledSubtasks`: busca só esse dado no Jira
+ * (uma consulta leve), completa o período e grava de volta, para a Ocupação histórica seguir a mesma regra.
+ * Em caso de falha, devolve o período como está (Ocupação sem o desconto) e tenta de novo na próxima leitura.
+ */
+export async function ensureCanceledSubtasks(squad: SquadConfig, periodKey: string, raw: RawPeriodData): Promise<RawPeriodData> {
+  if (raw.canceledSubtasks) return raw;
+  try {
+    const p = raw.period;
+    const canceledSubtasks = p.type === "sprint" && p.id
+      ? await fetchCanceledSubtasksWithParent(squad.project, p.id)
+      : await fetchCanceledSubtasksWithParent(squad.project, null, p.startDate.split("T")[0], p.endDate.split("T")[0]);
+    const updated: RawPeriodData = { ...raw, canceledSubtasks };
+    await saveRawPeriod(squad.slug, periodKey, updated).catch(() => undefined);
+    return updated;
+  } catch {
+    return raw;
+  }
 }
 
 /**

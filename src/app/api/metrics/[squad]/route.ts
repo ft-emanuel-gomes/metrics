@@ -4,7 +4,7 @@ import { createDashboardAdapter } from "@/adapters/adapter-factory";
 import { DataNotAvailableError } from "@/adapters/sprint-adapter-db";
 import { loadRawMeta, loadRawPeriod } from "@/services/s3-raw-storage";
 import { buildDashboardFromRaw } from "@/services/metrics-from-raw";
-import { fetchAndSaveSprintPeriod, fetchAndSaveMonthPeriod, ensureWipAndR2 } from "@/services/s3-sync-on-demand";
+import { fetchAndSaveSprintPeriod, fetchAndSaveMonthPeriod, ensureWipAndR2, ensureCanceledSubtasks } from "@/services/s3-sync-on-demand";
 
 // Desabilitar cache do Next.js para esta rota (dados dinâmicos)
 export const dynamic = "force-dynamic";
@@ -73,7 +73,8 @@ export async function GET(
       const periodsRaw = await Promise.all(
         periodIds.map(async (id, idx) => {
           const existing = await loadRawPeriod(slug, id).catch(() => null);
-          if (existing) return existing;
+          // Períodos antigos: completa as subtasks canceladas (Ocupação)
+          if (existing) return ensureCanceledSubtasks(squad, id, existing);
 
           // Não existe no S3 — buscar do Jira e salvar
           if (sprintIdsToFetch[idx]) {

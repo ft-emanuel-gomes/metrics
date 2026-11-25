@@ -3,10 +3,17 @@ import { CYCLE_TIME_END_STATUSES } from "@/config/status-mapping";
 import { JIRA_FLAGGED_FIELD, isFlaggedValue } from "@/config/jira";
 import { fetchActiveSprint } from "./jira-sprints";
 import { getSprintNamer } from "./sprint-display";
-import { EXCLUDED, STANDARD_TYPES, SUBTASK_TYPES, readHistory, searchAll } from "./jira-burndown";
+import { CANCELED, EXCLUDED, STANDARD_TYPES, SUBTASK_TYPES, hasCanceledParent, readHistory, searchAll } from "./jira-burndown";
 import { resolveWindowStartMs } from "./live-sprint-metrics";
 import { doneAt, type BurndownIssue } from "@/metrics/sprint-burndown";
-import { buildSprintExecutive, type ExecCardInput, type ExecSubInput, type SprintExecutiveResult } from "@/metrics/sprint-executive";
+import { buildSprintExecutive, type ExecCardInput, type ExecPerson, type ExecSubInput, type SprintExecutiveResult } from "@/metrics/sprint-executive";
+
+/** Responsável do Jira (campo assignee) com a foto 48x48. Sem responsável: null. */
+function readAssignee(value: unknown): ExecPerson | null {
+  const a = value as { accountId?: string; displayName?: string; avatarUrls?: Record<string, string> } | null | undefined;
+  if (!a?.accountId) return null;
+  return { accountId: a.accountId, name: a.displayName || "Sem nome", avatarUrl: a.avatarUrls?.["48x48"] || a.avatarUrls?.["32x32"] };
+}
 
 
 const DONE_LIST = [...CYCLE_TIME_END_STATUSES].map((s) => `"${s}"`).join(", ");
@@ -28,7 +35,7 @@ export async function fetchSprintExecutive(
   const standardRaw = await searchAll(
     `project = "${squad.project}" AND sprint = ${sprint.id} AND issuetype in ${STANDARD_TYPES} AND ${EXCLUDED}`,
     // timetracking: estimativa do card, para as horas alocadas (regra do maior entre card e subtasks)
-    ["summary", "issuetype", "status", "created", "parent", "timetracking", JIRA_FLAGGED_FIELD]
+    ["summary", "issuetype", "status", "created", "parent", "timetracking", "assignee", JIRA_FLAGGED_FIELD]
   );
   const cards: ExecCardInput[] = [];
   const cardAsBurndown = new Map<string, BurndownIssue>();
@@ -49,11 +56,12 @@ export async function fetchSprintExecutive(
       flagged,
       estimateHours: (Number(r.fields.timetracking?.originalEstimateSeconds) || 0) / 3600,
       doneAtMs: doneAt(bd),
+      assignee: readAssignee(r.fields.assignee),
     });
   }
 
   // Subtasks: as abertas só precisam do estado atual; as concluídas precisam do histórico (quando foram concluídas)
-  const subFields = ["issuetype", "status", "created", "parent", "timetracking"];
+  const subFields = ["issuetype", "status", "created", "parent", "timetracking", "assignee"];
   const [openSubs, doneSubs] = await Promise.all([
     searchAll(`project = "${squad.project}" AND sprint = ${sprint.id} AND issuetype in ${SUBTASK_TYPES} AND status not in (${DONE_LIST}) AND ${EXCLUDED}`, subFields, false),
     searchAll(`project = "${squad.project}" AND sprint = ${sprint.id} AND issuetype in ${SUBTASK_TYPES} AND status in (${DONE_LIST}) AND ${EXCLUDED}`, subFields),
@@ -61,6 +69,8 @@ export async function fetchSprintExecutive(
 
   const subs: ExecSubInput[] = [];
   const addSub = async (r: (typeof openSubs)[number], isDone: boolean) => {
+    // Card pai cancelado/rejeitado: a subtask não é trabalho da sprint (mesma regra da Capacidade)
+    if (hasCanceledParent(r)) return;
     const parentKey = r.fields.parent?.key ?? null;
     // Mesmo filtro de tipos da tela: a subtask segue o tipo do card pai
     const parentType = (parentKey ? cardAsBurndown.get(parentKey)?.issueType : undefined) || r.fields.parent?.fields?.issuetype?.name;
@@ -80,10 +90,23 @@ export async function fetchSprintExecutive(
         parentDoneAt: parentDone !== null ? new Date(parentDone).toISOString() : undefined,
       });
     }
-    subs.push({ key: r.key, parentKey, hours: (Number(r.fields.timetracking?.originalEstimateSeconds) || 0) / 3600, doneAtMs });
+    subs.push({ key: r.key, parentKey, hours: (Number(r.fields.timetracking?.originalEstimateSeconds) || 0) / 3600, doneAtMs, assignee: readAssignee(r.fields.assignee) });
   };
   for (const r of openSubs) await addSub(r, false);
   for (const r of doneSubs) await addSub(r, true);
+
+  // Canceladas/rejeitadas: só para descontar da estimativa do card pai (não são trabalho nem item de ninguém)
+  const canceledSubs = await searchAll(
+    `project = "${squad.project}" AND sprint = ${sprint.id} AND issuetype in ${SUBTASK_TYPES} AND ${CANCELED}`,
+    ["parent", "timetracking"],
+    false
+  );
+  for (const r of canceledSubs) {
+    const parentKey = r.fields.parent?.key ?? null;
+    // Só interessa a subtask de um card que está na conta (o card já passou pelo filtro de tipos)
+    if (!parentKey || !cardAsBurndown.has(parentKey)) continue;
+    subs.push({ key: r.key, parentKey, hours: (Number(r.fields.timetracking?.originalEstimateSeconds) || 0) / 3600, doneAtMs: null, canceled: true });
+  }
 
   return buildSprintExecutive({
     // Padrão de exibição "Sprint N - RN", seja qual for o nome no Jira

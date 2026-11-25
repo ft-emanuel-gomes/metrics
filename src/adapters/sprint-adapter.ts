@@ -6,6 +6,7 @@ import {
   fetchSpilledIssues,
   fetchStandardIssuesWithEstimates,
   fetchSubtasksWithParent,
+  fetchCanceledSubtasksWithParent,
   fetchCompletedBugs,
   fetchR2Epics,
   fetchR2Features,
@@ -173,6 +174,8 @@ export async function fetchSprintDashboard(
     }
     const sprintTeamSize = getSprintCapacity(squad.slug, sprint.id, squad.teamSize);
     const sprintBusinessDays = getSprintBusinessDays(squad.slug, sprint.id);
+    // Canceladas/rejeitadas: descontadas da estimativa do card pai
+    const canceledForOccupation = await fetchCanceledSubtasksWithParent(squad.project, sprint.id);
     const occupation = calculateOccupation(
       standardEstimates,
       subtasksForOccupation,
@@ -180,7 +183,8 @@ export async function fetchSprintDashboard(
       sprint.startDate,
       effectiveEndDate,
       6,
-      sprintBusinessDays
+      sprintBusinessDays,
+      canceledForOccupation
     );
 
     // Bugs / Sub-bugs (qualidade)

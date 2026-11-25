@@ -33,6 +33,11 @@ export interface RawPeriodData {
   standardEstimates: SubtaskWithEstimate[];
   /** Subtasks com parent key (para Ocupação — regra max entre subs e standard) */
   subtasksWithParent?: SubtaskWithEstimate[];
+  /**
+   * Subtasks canceladas/rejeitadas com parent (Ocupação: descontadas da estimativa do card pai).
+   * Ausente = período gravado antes desta regra (é completado do Jira na leitura, ver ensureCanceledSubtasks).
+   */
+  canceledSubtasks?: SubtaskWithEstimate[];
   /** Issues transbordadas — só sprint (para Transbordo) */
   spilledIssues?: JiraIssue[];
   /** Bugs e Sub-bugs concluídos (para Qualidade) */

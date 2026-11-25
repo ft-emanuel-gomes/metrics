@@ -5,6 +5,7 @@ import {
   fetchCompletedIssuesWithChangelogs,
   fetchSpilledIssues,
   fetchStandardIssuesWithEstimates,
+  fetchCanceledSubtasksWithParent,
   fetchCompletedBugs,
   fetchR2Epics,
   fetchR2Features,
@@ -146,6 +147,8 @@ async function syncSprintPeriod(squad: SquadConfig, sprint: SprintData): Promise
 
   // Estimates para ocupação
   const standardEstimates = await fetchStandardIssuesWithEstimates(squad.project, sprint.id);
+  // Canceladas/rejeitadas: descontadas da estimativa do card pai na Ocupação
+  const canceledSubtasks = await fetchCanceledSubtasksWithParent(squad.project, sprint.id);
 
   // Bugs e Sub-bugs
   const { bugs, subBugs } = await fetchCompletedBugs(
@@ -165,6 +168,7 @@ async function syncSprintPeriod(squad: SquadConfig, sprint: SprintData): Promise
     },
     completedIssues,
     standardEstimates,
+    canceledSubtasks,
     spilledIssues,
     bugs,
     subBugs,
@@ -213,6 +217,7 @@ async function syncKanbanPeriod(
   const standardEstimates = await fetchStandardIssuesWithEstimates(
     squad.project, null, period.startDate, period.endDate
   );
+  const canceledSubtasks = await fetchCanceledSubtasksWithParent(squad.project, null, period.startDate, period.endDate);
 
   const { bugs, subBugs } = await fetchCompletedBugs(
     squad.project, null, period.startDate, period.endDate
@@ -230,6 +235,7 @@ async function syncKanbanPeriod(
     },
     completedIssues,
     standardEstimates,
+    canceledSubtasks,
     bugs,
     subBugs,
   };

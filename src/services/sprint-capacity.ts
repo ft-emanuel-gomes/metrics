@@ -2,7 +2,7 @@ import type { SquadConfig } from "@/config/squads";
 import { fetchActiveSprint, fetchAllSprints, type SprintData } from "./jira-sprints";
 import { loadCapacityConfig } from "./capacity-store";
 import { getSprintNamer } from "./sprint-display";
-import { EXCLUDED, STANDARD_TYPES, SUBTASK_TYPES, readHistory, searchAll, type RawSearchIssue } from "./jira-burndown";
+import { CANCELED, EXCLUDED, STANDARD_TYPES, SUBTASK_TYPES, readHistory, searchAll, type RawSearchIssue } from "./jira-burndown";
 import { resolveWindowStartMs } from "./live-sprint-metrics";
 import { doneAt } from "@/metrics/sprint-burndown";
 import { sprintAllocationHours, type AllocationCard, type AllocationSub } from "@/metrics/sprint-executive";
@@ -69,9 +69,11 @@ export async function fetchSprintCapacity(
   const base = `project = "${squad.project}" AND sprint = ${sprint.id} AND issuetype in (${STANDARD_TYPES.slice(1, -1)}, ${SUBTASK_TYPES.slice(1, -1)}) AND ${EXCLUDED}`;
   const fields = ["timetracking", "parent", "issuetype", "status", "created"];
   // Abertos: só o estado atual; concluídos: com histórico (quando foram concluídos)
-  const [openRaw, doneRaw] = await Promise.all([
+  const [openRaw, doneRaw, canceledRaw] = await Promise.all([
     searchAll(`${base} AND status not in (${DONE_LIST})`, fields, false),
     searchAll(`${base} AND status in (${DONE_LIST})`, fields),
+    // Subtasks canceladas/rejeitadas: só descontam da estimativa do card pai
+    searchAll(`project = "${squad.project}" AND sprint = ${sprint.id} AND issuetype in ${SUBTASK_TYPES} AND ${CANCELED}`, ["parent", "timetracking"], false),
   ]);
   const doneMs = new Map<string, number | null>();
   for (const r of doneRaw) {
@@ -91,6 +93,10 @@ export async function fetchSprintCapacity(
     .filter((r) => SUBTASK_TYPE_NAMES.has(r.fields.issuetype.name))
     .filter((r) => !r.fields.parent?.key || keptKeys.has(r.fields.parent.key))
     .map((r) => ({ key: r.key, parentKey: r.fields.parent?.key ?? null, hours: hours(r), doneAtMs: doneMs.get(r.key) ?? null }));
+  for (const r of canceledRaw) {
+    const parentKey = r.fields.parent?.key;
+    if (parentKey && keptKeys.has(parentKey)) subs.push({ key: r.key, parentKey, hours: hours(r), doneAtMs: null, canceled: true });
+  }
   const alloc = sprintAllocationHours(cards, subs, isPrior);
   const allocatedHours = Math.round(alloc.total);
   const remainingHours = Math.max(0, allocatedHours - Math.min(allocatedHours, Math.round(alloc.done)));

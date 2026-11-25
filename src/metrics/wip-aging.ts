@@ -1,6 +1,6 @@
 import { StatusTransition } from "@/services/jira-changelog";
 import { calendarDaysBetween } from "@/lib/utils";
-import { CYCLE_TIME_START_STATUSES } from "@/config/status-mapping";
+import { CYCLE_TIME_START_STATUSES, PRE_FLOW_STATUSES } from "@/config/status-mapping";
 import type { KpiItem } from "@/adapters/types";
 
 /**
@@ -116,16 +116,29 @@ const AGING_BUCKETS_DEF = [
  * Regra de negócio: o aging considera o card no fluxo COMO UM TODO, não só a coluna atual.
  * Ex.: 5 dias em To Do + 10 dias em Progresso = 15 dias de WIP.
  *
- * - Início = PRIMEIRA transição para um status de início (To Do / A Fazer / Pendente / In Progress...),
- *   a mesma regra do Cycle Time.
+ * - Início = entrada em um status de início (To Do / A Fazer / Pendente / In Progress...).
+ * - Volta para antes do fluxo (Selected for Development, Refinamento, Backlog... ver PRE_FLOW_STATUSES): a contagem
+ *   ZERA e recomeça na próxima entrada em To Do. Ex.: To Do em 28/10 → Selected for Development em 10/11 →
+ *   To Do em 11/11 conta a partir de 11/11. Sem volta, vale a PRIMEIRA entrada (igual ao Cycle Time).
  * - Cards que nasceram já em To Do não têm transição "para To Do": nesse caso o início é a data de criação.
  * - Sem transições e sem data de criação: retorna null (o chamador usa a última transição como fallback).
  */
 export function findFlowStart(transitions: StatusTransition[], created?: string): string | null {
-  const first = transitions.find((t) => CYCLE_TIME_START_STATUSES.has(t.toStatus));
   const bornInStart = transitions.length > 0 && CYCLE_TIME_START_STATUSES.has(transitions[0].fromStatus);
-  if (created && (bornInStart || !first)) return created;
-  return first ? first.timestamp : null;
+  let start: string | null = bornInStart && created ? created : null;
+  let enteredFlow = start !== null;
+  for (const t of transitions) {
+    if (PRE_FLOW_STATUSES.has(t.toStatus)) {
+      start = null; // saiu do fluxo: a próxima entrada em To Do recomeça a contagem
+    } else if (start === null && CYCLE_TIME_START_STATUSES.has(t.toStatus)) {
+      start = t.timestamp;
+      enteredFlow = true;
+    }
+  }
+  if (start) return start;
+  // Nunca passou por um status de início (ou dado incompleto): usa a criação, como antes
+  if (!enteredFlow && created) return created;
+  return null;
 }
 
 /**

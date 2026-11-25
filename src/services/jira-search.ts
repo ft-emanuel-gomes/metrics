@@ -315,6 +315,8 @@ export interface SubtaskWithEstimate {
   originalEstimateSeconds: number;
   issueType?: string;
   parentKey?: string;
+  /** Status do card pai (subtask de card cancelado/rejeitado não conta na Ocupação). Ausente em dados antigos. */
+  parentStatus?: string;
 }
 
 /**
@@ -389,6 +391,29 @@ export async function fetchSubtasksWithParent(
   startDate?: string,
   endDate?: string
 ): Promise<SubtaskWithEstimate[]> {
+  return fetchSubtasksWithParentWhere(project, sprintId, startDate, endDate, `status not in (Cancelado, "Lista de Pendências")`);
+}
+
+/**
+ * Subtasks canceladas/rejeitadas com estimate e parent (Ocupação).
+ * Regra de negócio: não contam como trabalho, mas as horas delas são descontadas da estimativa do card pai.
+ */
+export async function fetchCanceledSubtasksWithParent(
+  project: string,
+  sprintId: number | null,
+  startDate?: string,
+  endDate?: string
+): Promise<SubtaskWithEstimate[]> {
+  return fetchSubtasksWithParentWhere(project, sprintId, startDate, endDate, `status in (Cancelado, CANCELADO, Rejeitado)`);
+}
+
+async function fetchSubtasksWithParentWhere(
+  project: string,
+  sprintId: number | null,
+  startDate: string | undefined,
+  endDate: string | undefined,
+  statusClause: string
+): Promise<SubtaskWithEstimate[]> {
   const sprintClause = sprintId ? `AND sprint = ${sprintId}` : "";
   const dateClause =
     !sprintId && startDate && endDate
@@ -400,7 +425,7 @@ export async function fetchSubtasksWithParent(
     AND issuetype in (Sub-task, Subtarefa, "Sub-bug")
     ${sprintClause}
     ${dateClause}
-    AND status not in (Cancelado, "Lista de Pendências")
+    AND ${statusClause}
   `.trim().replace(/\s+/g, " ");
 
   const cache = getCacheManager();
@@ -426,7 +451,7 @@ export async function fetchSubtasksWithParent(
         key: string;
         fields: {
           timetracking?: { originalEstimateSeconds?: number };
-          parent?: { key?: string };
+          parent?: { key?: string; fields?: { status?: { name?: string } } };
           issuetype?: { name?: string };
         };
       }[];
@@ -440,6 +465,7 @@ export async function fetchSubtasksWithParent(
         key: issue.key,
         originalEstimateSeconds: seconds,
         parentKey: issue.fields.parent?.key,
+        parentStatus: issue.fields.parent?.fields?.status?.name,
         issueType: issue.fields.issuetype?.name,
       });
     }
