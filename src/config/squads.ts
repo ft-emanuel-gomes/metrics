@@ -26,7 +26,7 @@ export const SQUADS_CONFIG: Record<string, SquadConfig> = {
     boardId: 702, // Downstream - Banking (scrum)
     teamSize: 6,
     r2FixVersion: "R2 - COMPLIANCE, ONBOARDING E FEE-BASED",
-    teamFieldValue: "Squad Custódia",
+    teamFieldValue: "Squad Banking",
   },
   consolidacao: {
     code: "16",
