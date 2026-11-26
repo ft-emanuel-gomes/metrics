@@ -1,6 +1,7 @@
 /**
  * Integrantes da squad e horas por dia (Central Administrativa), guardados no S3.
- * - config/settings.json: horas por dia padrão global (inicialmente 6h).
+ * - config/settings.json: horas por dia padrão global (inicialmente 6h), com histórico por data de vigência
+ *   (cada sprint usa o valor vigente na data de início dela; ver src/metrics/hours-schedule.ts).
  * - config/team/{slug}.json: integrantes vinculados (pelo accountId do Jira) e horas por dia da squad.
  *
  * Regras de negócio:
@@ -11,10 +12,22 @@
 
 import { readConfig, updateConfig, type Audited } from "./config-store";
 import { LEGACY_HOURS_PER_DAY, validateHoursPerDay } from "@/metrics/capacity";
+import {
+  brtDate,
+  hoursAt,
+  normalizeVersions,
+  removeVersion,
+  scheduleVersion,
+  validateEffectiveFrom,
+  type HoursVersion,
+} from "@/metrics/hours-schedule";
 import type { JiraPerson } from "./jira-users";
 
 export interface GlobalSettings {
+  /** Horas por dia vigentes HOJE (informativo; a regra de cada sprint vem de hoursVersions pela data de início) */
   hoursPerDayDefault: number;
+  /** Histórico das horas por dia globais, cada uma com a data de vigência */
+  hoursVersions?: HoursVersion[];
 }
 
 export interface TeamMember {
@@ -41,15 +54,50 @@ const teamKey = (slug: string) => `config/team/${slug}.json`;
 
 export const DEFAULT_SETTINGS: GlobalSettings = { hoursPerDayDefault: LEGACY_HOURS_PER_DAY };
 
-export async function getGlobalSettings(): Promise<GlobalSettings & Partial<Audited>> {
+/** Configuração global com o histórico normalizado; hoursPerDayDefault = valor vigente hoje. */
+export async function getGlobalSettings(): Promise<GlobalSettings & { hoursVersions: HoursVersion[] } & Partial<Audited>> {
   const { data } = await readConfig<GlobalSettings & Audited>(SETTINGS_KEY);
-  return { ...DEFAULT_SETTINGS, ...(data ?? {}) };
+  const hoursVersions = normalizeVersions(data);
+  return { ...DEFAULT_SETTINGS, ...(data ?? {}), hoursVersions, hoursPerDayDefault: hoursAt(hoursVersions, new Date()) };
 }
 
-export async function saveGlobalSettings(hoursPerDayDefault: number, actor: string): Promise<GlobalSettings> {
-  const hours = validateHoursPerDay(hoursPerDayDefault);
-  await updateConfig<GlobalSettings>(SETTINGS_KEY, (cur) => ({ ...(cur ?? DEFAULT_SETTINGS), hoursPerDayDefault: hours }), { actor });
-  return { hoursPerDayDefault: hours };
+/** Horas por dia globais vigentes numa data (início da sprint); sem data, hoje. */
+export async function getGlobalHoursAt(date?: string | Date | null): Promise<number> {
+  const s = await getGlobalSettings();
+  return hoursAt(s.hoursVersions, date ?? new Date());
+}
+
+/**
+ * Agenda novas horas por dia globais a partir de uma data (ex.: 8h a partir de 01/12).
+ * `activeSprintStarts` = início das sprints vigentes de todas as squads (a vigência não pode ser anterior).
+ */
+export async function scheduleGlobalHours(hoursPerDay: number, effectiveFrom: unknown, actor: string, activeSprintStarts: string[]): Promise<HoursVersion[]> {
+  const hours = validateHoursPerDay(hoursPerDay);
+  const from = validateEffectiveFrom(effectiveFrom, brtDate(new Date()), activeSprintStarts);
+  const version: HoursVersion = { hoursPerDay: hours, effectiveFrom: from, createdAt: new Date().toISOString(), createdBy: actor };
+  const saved = await updateConfig<GlobalSettings>(
+    SETTINGS_KEY,
+    (cur) => {
+      const versions = scheduleVersion(normalizeVersions(cur), version);
+      return { ...(cur ?? DEFAULT_SETTINGS), hoursVersions: versions, hoursPerDayDefault: hoursAt(versions, new Date()) };
+    },
+    { actor }
+  );
+  return normalizeVersions(saved as GlobalSettings | null);
+}
+
+/** Cancela um agendamento ainda não em vigor (mesma regra de data mínima). */
+export async function cancelScheduledGlobalHours(effectiveFrom: unknown, actor: string, activeSprintStarts: string[]): Promise<HoursVersion[]> {
+  const from = validateEffectiveFrom(effectiveFrom, brtDate(new Date()), activeSprintStarts);
+  const saved = await updateConfig<GlobalSettings>(
+    SETTINGS_KEY,
+    (cur) => {
+      const versions = removeVersion(normalizeVersions(cur), from);
+      return { ...(cur ?? DEFAULT_SETTINGS), hoursVersions: versions, hoursPerDayDefault: hoursAt(versions, new Date()) };
+    },
+    { actor }
+  );
+  return normalizeVersions(saved as GlobalSettings | null);
 }
 
 export async function getSquadTeam(slug: string): Promise<SquadTeam & Partial<Audited>> {
@@ -62,10 +110,10 @@ export function activeMembers(team: SquadTeam): TeamMember[] {
   return team.members.filter((m) => !m.removedAt);
 }
 
-/** Horas por dia padrão da squad (squad → global). */
-export async function getSquadDefaultHours(slug: string): Promise<number> {
-  const [team, settings] = await Promise.all([getSquadTeam(slug), getGlobalSettings()]);
-  return team.hoursPerDay ?? settings.hoursPerDayDefault;
+/** Horas por dia padrão da squad (squad → global vigente na data; sem data, hoje). */
+export async function getSquadDefaultHours(slug: string, date?: string | Date | null): Promise<number> {
+  const [team, globalHours] = await Promise.all([getSquadTeam(slug), getGlobalHoursAt(date)]);
+  return team.hoursPerDay ?? globalHours;
 }
 
 /** Vincula uma pessoa do Jira à squad (ou revincula, se tinha sido desvinculada). */

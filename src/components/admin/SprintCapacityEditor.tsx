@@ -64,7 +64,8 @@ export default function SprintCapacityEditor({ squad, sprintId, onSaved, onCance
       if (!teamRes.ok) throw new Error(teamJson.message || "Falha ao carregar os integrantes.");
       const cap = capJson.capacity as ResolvedCapacity;
       const members = teamJson.members as TeamMember[];
-      const squadDefault = (teamJson.hoursPerDay as number | null) ?? (teamJson.hoursPerDayDefault as number);
+      // Horas padrão vigentes na data de início desta sprint (squad → global com vigência)
+      const squadDefault = cap.hoursPerDayDefault;
       const byId = new Map(cap.members.map((m) => [m.accountId, m]));
       setCapacity(cap);
       setDefaultHours(squadDefault);

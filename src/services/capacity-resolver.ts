@@ -11,7 +11,7 @@ import { businessDaysListBrt } from "@/lib/utils";
 import { fetchAllSprints, fetchEditableSprint } from "./jira-sprints";
 import { loadCapacityConfig } from "./capacity-store";
 import { ConfigConflictError, deleteConfig, readConfig, updateConfig, writeConfig } from "./config-store";
-import { activeMembers, getGlobalSettings, getSquadTeam, type TeamMember } from "./squad-team";
+import { activeMembers, getGlobalHoursAt, getSquadTeam, type TeamMember } from "./squad-team";
 import {
   decideSprintCapacity,
   type CapacityDecision,
@@ -101,17 +101,26 @@ function enrich(members: SprintMemberCapacity[], team: TeamMember[]): ResolvedMe
 export async function resolveSprintCapacity(
   squad: SquadConfig,
   sprint: CapacitySprintRef,
-  opts: { materialize?: boolean } = {}
+  opts: {
+    materialize?: boolean;
+    /**
+     * Prévia da PRÓXIMA sprint (Backlog estimado): resolve como se ela já fosse editável (herança da vigente,
+     * horas vigentes na data de início dela), sem gravar nada.
+     */
+    preview?: boolean;
+  } = {}
 ): Promise<ResolvedCapacity> {
-  const [own, legacyAll, team, settings, editable] = await Promise.all([
+  const [own, legacyAll, team, globalHours, editable] = await Promise.all([
     getSprintCapacityConfig(squad.slug, sprint.id),
     loadCapacityConfig(squad.slug).catch(() => ({} as Record<string, LegacyCapacityEntry>)),
     getSquadTeam(squad.slug),
-    getGlobalSettings(),
-    isEditable(squad, sprint),
+    // Horas globais vigentes na DATA DE INÍCIO da sprint (sem data no Jira: hoje)
+    getGlobalHoursAt(sprint.startDate ?? null),
+    opts.preview ? Promise.resolve(true) : isEditable(squad, sprint),
   ]);
+  if (opts.preview) opts = { ...opts, materialize: false };
   const legacy = (legacyAll[String(sprint.id)] as LegacyCapacityEntry | undefined) ?? null;
-  const defaultHours = team.hoursPerDay ?? settings.hoursPerDayDefault;
+  const defaultHours = team.hoursPerDay ?? globalHours;
   const previous = !own && editable ? await findPreviousConfig(squad, sprint) : null;
   const autoBusinessDays = sprint.startDate && sprint.endDate ? businessDaysListBrt(sprint.startDate, sprint.endDate).length : undefined;
 
@@ -191,8 +200,8 @@ export async function saveSprintCapacityAdjustment(
   if (!(await isEditable(squad, sprint))) {
     throw new CapacityValidationError("Só é possível ajustar a sprint vigente ou a próxima.");
   }
-  const [team, settings] = await Promise.all([getSquadTeam(squad.slug), getGlobalSettings()]);
-  const defaultHours = team.hoursPerDay ?? settings.hoursPerDayDefault;
+  const [team, globalHours] = await Promise.all([getSquadTeam(squad.slug), getGlobalHoursAt(sprint.startDate ?? null)]);
+  const defaultHours = team.hoursPerDay ?? globalHours;
   const active = new Set(activeMembers(team).map((m) => m.accountId));
   const seen = new Set<string>();
   let members: SprintMemberCapacity[];
@@ -236,8 +245,8 @@ export async function refreshEditableSprintCapacity(squad: SquadConfig): Promise
   const key = sprintKey(squad.slug, editable.id);
   const own = await getSprintCapacityConfig(squad.slug, editable.id);
   if (!own) return; // sem configuração gravada: a próxima leitura já resolve com os dados atuais
-  const [team, settings] = await Promise.all([getSquadTeam(squad.slug), getGlobalSettings()]);
-  const defaultHours = team.hoursPerDay ?? settings.hoursPerDayDefault;
+  const [team, globalHours] = await Promise.all([getSquadTeam(squad.slug), getGlobalHoursAt(editable.startDate ?? null)]);
+  const defaultHours = team.hoursPerDay ?? globalHours;
   const ids = activeMembers(team).map((m) => m.accountId);
 
   if (own.source === "ajustada") {

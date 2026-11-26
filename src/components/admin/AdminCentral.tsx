@@ -340,31 +340,129 @@ function SquadHoursPanel({ squad, onChanged }: { squad: string; onChanged: () =>
   );
 }
 
+interface HoursVersionView {
+  hoursPerDay: number;
+  effectiveFrom: string;
+  createdAt?: string;
+  createdBy?: string;
+}
+interface SettingsPayload {
+  settings: { hoursPerDayDefault: number; hoursVersions: HoursVersionView[] };
+  minEffectiveFrom: string;
+  today: string;
+}
+const fmtYmd = (ymd: string) => ymd.split("-").reverse().join("/");
+const BASE_FROM = "2000-01-01";
+
+/** Horas por dia globais com data de vigência: cada sprint usa o valor vigente na data de início dela. */
 function GlobalSettingsPanel() {
-  const [hours, setHours] = useState<number | null>(null);
+  const [data, setData] = useState<SettingsPayload | null>(null);
+  const [hoursDraft, setHoursDraft] = useState("");
+  const [fromDraft, setFromDraft] = useState("");
   const [saving, setSaving] = useState(false);
-  const [msg, setMsg] = useState("");
+  const [msg, setMsg] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
+
+  const apply = (d: SettingsPayload) => {
+    setData(d);
+    setFromDraft((cur) => (cur && cur >= d.minEffectiveFrom ? cur : d.minEffectiveFrom));
+  };
   useEffect(() => {
-    api<{ settings: { hoursPerDayDefault: number } }>("/api/admin/settings").then((d) => setHours(d.settings.hoursPerDayDefault)).catch((e) => setMsg((e as Error).message));
+    api<SettingsPayload>("/api/admin/settings").then(apply).catch((e) => setMsg({ tone: "error", text: (e as Error).message }));
   }, []);
-  async function save(v: number | null) {
-    if (v === null) return;
+
+  const n = hoursDraft === "" ? null : Number(hoursDraft.replace(",", "."));
+  const invalidHours = n === null || !Number.isFinite(n) || n < 1 || n > 12 || Math.round(n * 2) !== n * 2;
+  const invalidDate = !data || !fromDraft || fromDraft < data.minEffectiveFrom;
+
+  async function schedule() {
+    if (invalidHours || invalidDate) return;
     setSaving(true);
-    setMsg("");
+    setMsg(null);
     try {
-      const d = await api<{ settings: { hoursPerDayDefault: number } }>("/api/admin/settings", { method: "PUT", body: JSON.stringify({ hoursPerDayDefault: v }) });
-      setHours(d.settings.hoursPerDayDefault);
-      setMsg("Salvo. Vale para as sprints vigentes e próximas sem valor próprio; sprints concluídas não mudam.");
+      const d = await api<SettingsPayload>("/api/admin/settings", { method: "PUT", body: JSON.stringify({ hoursPerDay: n, effectiveFrom: fromDraft }) });
+      apply(d);
+      setHoursDraft("");
+      setMsg({ tone: "ok", text: `Agendado: ${fmt(n as number)}h a partir de ${fmtYmd(fromDraft)}. Sprints que começam a partir dessa data usam o novo valor; a vigente e as concluídas não mudam.` });
     } catch (e) {
-      setMsg((e as Error).message);
+      setMsg({ tone: "error", text: (e as Error).message });
     } finally {
       setSaving(false);
     }
   }
+
+  async function cancel(effectiveFrom: string) {
+    setSaving(true);
+    setMsg(null);
+    try {
+      apply(await api<SettingsPayload>(`/api/admin/settings?effectiveFrom=${effectiveFrom}`, { method: "DELETE" }));
+      setMsg({ tone: "ok", text: `Agendamento de ${fmtYmd(effectiveFrom)} cancelado.` });
+    } catch (e) {
+      setMsg({ tone: "error", text: (e as Error).message });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const versions = data ? [...data.settings.hoursVersions].sort((a, b) => b.effectiveFrom.localeCompare(a.effectiveFrom)) : [];
+  // Versão em vigor hoje = a mais recente com vigência ≤ hoje
+  const currentFrom = data ? versions.find((v) => v.effectiveFrom <= data.today)?.effectiveFrom : undefined;
+  const label = "mb-1 block text-[10px] font-semibold uppercase tracking-wide";
+
   return (
-    <Section title="Horas por dia padrão" description="Horas produtivas consideradas por pessoa em cada dia útil, para todas as squads (cada squad e cada integrante podem ter o seu ajuste).">
-      {hours === null && !msg ? <p className="text-[12px] t-muted">Carregando…</p> : <HoursField value={hours} onSave={(v) => void save(v)} saving={saving} />}
-      {msg && <p className="mt-2 text-[11px] t-muted">{msg}</p>}
+    <Section
+      title="Horas por dia padrão"
+      description="Horas produtivas por pessoa em cada dia útil, para todas as squads. Cada mudança vale a partir de uma data: cada sprint usa o valor vigente na data de início dela (cada squad e cada integrante ainda podem ter o seu ajuste)."
+    >
+      {!data ? (
+        <p className="text-[12px] t-muted">{msg?.text ?? "Carregando…"}</p>
+      ) : (
+        <>
+          <p className="mb-4 text-[13px]" style={{ color: "var(--ds-color-content-title)" }}>
+            Em vigor hoje: <strong>{fmt(data.settings.hoursPerDayDefault)}h por dia</strong>
+          </p>
+
+          <div className="mb-2 flex flex-wrap items-end gap-3">
+            <div>
+              <label htmlFor="global-hours" className={label} style={{ color: "var(--ds-color-content-caption)" }}>Novas horas por dia</label>
+              <input id="global-hours" type="number" min={1} max={12} step={0.5} value={hoursDraft} placeholder="ex.: 8" onChange={(e) => setHoursDraft(e.target.value)} className="theme-input w-28 rounded-md text-[13px]" />
+            </div>
+            <div>
+              <label htmlFor="global-from" className={label} style={{ color: "var(--ds-color-content-caption)" }}>A partir de</label>
+              <input id="global-from" type="date" min={data.minEffectiveFrom} value={fromDraft} onChange={(e) => setFromDraft(e.target.value)} className="theme-input rounded-md text-[13px]" />
+            </div>
+            <button className="btn-primary rounded-md px-4 py-2 text-[11px] disabled:opacity-40" disabled={saving || invalidHours || invalidDate} onClick={() => void schedule()}>
+              {saving ? "Salvando..." : "Agendar"}
+            </button>
+          </div>
+          <p className="mb-4 text-[11px] t-muted">
+            A data não pode ser anterior a {fmtYmd(data.minEffectiveFrom)}: a sprint vigente e as concluídas mantêm o valor da época.
+            {hoursDraft !== "" && invalidHours && <span style={{ color: "var(--ds-color-content-negative)" }}> Horas: de 1 a 12, em passos de 0,5.</span>}
+          </p>
+
+          <p className={label} style={{ color: "var(--ds-color-content-caption)" }}>Histórico</p>
+          <ul className="overflow-hidden rounded-lg" style={{ border: BORDER }}>
+            {versions.map((v) => {
+              const scheduled = v.effectiveFrom > data.today;
+              const inForce = v.effectiveFrom === currentFrom;
+              return (
+                <li key={v.effectiveFrom} className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 text-[12px] first:border-t-0" style={{ borderTop: BORDER, color: "var(--ds-color-content-title)" }}>
+                  <strong className="w-14">{fmt(v.hoursPerDay)}h</strong>
+                  <span className="flex-1">{v.effectiveFrom === BASE_FROM ? "Valor inicial" : `a partir de ${fmtYmd(v.effectiveFrom)}`}</span>
+                  {scheduled && <span className="ds-badge" style={{ background: "var(--ds-color-feedback-alert-surface)", color: "var(--ds-color-feedback-alert-label)" }}>agendado</span>}
+                  {inForce && <span className="ds-badge ds-badge-positive">em vigor</span>}
+                  {v.createdBy && <span className="text-[11px] t-muted">por {v.createdBy}</span>}
+                  {scheduled && v.effectiveFrom >= data.minEffectiveFrom && (
+                    <button className="text-[11px] underline disabled:opacity-40" style={{ color: "var(--ds-color-content-negative)" }} disabled={saving} onClick={() => void cancel(v.effectiveFrom)}>
+                      Cancelar
+                    </button>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+          {msg && <p className="mt-2 text-[11px]" style={{ color: msg.tone === "ok" ? "var(--ds-color-content-positive)" : "var(--ds-color-content-negative)" }}>{msg.text}</p>}
+        </>
+      )}
     </Section>
   );
 }
