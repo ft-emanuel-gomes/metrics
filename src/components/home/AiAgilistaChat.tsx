@@ -8,7 +8,7 @@ interface Message {
 }
 
 const SQUADS = [
-  { slug: "custodia", name: "Squad Custódia" },
+  { slug: "custodia", name: "Squad Banking" },
   { slug: "consolidacao", name: "Squad Consolidação" },
   { slug: "lifecycle", name: "Squad LifeCycle" },
   { slug: "inteligencia", name: "Squad Inteligência" },
@@ -141,7 +141,7 @@ export default function AiAgilistaChat({ onClose }: { onClose: () => void }) {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Ex: Analise o fluxo da Squad Custódia para a daily de hoje..."
+              placeholder="Ex: Analise o fluxo da Squad Banking para a daily de hoje..."
               rows={1}
               className="flex-1 rounded-xl px-4 py-2.5 text-sm placeholder-gray-500 outline-none resize-none theme-input"
             />

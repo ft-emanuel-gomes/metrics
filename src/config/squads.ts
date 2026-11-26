@@ -20,10 +20,10 @@ export const SQUADS_CONFIG: Record<string, SquadConfig> = {
   custodia: {
     code: "09",
     project: "CT",
-    name: "Squad Custódia",
+    name: "Squad Banking",
     slug: "custodia",
     methodology: "sprint",
-    boardId: 702, // Downstream - Custódia (scrum)
+    boardId: 702, // Downstream - Banking (scrum)
     teamSize: 6,
     r2FixVersion: "R2 - COMPLIANCE, ONBOARDING E FEE-BASED",
     teamFieldValue: "Squad Custódia",
