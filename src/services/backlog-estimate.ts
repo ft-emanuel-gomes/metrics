@@ -11,23 +11,20 @@
  * - Horas: mesma regra das demais visões (sprintAllocationHours): por card, o maior entre a estimativa do card
  *   (descontadas as subtasks canceladas/rejeitadas e as já concluídas) e a soma das subtasks ainda abertas.
  * - Mesmo filtro de tipos da tela; subtask segue o card pai.
- * - Capacidade = a da próxima sprint (pessoas configuradas em Capacidade, ou o padrão da squad, × horas por dia da
- *   configuração global (config/settings.json; sem configuração, 6h) × dias úteis
- *   pelas datas da sprint no Jira; sem datas, os dias salvos em Capacidade ou 10).
+ * - Capacidade = a da próxima sprint por integrante (resolveSprintCapacity em modo prévia: herda da vigente), com as
+ *   horas por dia vigentes na data de início da próxima sprint.
  */
 
 import type { SquadConfig } from "@/config/squads";
 import { CYCLE_TIME_END_STATUSES } from "@/config/status-mapping";
-import { businessDaysListBrt } from "@/lib/utils";
 import { sprintAllocationHours, type AllocationCard, type AllocationSub } from "@/metrics/sprint-executive";
-import { getGlobalHoursPerDay, loadCapacityConfig } from "./capacity-store";
+import { resolveSprintCapacity } from "./capacity-resolver";
 import { EXCLUDED, STANDARD_TYPES, SUBTASK_TYPES, CANCELED, hasCanceledParent, searchAll, type RawSearchIssue } from "./jira-burndown";
 import { fetchActiveSprint, fetchNextSprint } from "./jira-sprints";
 import { getSprintNamer } from "./sprint-display";
 
 /** Status que define o backlog preparado. */
 export const SELECTED_FOR_DEVELOPMENT = "Selected for Development";
-const FALLBACK_BUSINESS_DAYS = 10;
 /** Campo Sprint do Jira (lista de sprints do card) */
 const SPRINT_FIELD = process.env.JIRA_SPRINT_FIELD || "customfield_10020";
 const DONE_LIST = [...CYCLE_TIME_END_STATUSES].map((s) => `"${s}"`).join(", ");
@@ -41,7 +38,7 @@ export interface BacklogGroup {
 
 export interface BacklogEstimateResult {
   nextSprint: { id: number; name: string; startDate?: string; endDate?: string };
-  capacity: { teamSize: number; businessDays: number; availableHours: number; hoursPerDay: number };
+  capacity: { teamSize: number; fte: number; businessDays: number; availableHours: number; hoursPerDay: number; source: string };
   /** A ∪ B, sem repetir card */
   total: BacklogGroup;
   /** Cards da próxima sprint (com ou sem Selected for Development) */
@@ -126,18 +123,22 @@ export async function fetchBacklogEstimate(
   onlySelected.hours = round1(onlySelected.hours);
   const inBoth = [...inSprint.keys()].filter((k) => selected.has(k)).length;
 
-  // Capacidade da próxima sprint (formato atual: pessoas × 6h × dias úteis)
-  const config = await loadCapacityConfig(squad.slug).catch(() => ({} as Record<string, { teamSize: number; businessDays?: number }>));
-  const entry = config[String(next.id)];
-  const teamSize = entry?.teamSize ?? squad.teamSize;
-  const autoDays = next.startDate && next.endDate ? businessDaysListBrt(next.startDate, next.endDate).length : undefined;
-  const businessDays = entry?.businessDays || autoDays || FALLBACK_BUSINESS_DAYS;
-  // Horas por dia da configuração global (Central Administrativa); sem configuração, 6h
-  const hoursPerDay = await getGlobalHoursPerDay();
-
+  // Capacidade da próxima sprint por integrante (prévia: herda da vigente, horas vigentes na data de início dela)
+  const resolved = await resolveSprintCapacity(
+    squad,
+    { id: next.id, state: "future", startDate: next.startDate, endDate: next.endDate },
+    { preview: true }
+  );
   return {
     nextSprint: { id: next.id, name: (await getSprintNamer())(next.name, next.startDate ?? new Date().toISOString()), startDate: next.startDate, endDate: next.endDate },
-    capacity: { teamSize, businessDays, availableHours: teamSize * hoursPerDay * businessDays, hoursPerDay },
+    capacity: {
+      teamSize: resolved.headcount,
+      fte: resolved.fte,
+      businessDays: resolved.businessDays,
+      availableHours: resolved.capacityHours,
+      hoursPerDay: resolved.hoursPerDayDefault,
+      source: resolved.source,
+    },
     total: { cards: inNextSprint.cards + onlySelected.cards, hours: round1(inNextSprint.hours + onlySelected.hours) },
     inNextSprint,
     onlySelected,

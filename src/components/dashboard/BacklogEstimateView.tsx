@@ -80,7 +80,7 @@ export default function BacklogEstimateView({ squadSlug, issueType, title, toggl
     { label: "Backlog estimado", value: fmtHours(total), hint: cardsWord(data.total.cards) },
     { label: "Na próxima sprint", value: fmtHours(data.inNextSprint.hours), hint: `${cardsWord(data.inNextSprint.cards)}${data.inBoth ? ` (${data.inBoth} também em Selecionado)` : ""}` },
     { label: "Em Selecionado para Desenvolvimento", value: fmtHours(data.onlySelected.hours), hint: `${cardsWord(data.onlySelected.cards)} fora da sprint` },
-    { label: "Capacidade da próxima sprint", value: fmtHours(cap), hint: `${data.capacity.teamSize} × ${data.capacity.hoursPerDay}h × ${data.capacity.businessDays} dias úteis` },
+    { label: "Capacidade da próxima sprint", value: fmtHours(cap), hint: `${data.capacity.fte} pessoas-equiv. × ${data.capacity.hoursPerDay}h × ${data.capacity.businessDays} dias úteis` },
   ];
 
   return (
