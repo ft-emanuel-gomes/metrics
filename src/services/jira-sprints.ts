@@ -227,3 +227,34 @@ export async function fetchEditableSprint(boardId: number): Promise<OpenSprint |
     return null;
   }
 }
+
+/**
+ * PRÓXIMA sprint do board (para o Backlog estimado): com sprint vigente, a futura de início mais cedo;
+ * sem vigente, a própria futura de início mais cedo (a que vai começar). Sprint em planejamento pode não ter datas
+ * (aí vale a de menor id). Sempre direto no Jira. Retorna null se não houver sprint futura ou se o Jira falhar.
+ */
+export async function fetchNextSprint(boardId: number): Promise<OpenSprint | null> {
+  const client = getJiraClient();
+  try {
+    const future: OpenSprint[] = [];
+    let startAt = 0;
+    let isLast = false;
+    do {
+      const response = await client.get<JiraSprintsResponse>(`/rest/agile/1.0/board/${boardId}/sprint`, { state: "future", startAt, maxResults: 50 });
+      isLast = response.isLast;
+      for (const raw of response.values) {
+        if (raw.state === "future") future.push({ id: raw.id, name: raw.name, state: "future", startDate: raw.startDate, endDate: raw.endDate });
+      }
+      startAt += 50;
+    } while (!isLast);
+    return (
+      future.sort((a, b) => {
+        const sa = a.startDate ? new Date(a.startDate).getTime() : Number.POSITIVE_INFINITY;
+        const sb = b.startDate ? new Date(b.startDate).getTime() : Number.POSITIVE_INFINITY;
+        return sa !== sb ? sa - sb : a.id - b.id;
+      })[0] ?? null
+    );
+  } catch {
+    return null;
+  }
+}

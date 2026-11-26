@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import type { SprintCapacityResult } from "@/services/sprint-capacity";
+import BacklogEstimateView from "./BacklogEstimateView";
 
 interface SprintCapacityBarProps {
   squadSlug: string;
@@ -64,6 +65,8 @@ function timeProgress(days: string[], now: Date): { pos: number; todayIdx: numbe
 export default function SprintCapacityBar({ squadSlug, issueType }: SprintCapacityBarProps) {
   const [data, setData] = useState<SprintCapacityResult | null>(null);
   const [state, setState] = useState<"loading" | "ok" | "empty" | "error">("loading");
+  // Visão: sprint vigente (padrão) ou Backlog estimado × capacidade da próxima sprint
+  const [mode, setMode] = useState<"sprint" | "backlog">("sprint");
 
   const load = useCallback(async () => {
     try {
@@ -108,10 +111,42 @@ export default function SprintCapacityBar({ squadSlug, issueType }: SprintCapaci
     </h3>
   );
 
+  const toggle = (
+    <div className="inline-flex rounded-full p-0.5 text-[10px] font-semibold" role="group" aria-label="Visão da capacidade" style={{ background: "var(--ds-color-container-divider-card)" }}>
+      {[
+        { id: "sprint", label: "Sprint vigente" },
+        { id: "backlog", label: "Backlog estimado" },
+      ].map((o) => (
+        <button
+          key={o.id}
+          type="button"
+          aria-pressed={mode === o.id}
+          onClick={() => setMode(o.id as typeof mode)}
+          className="rounded-full px-2.5 py-1 transition"
+          style={mode === o.id ? { background: "var(--ds-color-action-primary-surface)", color: "#fff" } : { color: "var(--ds-color-content-body)" }}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+
+  if (mode === "backlog") {
+    const backlogTitle = (
+      <h3 className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide t-secondary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+          <path d="M4 6h16M4 12h16M4 18h10" strokeLinecap="round" />
+        </svg>
+        Backlog estimado
+      </h3>
+    );
+    return <BacklogEstimateView squadSlug={squadSlug} issueType={issueType} title={backlogTitle} toggle={toggle} />;
+  }
+
   if (state !== "ok" || !data) {
     return (
       <section className="theme-section" aria-label="Capacidade da sprint">
-        <div className="mb-2 flex items-center justify-between gap-3">{title}</div>
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-3">{title}{toggle}</div>
         <p className="py-3 text-[11px] t-muted">
           {state === "loading" && "Buscando a sprint no Jira…"}
           {state === "empty" && "Nenhuma sprint ativa ou planejada no Jira."}
@@ -137,7 +172,7 @@ export default function SprintCapacityBar({ squadSlug, issueType }: SprintCapaci
       ? { text: "Aguardando start", bg: "var(--ds-color-feedback-alert-surface)", fg: "var(--ds-color-feedback-alert-label)" }
       : overdue
       ? { text: "Aguardando conclusão", bg: "var(--ds-color-feedback-alert-surface)", fg: "var(--ds-color-feedback-alert-label)" }
-      : { text: "Em curso", bg: "var(--ds-color-feedback-primary-surface)", fg: "var(--ds-color-feedback-primary-label)" };
+      : null;
 
   // Faixa das horas: escala = maior entre capacidade e alocado (o excesso aparece além da linha de 100%)
   const done = Math.max(0, data.allocatedHours - data.remainingHours);
@@ -169,12 +204,16 @@ export default function SprintCapacityBar({ squadSlug, issueType }: SprintCapaci
 
   return (
     <section className="theme-section" aria-label="Capacidade da sprint">
-      <div className="mb-3 flex items-center justify-between gap-3">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         {title}
-        <div className="flex items-center gap-2">
-          <span className="rounded-full px-2.5 py-1 text-[10px] font-semibold" style={{ background: status.bg, color: status.fg }}>
-            {status.text}
-          </span>
+        <div className="flex flex-wrap items-center gap-2">
+          {toggle}
+          {/* "Em curso" não aparece (a chave já diz que é a sprint vigente); só os avisos de start/conclusão */}
+          {status && (
+            <span className="rounded-full px-2.5 py-1 text-[10px] font-semibold" style={{ background: status.bg, color: status.fg }}>
+              {status.text}
+            </span>
+          )}
           <span className="rounded-full px-2.5 py-1 text-[10px] font-semibold" style={{ background: "var(--ds-color-feedback-primary-surface)", color: "var(--ds-color-feedback-primary-label)" }}>
             Tempo real
           </span>
