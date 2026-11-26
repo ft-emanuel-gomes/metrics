@@ -15,7 +15,7 @@ const METRIC_TOOLTIPS: Record<string, string> = {
   "Eficiência de Fluxo": "Métrica que mede a proporção entre o tempo ativo de trabalho (valor agregado) e o tempo total de permanência do item no fluxo (Cycle Time). Nos ajuda a identificar tempos de espera excessivos, gargalos e desperdícios ao longo dos status.",
   "Transbordo": "Percentual de itens comprometidos no início da sprint que não foram concluídos dentro do período. Indica se o time está comprometendo acima da sua capacidade real.",
   "WIP Aging": "Idade, em dias corridos, do item mais antigo atualmente no fluxo de trabalho (To Do a Done), e quantos itens passam de 10 dias. Meta: nenhum item acima de 10 dias. Dados realtime — reflete o estado atual do board.",
-  "Ocupação": "Percentual da capacidade do time que foi alocada via Original Estimate das issues. Capacidade = pessoas × 6h/dia × dias úteis da sprint.",
+  "Ocupação": "Percentual da capacidade do time que foi alocada via Original Estimate das issues. Capacidade = Σ (horas por dia × % de atuação de cada integrante) × dias úteis da sprint (configurável no Administrador).",
 };
 
 /**

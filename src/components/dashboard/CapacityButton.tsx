@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { businessDaysListBrt } from "@/lib/utils";
 import { formatSprintName } from "@/lib/sprint-name";
+import SprintCapacityEditor from "@/components/admin/SprintCapacityEditor";
 
 /** Sprint listada no modal. Vigente/próxima trazem state "active"/"future" (a próxima pode não ter datas). */
 export interface CapacitySprintOption {
@@ -148,9 +149,10 @@ export default function CapacityButton({ squad, availableSprints, defaultTeamSiz
   function optionLabel(s: CapacitySprintOption): string {
     const saved = savedCapacities[String(s.id)];
     const savedInfo = saved ? ` (${saved.teamSize}p / ${saved.businessDays || jiraBusinessDays(s) || "?"}d)` : "";
-    // Vigente e próxima: nome completo (o número da sprint se repete a cada release) e a situação
-    if (s.state === "active") return `${s.name} · vigente${savedInfo}`;
-    if (s.state === "future") return `${s.name} · próxima (planejamento)${savedInfo}`;
+    // Vigente e próxima: nome completo (o número da sprint se repete a cada release) e a situação.
+    // Sem "(Np / Nd)": a capacidade delas é por integrante (o valor antigo não representa mais a conta)
+    if (s.state === "active") return `${s.name} · vigente`;
+    if (s.state === "future") return `${s.name} · próxima (planejamento)`;
     return `${sprintDisplayName(s)}${savedInfo}`;
   }
 
@@ -170,8 +172,8 @@ export default function CapacityButton({ squad, availableSprints, defaultTeamSiz
 
       {/* Modal */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="w-full max-w-sm rounded-xl p-6 shadow-2xl theme-modal">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3">
+          <div className={`w-full ${isOpenSprint ? "max-w-2xl" : "max-w-sm"} max-h-[92vh] overflow-y-auto rounded-xl p-4 shadow-2xl theme-modal sm:p-6`}>
             <h3 className="text-sm font-bold mb-4" style={{ color: "var(--text-primary)" }}>
               Definir Capacidade do Time
             </h3>
@@ -192,6 +194,19 @@ export default function CapacityButton({ squad, availableSprints, defaultTeamSiz
               ))}
             </select>
 
+            {/* Vigente/próxima: capacidade por integrante (% de atuação e horas por dia) */}
+            {isOpenSprint && selectedSprint && (
+              <SprintCapacityEditor
+                key={selectedSprint.id}
+                squad={squad}
+                sprintId={selectedSprint.id}
+                onSaved={() => router.refresh()}
+                onCancel={() => { setIsOpen(false); if (onAutoClose) onAutoClose(); setMessage(""); }}
+              />
+            )}
+
+            {/* Sprint concluída: formato anterior (pessoas e dias úteis) */}
+            {!isOpenSprint && (<>
             {/* Campos: Pessoas e Dias úteis lado a lado */}
             <div className="grid grid-cols-2 gap-3 mb-2">
               <div>
@@ -222,15 +237,7 @@ export default function CapacityButton({ squad, availableSprints, defaultTeamSiz
               </div>
             </div>
 
-            {/* Referência dos dias úteis: datas da sprint no Jira */}
-            {isOpenSprint && (
-              <p className="mb-4 text-[10px]" style={{ color: "var(--ds-color-content-subdued)" }}>
-                {autoDays !== undefined
-                  ? `Pelas datas da sprint no Jira: ${autoDays} dias úteis.`
-                  : "Sprint sem datas no Jira: informe os dias úteis."}
-              </p>
-            )}
-            {!isOpenSprint && <div className="mb-2" />}
+            <div className="mb-2" />
 
             {/* Info de capacidade calculada */}
             <div className="rounded-md p-3 mb-4" style={{ backgroundColor: "var(--accent-bg)" }}>
@@ -262,6 +269,7 @@ export default function CapacityButton({ squad, availableSprints, defaultTeamSiz
                 {saving ? "Salvando..." : "Salvar e Recalcular"}
               </button>
             </div>
+            </>)}
           </div>
         </div>
       )}

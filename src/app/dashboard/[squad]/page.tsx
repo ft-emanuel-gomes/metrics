@@ -1,7 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { getSquadBySlug } from "@/config/squads";
 import { DataNotAvailableError } from "@/adapters/sprint-adapter-db";
-import { getSprintCapacity } from "@/services/capacity-store";
 import { getAuthSession } from "@/services/auth-session";
 import { fetchClosedSprints, fetchEditableSprint } from "@/services/jira-sprints";
 import { getSprintNamer } from "@/services/sprint-display";
@@ -153,11 +152,9 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
     .filter((p) => p.type === "sprint" && p.id)
     .map((p) => p.id as number);
 
-  // Determinar teamSize dinâmico (da sprint mais recente, salvo via Capacidade)
-  const lastSprintId = currentSprintIds.length > 0 ? currentSprintIds[currentSprintIds.length - 1] : 0;
-  const displayTeamSize = lastSprintId
-    ? getSprintCapacity(slug, lastSprintId, squad.teamSize)
-    : squad.teamSize;
+  // Pessoas da sprint mais recente: vem da Ocupação já resolvida (integrantes com % > 0 ou o formato antigo)
+  const lastOccupation = data.periodMetrics[data.periodMetrics.length - 1]?.occupation;
+  const displayTeamSize = lastOccupation?.headcount ?? squad.teamSize;
 
   const periodDates = data.periods.length > 0
     ? `Período Apurado: ${formatFullDate(data.periods[0].startDate)} a ${formatFullDate(data.periods[data.periods.length - 1].endDate)}`

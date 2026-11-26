@@ -1,6 +1,6 @@
 import type { SquadConfig } from "@/config/squads";
 import { fetchActiveSprint, fetchAllSprints, type SprintData } from "./jira-sprints";
-import { loadCapacityConfig } from "./capacity-store";
+import { resolveSprintCapacity } from "./capacity-resolver";
 import { getSprintNamer } from "./sprint-display";
 import { CANCELED, EXCLUDED, STANDARD_TYPES, SUBTASK_TYPES, readHistory, searchAll, type RawSearchIssue } from "./jira-burndown";
 import { resolveWindowStartMs } from "./live-sprint-metrics";
@@ -9,8 +9,6 @@ import { sprintAllocationHours, type AllocationCard, type AllocationSub } from "
 import { businessDaysListBrt } from "@/lib/utils";
 import { CYCLE_TIME_END_STATUSES } from "@/config/status-mapping";
 
-/** Regra de negócio da Ocupação: 6 horas produtivas por pessoa por dia útil. */
-const HOURS_PER_DAY = 6;
 const SUBTASK_TYPE_NAMES = new Set(["Sub-task", "Subtarefa", "Sub-bug"]);
 const DONE_LIST = [...CYCLE_TIME_END_STATUSES].map((s) => `"${s}"`).join(", ");
 
@@ -18,7 +16,17 @@ export interface SprintCapacityResult {
   sprint: { id: number; name: string; startDate: string; endDate: string };
   /** active = sprint vigente no Jira; future = próxima sprint (a vigente já foi concluída) */
   state: "active" | "future";
+  /** Pessoas consideradas (integrantes com % > 0, ou pessoas do formato antigo) */
   teamSize: number;
+  /** Pessoas-equivalentes (Σ % / 100) */
+  fte: number;
+  /** Horas do time por dia útil (Σ horas por dia × %) */
+  hoursPerDayTotal: number;
+  /** Horas por dia padrão (ou do formato antigo) */
+  hoursPerDay: number;
+  /** De onde veio a capacidade: ajustada, herdada, padrão (integrantes a 100%), legado ou time-padrão */
+  capacitySource: "ajustada" | "herdada" | "padrao" | "legado" | "time-padrao";
+  inheritedFromSprintName?: string;
   /** Dias úteis considerados na capacidade (configurados em Capacidade ou calculados pelas datas) */
   businessDays: number;
   availableHours: number;
@@ -100,21 +108,25 @@ export async function fetchSprintCapacity(
   const alloc = sprintAllocationHours(cards, subs, isPrior);
   const allocatedHours = Math.round(alloc.total);
   const remainingHours = Math.max(0, allocatedHours - Math.min(allocatedHours, Math.round(alloc.done)));
-  // Pessoas e dias úteis: configuração de Capacidade da sprint; sem configuração, padrão da squad e datas do Jira
-  const config = await loadCapacityConfig(squad.slug).catch(() => ({} as Record<string, { teamSize: number; businessDays?: number }>));
-  const entry = config[String(sprint.id)];
-  const teamSize = entry?.teamSize ?? squad.teamSize;
+  // Capacidade: integrantes × % de atuação × horas por dia × dias úteis (capacity-resolver). Sem configuração
+  // por integrante, a conta antiga (pessoas × horas por dia × dias úteis), com as datas da sprint no Jira.
+  const cap = await resolveSprintCapacity(squad, { id: sprint.id, name: sprint.name, state, startDate: sprint.startDate, endDate: sprint.endDate });
   // Dias úteis entre o início e o fim da sprint exatamente como no Jira (fuso de Brasília, dias incluídos)
   const days = businessDaysListBrt(sprint.startDate, sprint.endDate);
-  const businessDays = entry?.businessDays || days.length;
+  const sprintNamer = await getSprintNamer();
 
   return {
     // Nome no padrão "Sprint N - RN"
-    sprint: { id: sprint.id, name: (await getSprintNamer())(sprint.name, sprint.startDate), startDate: sprint.startDate, endDate: sprint.endDate },
+    sprint: { id: sprint.id, name: sprintNamer(sprint.name, sprint.startDate), startDate: sprint.startDate, endDate: sprint.endDate },
     state,
-    teamSize,
-    businessDays,
-    availableHours: teamSize * HOURS_PER_DAY * businessDays,
+    teamSize: cap.headcount,
+    fte: cap.fte,
+    hoursPerDayTotal: cap.hoursPerDayTotal,
+    hoursPerDay: cap.legacy?.hoursPerDay ?? cap.hoursPerDayDefault,
+    capacitySource: cap.source,
+    inheritedFromSprintName: cap.inheritedFromSprintName ? sprintNamer(cap.inheritedFromSprintName, sprint.startDate) : undefined,
+    businessDays: cap.businessDays,
+    availableHours: cap.capacityHours,
     allocatedHours,
     remainingHours,
     days,

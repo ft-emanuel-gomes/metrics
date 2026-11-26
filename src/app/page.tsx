@@ -20,6 +20,11 @@ export default async function HomePage() {
     ? allSquads
     : allSquads.filter((s) => session.allowedSquads.includes(s.slug));
 
+  // Squads da Central Administrativa (modal do menu Administrador)
+  const adminSquads = allSquads
+    .map((s) => ({ slug: s.slug, name: s.name.replace("Squad ", ""), methodology: s.methodology }))
+    .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+
   return (
     <main className="min-h-screen px-6 py-6 flex flex-col">
       <div className="mx-auto flex-1 w-full">
@@ -38,7 +43,7 @@ export default async function HomePage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            {session.isAdmin && <AdminMenu />}
+            {session.isAdmin && <AdminMenu squads={adminSquads} />}
             <SyncButton />
             <ThemeToggle />
           </div>

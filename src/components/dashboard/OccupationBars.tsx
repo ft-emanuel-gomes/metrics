@@ -19,6 +19,7 @@ export default function OccupationBars({ periodMetrics, teamSize }: OccupationBa
     value: Math.round(p.occupation.percentage),
     allocated: Math.round(p.occupation.allocatedHours),
     capacity: Math.round(p.occupation.capacityHours),
+    people: p.occupation.headcount,
   }));
   const over = data.filter((d) => d.value > 100);
   const max = Math.ceil(Math.max(125, ...data.map((d) => d.value + 8)) / 25) * 25;
@@ -55,7 +56,10 @@ export default function OccupationBars({ periodMetrics, teamSize }: OccupationBa
               contentStyle={{ background: t.surface, border: `1px solid ${t.grid}`, borderRadius: 12, fontSize: 12, color: t.title }}
               labelStyle={{ color: t.title, fontWeight: 600 }}
               itemStyle={{ color: t.title }}
-              formatter={(v, _n, item) => [`${v}% (${item.payload.allocated}h de ${item.payload.capacity}h)`, "Ocupação"]}
+              formatter={(v, _n, item) => [
+                `${v}% (${item.payload.allocated}h de ${item.payload.capacity}h${item.payload.people ? ` · ${item.payload.people} pessoas` : ""})`,
+                "Ocupação",
+              ]}
             />
             <ReferenceLine x={100} stroke={t.title} strokeDasharray="4 4" label={{ value: "Capacidade", position: "top", fill: t.muted, fontSize: 10 }} />
             <Bar isAnimationActive={false} dataKey="value" radius={[0, 6, 6, 0]} maxBarSize={26}>
@@ -71,7 +75,7 @@ export default function OccupationBars({ periodMetrics, teamSize }: OccupationBa
         {over.length > 0
           ? `Planejado acima da capacidade em ${over.map((d) => d.name).join(", ")}: risco de transbordo.`
           : "Planejamento dentro da capacidade em todas as sprints."}{" "}
-        Capacidade = pessoas × 6h/dia × dias úteis.
+        Capacidade = Σ (horas por dia × % de atuação de cada integrante) × dias úteis.
       </p>
     </div>
   );

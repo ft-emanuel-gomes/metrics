@@ -11,6 +11,22 @@ export interface OccupationPeriodResult {
   allocatedHours: number;
   capacityHours: number;
   percentage: number;
+  /** Pessoas consideradas (integrantes com % > 0, ou pessoas do formato antigo) */
+  headcount?: number;
+  /** Pessoas-equivalentes (Σ % de atuação / 100) */
+  fte?: number;
+  /** Horas do time por dia útil (Σ horas por dia × %) */
+  hoursPerDayTotal?: number;
+  businessDays?: number;
+}
+
+/** Capacidade já resolvida (ver src/services/capacity-resolver.ts). */
+export interface ResolvedOccupationCapacity {
+  capacityHours: number;
+  businessDays: number;
+  headcount: number;
+  fte: number;
+  hoursPerDayTotal: number;
 }
 
 /**
@@ -133,5 +149,32 @@ export function calculateOccupation(
     allocatedHours,
     capacityHours,
     percentage,
+    headcount: teamSize,
+    fte: teamSize,
+    hoursPerDayTotal: teamSize * hoursPerDay,
+    businessDays,
+  };
+}
+
+/**
+ * Ocupação com a capacidade já resolvida por integrante (Σ horas por dia × % × dias úteis).
+ * As horas alocadas seguem exatamente a mesma regra de calculateOccupation (regra do maior, descontos).
+ */
+export function calculateOccupationWithCapacity(
+  standardEstimates: SubtaskWithEstimate[],
+  subtasksWithParent: SubtaskWithEstimate[],
+  capacity: ResolvedOccupationCapacity,
+  canceledSubtasks: SubtaskWithEstimate[] = []
+): OccupationPeriodResult {
+  const allocatedHours = Math.round(resolveOccupationEstimates(standardEstimates, subtasksWithParent, canceledSubtasks) / 3600);
+  const capacityHours = capacity.capacityHours;
+  return {
+    allocatedHours,
+    capacityHours,
+    percentage: capacityHours > 0 ? Math.round((allocatedHours / capacityHours) * 100) : 0,
+    headcount: capacity.headcount,
+    fte: capacity.fte,
+    hoursPerDayTotal: capacity.hoursPerDayTotal,
+    businessDays: capacity.businessDays,
   };
 }

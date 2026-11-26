@@ -32,3 +32,6 @@ build/
 
 # Kiro
 .kiro/
+
+# Cópia local de segurança da capacidade (a fonte da verdade é o S3: config/capacity.json)
+data/capacity.json

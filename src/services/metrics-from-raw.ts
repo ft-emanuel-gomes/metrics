@@ -13,7 +13,7 @@ import { calculateCycleTimeP85, generateCycleTimeNote } from "@/metrics/cycle-ti
 import { calculateThroughput } from "@/metrics/throughput";
 import { calculatePeriodFlowEfficiency } from "@/metrics/flow-efficiency";
 import { calculateSpillover } from "@/metrics/spillover";
-import { calculateOccupation } from "@/metrics/occupation";
+import { calculateOccupation, calculateOccupationWithCapacity, type ResolvedOccupationCapacity } from "@/metrics/occupation";
 import { calculateR2Progress } from "@/metrics/r2-progress";
 import { calculateForecast } from "@/metrics/forecast";
 import { calculateWipAging, buildWipAgingKpi, summarizeWipAging, WIP_AGING_LIMIT_DAYS, type WipAgingResult } from "@/metrics/wip-aging";
@@ -64,7 +64,13 @@ export function buildDashboardFromRaw(
   periodsRaw: RawPeriodData[],
   wipRaw: RawWipData | null,
   r2Raw: RawR2Data | null,
-  issueTypeFilter?: string[]
+  issueTypeFilter?: string[],
+  options: {
+    /** Capacidade de cada sprint concluída, já resolvida por integrante (resolveCapacitiesForPeriods) */
+    capacityBySprintId?: Map<number, ResolvedOccupationCapacity>;
+    /** Horas por dia da squad para as janelas Kanban */
+    kanbanHoursPerDay?: number;
+  } = {}
 ): DashboardData {
   // Ordenar períodos cronologicamente (garante KPIs current/previous corretos)
   periodsRaw.sort((a, b) => a.period.startDate.localeCompare(b.period.startDate));
@@ -116,23 +122,22 @@ export function buildDashboardFromRaw(
       });
     }
     const sprintId = raw.period.id;
-    const teamSize = sprintId
-      ? getSprintCapacity(squad.slug, sprintId, squad.teamSize)
-      : squad.teamSize;
-    const customBusinessDays = sprintId
-      ? getSprintBusinessDays(squad.slug, sprintId)
-      : undefined;
-    const occupation = calculateOccupation(
-      estimates,
-      subtasksForOccupation,
-      teamSize,
-      raw.period.startDate,
-      raw.period.endDate,
-      6,
-      customBusinessDays,
-      // Canceladas/rejeitadas: descontadas da estimativa do card pai (só pesam para os cards da conta)
-      raw.canceledSubtasks ?? []
-    );
+    // Capacidade resolvida por integrante (capacity-resolver); sem ela, a conta antiga (pessoas × horas × dias)
+    const resolved = sprintId ? options.capacityBySprintId?.get(sprintId) : undefined;
+    const occupation = resolved
+      ? calculateOccupationWithCapacity(estimates, subtasksForOccupation, resolved, raw.canceledSubtasks ?? [])
+      : calculateOccupation(
+          estimates,
+          subtasksForOccupation,
+          sprintId ? getSprintCapacity(squad.slug, sprintId, squad.teamSize) : squad.teamSize,
+          raw.period.startDate,
+          raw.period.endDate,
+          // Sprint concluída no formato antigo: sempre 6h; janela Kanban: horas por dia da squad
+          sprintId ? 6 : options.kanbanHoursPerDay ?? 6,
+          sprintId ? getSprintBusinessDays(squad.slug, sprintId) : undefined,
+          // Canceladas/rejeitadas: descontadas da estimativa do card pai (só pesam para os cards da conta)
+          raw.canceledSubtasks ?? []
+        );
 
     // Bugs (não filtra por issueType — sempre mostra qualidade)
     bugsQuality.push({

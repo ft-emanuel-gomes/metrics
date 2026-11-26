@@ -15,6 +15,7 @@ import { calculateThroughput } from "@/metrics/throughput";
 import { calculatePeriodFlowEfficiency } from "@/metrics/flow-efficiency";
 import { calculateWipAging, buildWipAgingKpi, summarizeWipAging, WIP_AGING_LIMIT_DAYS, type WipAgingResult } from "@/metrics/wip-aging";
 import { calculateOccupation } from "@/metrics/occupation";
+import { getSquadDefaultHours } from "@/services/squad-team";
 import { calculateR2Progress } from "@/metrics/r2-progress";
 import { calculateForecast } from "@/metrics/forecast";
 import { calculateP50, calculateP85, calculateP95 } from "@/metrics/percentile";
@@ -180,13 +181,15 @@ export async function fetchKanbanDashboard(
     }
     // Canceladas/rejeitadas: descontadas da estimativa do card pai
     const canceledForOccupation = await fetchCanceledSubtasksWithParent(squad.project, null, period.startDate, period.endDate);
+    // Kanban: pessoas da squad × horas por dia da squad (Central Administrativa) × dias úteis da janela
+    const kanbanHoursPerDay = await getSquadDefaultHours(squad.slug).catch(() => 6);
     const occupation = calculateOccupation(
       standardEstimates,
       subtasksForOccupation,
       squad.teamSize,
       period.startDate,
       period.endDate,
-      6,
+      kanbanHoursPerDay,
       undefined,
       canceledForOccupation
     );

@@ -18,6 +18,29 @@ function fmtDayMonth(iso: string): string {
 function fmtHours(h: number): string {
   return `${h.toLocaleString("pt-BR")}h`;
 }
+const fmtNum = (n: number) => n.toLocaleString("pt-BR", { maximumFractionDigits: 2 });
+
+/** Conta por extenso da capacidade: por integrante (% de atuação) ou no formato antigo (pessoas × horas). */
+function capacityFormula(d: SprintCapacityResult): string {
+  if (d.capacitySource === "legado" || d.capacitySource === "time-padrao") {
+    return `${d.teamSize} × ${fmtNum(d.hoursPerDay)}h × ${d.businessDays} dias úteis`;
+  }
+  return `${fmtNum(d.fte)} pessoas-equivalentes · ${fmtNum(d.hoursPerDayTotal)}h/dia × ${d.businessDays} dias úteis`;
+}
+
+/** De onde veio a capacidade (só informação; nada depende de validação manual). */
+function capacityOrigin(d: SprintCapacityResult): string | undefined {
+  switch (d.capacitySource) {
+    case "ajustada":
+      return "Ajustada nesta sprint";
+    case "herdada":
+      return d.inheritedFromSprintName ? `Herdada da ${d.inheritedFromSprintName}` : "Herdada da sprint anterior";
+    case "padrao":
+      return "Integrantes da squad a 100%";
+    default:
+      return undefined;
+  }
+}
 
 /** Posição (0..1) de agora na faixa de dias úteis: dias passados + fração do dia corrente. */
 function timeProgress(days: string[], now: Date): { pos: number; todayIdx: number } {
@@ -138,8 +161,8 @@ export default function SprintCapacityBar({ squadSlug, issueType }: SprintCapaci
       : `${Math.round(pos * n)} de ${n} dias úteis`;
 
   const numbers: { label: string; value: string; hint?: string }[] = [
-    { label: "Pessoas", value: String(data.teamSize) },
-    { label: "Horas disponíveis", value: fmtHours(data.availableHours), hint: `${data.teamSize} × 6h × ${data.businessDays} dias úteis` },
+    { label: "Pessoas", value: String(data.teamSize), hint: capacityOrigin(data) },
+    { label: "Horas disponíveis", value: fmtHours(data.availableHours), hint: capacityFormula(data) },
     { label: "Horas alocadas", value: fmtHours(data.allocatedHours), hint: `${occupation}% da capacidade` },
     { label: "Horas restantes", value: fmtHours(data.remainingHours), hint: "Comprometido desta sprint ainda não concluído" },
   ];

@@ -1,14 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import type { SquadOption } from "@/components/admin/AdminCentral";
 
 const AiAgilistaChat = dynamic(() => import("@/components/home/AiAgilistaChat"), { ssr: false });
+const AdminCentralModal = dynamic(() => import("@/components/admin/AdminCentralModal"), { ssr: false });
 
-export default function AdminMenu() {
+export default function AdminMenu({ squads }: { squads: SquadOption[] }) {
   const [isOpen, setIsOpen] = useState(false);
   const [showAiChat, setShowAiChat] = useState(false);
+  const [showCentral, setShowCentral] = useState(false);
+  const closeCentral = useCallback(() => setShowCentral(false), []);
 
   return (
     <div className="relative">
@@ -36,6 +40,17 @@ export default function AdminMenu() {
             className="absolute right-0 top-full mt-1.5 z-50 rounded-lg py-1 shadow-xl min-w-[180px]"
             style={{ backgroundColor: "var(--bg-card)", border: "0.5px solid var(--border-primary)" }}
           >
+            <button
+              type="button"
+              onClick={() => { setIsOpen(false); setShowCentral(true); }}
+              className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[12px] font-medium text-left transition hover:opacity-80"
+              style={{ color: "var(--text-primary)" }}
+            >
+              <svg className="h-4 w-4" style={{ color: "var(--accent)" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              Central Administrativa
+            </button>
             <Link
               href="/retrospectiva"
               onClick={() => setIsOpen(false)}
@@ -63,6 +78,9 @@ export default function AdminMenu() {
 
       {/* Agile IA Chat Modal */}
       {showAiChat && <AiAgilistaChat onClose={() => setShowAiChat(false)} />}
+
+      {/* Central Administrativa: modal sobre a home */}
+      {showCentral && <AdminCentralModal squads={squads} onClose={closeCentral} />}
     </div>
   );
 }

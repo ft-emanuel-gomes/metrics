@@ -6,6 +6,8 @@ import { fetchClosedSprints } from "@/services/jira-sprints";
 import { loadRawMeta, loadRawPeriod, type RawPeriodData } from "@/services/s3-raw-storage";
 import { buildDashboardFromRaw } from "@/services/metrics-from-raw";
 import { fetchAndSaveSprintPeriod, fetchAndSaveMonthPeriod, ensureWipAndR2, ensureCanceledSubtasks } from "@/services/s3-sync-on-demand";
+import { resolveCapacitiesForPeriods } from "@/services/capacity-resolver";
+import { getSquadDefaultHours } from "@/services/squad-team";
 
 /** Tipos de issue padrão do dashboard (quando não há filtro explícito). */
 export const DEFAULT_ISSUE_TYPES = ["História", "Bug", "Task", "Tech Debt"];
@@ -81,8 +83,13 @@ export async function loadDashboardData(squad: SquadConfig, options: DashboardDa
     );
     const validPeriods = await withSprintNames(squad, periodsRaw.filter(Boolean) as RawPeriodData[]);
     if (validPeriods.length > 0) {
-      const { wipRaw, r2Raw } = await ensureWipAndR2(squad);
-      data = buildDashboardFromRaw(squad, validPeriods, wipRaw, r2Raw, issueTypeFilter);
+      const [{ wipRaw, r2Raw }, capacityBySprintId, kanbanHoursPerDay] = await Promise.all([
+        ensureWipAndR2(squad),
+        // Capacidade por integrante das sprints concluídas (Ocupação)
+        resolveCapacitiesForPeriods(squad, validPeriods),
+        getSquadDefaultHours(squad.slug).catch(() => undefined),
+      ]);
+      data = buildDashboardFromRaw(squad, validPeriods, wipRaw, r2Raw, issueTypeFilter, { capacityBySprintId, kanbanHoursPerDay });
     }
   }
 

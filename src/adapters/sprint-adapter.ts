@@ -13,7 +13,7 @@ import {
   fetchWipIssues,
 } from "@/services/jira-search";
 import { fetchChangelogsBatch, fetchFlaggedSinceBatch, fetchSprintAdditionDates } from "@/services/jira-changelog";
-import { getSprintCapacity, getSprintBusinessDays } from "@/services/capacity-store";
+import { resolveSprintCapacity } from "@/services/capacity-resolver";
 import { fetchProjectVersions, findActiveRelease } from "@/services/jira-versions";
 import { calculateCycleTimeP85, generateCycleTimeNote } from "@/metrics/cycle-time";
 import { calculateThroughput } from "@/metrics/throughput";
@@ -22,7 +22,7 @@ import {
   detectBottleneck,
 } from "@/metrics/flow-efficiency";
 import { calculateSpillover } from "@/metrics/spillover";
-import { calculateOccupation } from "@/metrics/occupation";
+import { calculateOccupationWithCapacity } from "@/metrics/occupation";
 import { calculateR2Progress } from "@/metrics/r2-progress";
 import { calculateForecast } from "@/metrics/forecast";
 import { calculateWipAging, buildWipAgingKpi, type WipAgingResult } from "@/metrics/wip-aging";
@@ -172,20 +172,15 @@ export async function fetchSprintDashboard(
         return standardEstimates.some((std) => std.key === s.parentKey);
       });
     }
-    const sprintTeamSize = getSprintCapacity(squad.slug, sprint.id, squad.teamSize);
-    const sprintBusinessDays = getSprintBusinessDays(squad.slug, sprint.id);
     // Canceladas/rejeitadas: descontadas da estimativa do card pai
     const canceledForOccupation = await fetchCanceledSubtasksWithParent(squad.project, sprint.id);
-    const occupation = calculateOccupation(
-      standardEstimates,
-      subtasksForOccupation,
-      sprintTeamSize,
-      sprint.startDate,
-      effectiveEndDate,
-      6,
-      sprintBusinessDays,
-      canceledForOccupation
+    // Capacidade da sprint concluída: configuração por integrante da época ou a conta antiga (capacity-resolver)
+    const cap = await resolveSprintCapacity(
+      squad,
+      { id: sprint.id, state: "closed", startDate: sprint.startDate, endDate: effectiveEndDate },
+      { materialize: false }
     );
+    const occupation = calculateOccupationWithCapacity(standardEstimates, subtasksForOccupation, cap, canceledForOccupation);
 
     // Bugs / Sub-bugs (qualidade)
     const { bugs: sprintBugs, subBugs: sprintSubBugs } = await fetchCompletedBugs(

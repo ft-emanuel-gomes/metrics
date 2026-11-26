@@ -5,6 +5,8 @@ import { DataNotAvailableError } from "@/adapters/sprint-adapter-db";
 import { loadRawMeta, loadRawPeriod } from "@/services/s3-raw-storage";
 import { buildDashboardFromRaw } from "@/services/metrics-from-raw";
 import { fetchAndSaveSprintPeriod, fetchAndSaveMonthPeriod, ensureWipAndR2, ensureCanceledSubtasks } from "@/services/s3-sync-on-demand";
+import { resolveCapacitiesForPeriods } from "@/services/capacity-resolver";
+import { getSquadDefaultHours } from "@/services/squad-team";
 
 // Desabilitar cache do Next.js para esta rota (dados dinâmicos)
 export const dynamic = "force-dynamic";
@@ -89,8 +91,12 @@ export async function GET(
       const validPeriods = periodsRaw.filter(Boolean) as import("@/services/s3-raw-storage").RawPeriodData[];
 
       if (validPeriods.length > 0) {
-        const { wipRaw, r2Raw } = await ensureWipAndR2(squad);
-        const data = buildDashboardFromRaw(squad, validPeriods, wipRaw, r2Raw, issueTypes);
+        const [{ wipRaw, r2Raw }, capacityBySprintId, kanbanHoursPerDay] = await Promise.all([
+          ensureWipAndR2(squad),
+          resolveCapacitiesForPeriods(squad, validPeriods),
+          getSquadDefaultHours(squad.slug).catch(() => undefined),
+        ]);
+        const data = buildDashboardFromRaw(squad, validPeriods, wipRaw, r2Raw, issueTypes, { capacityBySprintId, kanbanHoursPerDay });
         return NextResponse.json({ ...data, _source: "s3-raw" });
       }
     }

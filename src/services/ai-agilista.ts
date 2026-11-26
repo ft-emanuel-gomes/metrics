@@ -72,12 +72,15 @@ export async function buildJiraContext(slug: string): Promise<string> {
     const wipEstimates = await fetchWipIssuesWithEstimates(squad.project);
     const engineeringEstimates = wipEstimates.filter((e) => e.issueType !== "Design");
     const designEstimates = wipEstimates.filter((e) => e.issueType === "Design");
+    // Horas por dia da squad (Central Administrativa); padrão 6h
+    const { getSquadDefaultHours } = await import("@/services/squad-team");
+    const hoursPerDay = await getSquadDefaultHours(squad.slug).catch(() => 6);
 
     const sections: string[] = [];
 
     // Seção Engenharia
     if (engineeringIssues.length > 0) {
-      sections.push(generateDailyAnalysis(`${squad.name} — Engenharia`, engineeringIssues, engineeringEstimates));
+      sections.push(generateDailyAnalysis(`${squad.name} — Engenharia`, engineeringIssues, engineeringEstimates, hoursPerDay));
     }
 
     // Separador
@@ -87,7 +90,7 @@ export async function buildJiraContext(slug: string): Promise<string> {
 
     // Seção Design
     if (designIssues.length > 0) {
-      sections.push(generateDailyAnalysis(`${squad.name} — Design`, designIssues, designEstimates));
+      sections.push(generateDailyAnalysis(`${squad.name} — Design`, designIssues, designEstimates, hoursPerDay));
     } else {
       sections.push(`\n🎨 **${squad.name} — Design**: Nenhum item de Design em andamento.`);
     }
@@ -104,7 +107,9 @@ export async function buildJiraContext(slug: string): Promise<string> {
 function generateDailyAnalysis(
   squadName: string,
   issues: JiraIssue[],
-  wipEstimates?: { key: string; originalEstimateSeconds: number; issueType?: string }[]
+  wipEstimates?: { key: string; originalEstimateSeconds: number; issueType?: string }[],
+  /** Horas por dia da squad (Central Administrativa); padrão 6h */
+  hoursPerDay: number = 6
 ): string {
   const today = new Date();
   const lines: string[] = [];
@@ -223,7 +228,7 @@ function generateDailyAnalysis(
     }
 
     const totalHours = Math.round(totalSeconds / 3600);
-    const totalDays = Math.round((totalHours / 6) * 10) / 10; // 6h/dia útil
+    const totalDays = Math.round((totalHours / hoursPerDay) * 10) / 10;
 
     lines.push("");
     lines.push(`⏱️ **Ocupação Comprometida (To Do → Delivery):**`);
