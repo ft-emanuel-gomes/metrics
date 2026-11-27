@@ -8,7 +8,7 @@
 
 import type { SquadConfig } from "@/config/squads";
 import { businessDaysListBrt } from "@/lib/utils";
-import { fetchAllSprints, fetchEditableSprint } from "./jira-sprints";
+import { fetchAllSprints, fetchNextSprint, fetchOpenSprints, type OpenSprint } from "./jira-sprints";
 import { loadCapacityConfig } from "./capacity-store";
 import { ConfigConflictError, deleteConfig, readConfig, updateConfig, writeConfig } from "./config-store";
 import { activeMembers, getGlobalHoursAt, getSquadTeam, type TeamMember } from "./squad-team";
@@ -60,12 +60,15 @@ export async function getSprintCapacityConfig(slug: string, sprintId: number): P
   return (await readConfig<SprintCapacityConfig>(sprintKey(slug, sprintId))).data;
 }
 
-/** A sprint aceita ajuste? Vigente, ou a próxima quando não há vigente (mesma regra atual da Capacidade). */
+/**
+ * A sprint aceita ajuste? A VIGENTE e a PRÓXIMA (a futura de início mais cedo, com ou sem vigente), para o
+ * administrador preparar a capacidade antes de a sprint começar. Concluídas e futuras mais distantes, não.
+ */
 async function isEditable(squad: SquadConfig, sprint: CapacitySprintRef): Promise<boolean> {
   if (sprint.state === "active") return true;
   if (sprint.state === "closed") return false;
-  const editable = await fetchEditableSprint(squad.boardId);
-  return editable?.id === sprint.id;
+  const next = await fetchNextSprint(squad.boardId);
+  return next?.id === sprint.id;
 }
 
 /** Configuração por integrante da sprint anterior mais próxima (por data de início). */
@@ -118,7 +121,9 @@ export async function resolveSprintCapacity(
     getGlobalHoursAt(sprint.startDate ?? null),
     opts.preview ? Promise.resolve(true) : isEditable(squad, sprint),
   ]);
-  if (opts.preview) opts = { ...opts, materialize: false };
+  // Prévia e sprint FUTURA não gravam nada sozinhas: a próxima só fica gravada quando o administrador salva o
+  // ajuste, ou quando vira vigente. Assim ela acompanha a vigente (herança) até lá.
+  if (opts.preview || sprint.state === "future") opts = { ...opts, materialize: false };
   const legacy = (legacyAll[String(sprint.id)] as LegacyCapacityEntry | undefined) ?? null;
   const defaultHours = team.hoursPerDay ?? globalHours;
   const previous = !own && editable ? await findPreviousConfig(squad, sprint) : null;
@@ -234,14 +239,19 @@ export async function saveSprintCapacityAdjustment(
 }
 
 /**
- * Integrantes ou horas padrão mudaram: reaplica na sprint editável já materializada.
+ * Integrantes ou horas padrão mudaram: reaplica nas sprints editáveis (vigente e próxima) já gravadas.
  * - Herdada ou padrão: refaz a herança (mesma regra da resolução).
  * - Ajustada: mantém os %, atualiza as horas de quem não tem override, inclui novos a 100% e tira desvinculados.
  * Sprints concluídas nunca são tocadas.
  */
 export async function refreshEditableSprintCapacity(squad: SquadConfig): Promise<void> {
-  const editable = await fetchEditableSprint(squad.boardId);
-  if (!editable) return;
+  const open = await fetchOpenSprints(squad.boardId).catch(() => ({ active: null, next: null }));
+  const sprints = [open.active, open.next].filter((s): s is OpenSprint => !!s);
+  // Vigente primeiro: a próxima herda dela
+  for (const s of sprints) await refreshOpenSprint(squad, s);
+}
+
+async function refreshOpenSprint(squad: SquadConfig, editable: OpenSprint): Promise<void> {
   const key = sprintKey(squad.slug, editable.id);
   const own = await getSprintCapacityConfig(squad.slug, editable.id);
   if (!own) return; // sem configuração gravada: a próxima leitura já resolve com os dados atuais

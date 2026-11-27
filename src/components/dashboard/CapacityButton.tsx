@@ -79,7 +79,7 @@ export default function CapacityButton({ squad, availableSprints, defaultTeamSiz
     }
   }, [isOpen, squad]);
 
-  // Pre-selecionar a primeira da lista: a sprint vigente (ou a próxima), senão a concluída mais recente
+  // Pre-selecionar a primeira da lista: a vigente; sem vigente, a próxima; senão a concluída mais recente
   useEffect(() => {
     if (availableSprints.length > 0 && !selectedSprintId) {
       setSelectedSprintId(String(availableSprints[0].id));

@@ -12,7 +12,7 @@ interface AdminDashboardMenuProps {
   squad: string;
   teamSize: number;
   availableSprints: { id: number; name: string }[];
-  /** Sprints do modal de Capacidade: vigente (ou próxima) + concluídas */
+  /** Sprints do modal de Capacidade: vigente, próxima e as 2 últimas concluídas */
   capacitySprints: CapacitySprintOption[];
 }
 

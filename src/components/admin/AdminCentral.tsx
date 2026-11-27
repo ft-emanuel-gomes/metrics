@@ -469,25 +469,51 @@ function GlobalSettingsPanel() {
 
 // --- Sprint editável ---
 
+type OpenSprintOption = { id: number; name: string; state: "active" | "future" };
+
 function EditableSprintPanel({ squad }: { squad: string }) {
-  const [sprint, setSprint] = useState<{ id: number; name: string; state: "active" | "future" } | null | undefined>(undefined);
+  const [sprints, setSprints] = useState<OpenSprintOption[] | undefined>(undefined);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
   const [error, setError] = useState("");
   useEffect(() => {
-    api<{ sprint: { id: number; name: string; state: "active" | "future" } | null }>(`/api/admin/squads/${squad}/capacity`)
-      .then((d) => setSprint(d.sprint))
+    api<{ sprints: OpenSprintOption[] }>(`/api/admin/squads/${squad}/capacity`)
+      .then((d) => {
+        setSprints(d.sprints);
+        setSelectedId(d.sprints[0]?.id ?? null);
+      })
       .catch((e) => setError((e as Error).message));
   }, [squad]);
-  const title = sprint ? `Capacidade da ${sprint.name}${sprint.state === "active" ? " · vigente" : " · próxima"}` : "Capacidade da sprint";
+  const stateLabel = (s: OpenSprintOption) => (s.state === "active" ? "vigente" : "próxima");
+  const sprint = sprints?.find((s) => s.id === selectedId) ?? null;
+  const title = sprint ? `Capacidade da ${sprint.name} · ${stateLabel(sprint)}` : "Capacidade da sprint";
   return (
-    <Section title={title} description="Vale só para a sprint vigente (ou a próxima, quando a vigente já foi concluída no Jira). A sprint seguinte herda esta configuração automaticamente.">
+    <Section title={title} description="Vale para a sprint vigente e para a próxima. Sem ajuste salvo, a próxima segue a configuração da vigente.">
       {error ? (
         <p className="text-[12px]" style={{ color: "var(--ds-color-content-negative)" }}>{error}</p>
-      ) : sprint === undefined ? (
+      ) : sprints === undefined ? (
         <p className="text-[12px] t-muted">Buscando a sprint no Jira…</p>
-      ) : sprint === null ? (
+      ) : !sprint ? (
         <p className="text-[12px] t-muted">Nenhuma sprint vigente ou próxima no Jira.</p>
       ) : (
-        <SprintCapacityEditor squad={squad} sprintId={sprint.id} />
+        <>
+          {sprints.length > 1 && (
+            <div className="mb-3 inline-flex rounded-lg p-0.5" style={{ backgroundColor: "var(--ds-color-input-surface)" }} role="tablist">
+              {sprints.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={s.id === sprint.id}
+                  onClick={() => setSelectedId(s.id)}
+                  className={`rounded-md px-3 py-1 text-[11px] font-semibold transition ${s.id === sprint.id ? "btn-primary" : "t-muted"}`}
+                >
+                  {s.name} · {stateLabel(s)}
+                </button>
+              ))}
+            </div>
+          )}
+          <SprintCapacityEditor key={sprint.id} squad={squad} sprintId={sprint.id} />
+        </>
       )}
     </Section>
   );

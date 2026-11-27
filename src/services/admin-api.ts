@@ -7,7 +7,7 @@ import { NextResponse } from "next/server";
 import { getSquadBySlug, type SquadConfig } from "@/config/squads";
 import { ConfigConflictError, ConfigUnavailableError } from "./config-store";
 import { CapacityValidationError, type CapacitySprintRef } from "./capacity-resolver";
-import { fetchAllSprints, fetchEditableSprint } from "./jira-sprints";
+import { fetchAllSprints, fetchOpenSprints } from "./jira-sprints";
 
 const NO_STORE = { "Cache-Control": "no-store" };
 
@@ -27,13 +27,20 @@ export function squadOr404(slug: string): { squad: SquadConfig } | { response: N
 
 /** Sprint de referência no Jira: a editável (pode não ter datas) ou qualquer sprint do board com datas. */
 export async function findSprintRef(squad: SquadConfig, sprintId: number): Promise<CapacitySprintRef | null> {
-  const editable = await fetchEditableSprint(squad.boardId);
-  if (editable?.id === sprintId) {
-    return { id: editable.id, name: editable.name, state: editable.state, startDate: editable.startDate, endDate: editable.endDate };
-  }
+  // Vigente e próxima direto no Jira (a próxima pode estar em planejamento, sem datas)
+  const open = (await findOpenSprintRefs(squad)).find((s) => s.id === sprintId);
+  if (open) return open;
   const all = await fetchAllSprints(squad.boardId, { fresh: true }).catch(() => []);
   const s = all.find((x) => x.id === sprintId);
   return s ? { id: s.id, name: s.name, state: s.state, startDate: s.startDate, endDate: s.endDate } : null;
+}
+
+/** Vigente e próxima (as duas aceitam ajuste de capacidade), na ordem em que aparecem. */
+export async function findOpenSprintRefs(squad: SquadConfig): Promise<CapacitySprintRef[]> {
+  const { active, next } = await fetchOpenSprints(squad.boardId).catch(() => ({ active: null, next: null }));
+  return [active, next]
+    .filter((s): s is NonNullable<typeof s> => !!s)
+    .map((s) => ({ id: s.id, name: s.name, state: s.state, startDate: s.startDate, endDate: s.endDate }));
 }
 
 /** Converte erros conhecidos em resposta HTTP; o resto vira 500 com a mensagem. */

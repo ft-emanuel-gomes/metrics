@@ -2,12 +2,14 @@ import { notFound, redirect } from "next/navigation";
 import { getSquadBySlug } from "@/config/squads";
 import { DataNotAvailableError } from "@/adapters/sprint-adapter-db";
 import { getAuthSession } from "@/services/auth-session";
-import { fetchClosedSprints, fetchEditableSprint } from "@/services/jira-sprints";
+import { fetchClosedSprints, fetchOpenSprints } from "@/services/jira-sprints";
 import { getSprintNamer } from "@/services/sprint-display";
 import { displaySprintName, releaseNumber, sprintReleaseShort } from "@/lib/sprint-name";
 
 /** Primeira release cujas sprints aparecem no filtro (R2 em diante: R2, R3, R4…). */
 const FIRST_FILTER_RELEASE = 2;
+/** Sprints concluídas listadas no modal de Capacidade (além da vigente e da próxima) */
+const CAPACITY_CLOSED_SPRINTS = 2;
 import { loadDashboardData, DEFAULT_ISSUE_TYPES } from "@/services/dashboard-data";
 import KpiCards from "@/components/dashboard/KpiCards";
 import CycleTimeChart from "@/components/dashboard/CycleTimeChart";
@@ -131,12 +133,21 @@ export default async function DashboardPage({ params, searchParams }: PageProps)
       })()
     : [];
 
-  // Sprints do modal de Capacidade (só admin): a vigente (ou a próxima, se a vigente já foi encerrada) + as concluídas
+  // Sprints do modal de Capacidade (só admin): vigente, próxima e as 2 últimas concluídas (mais recente primeiro).
+  // Vigente e próxima aceitam ajuste por integrante; as concluídas, o formato antigo.
   const capacitySprints = squad.methodology === "sprint" && session.isAdmin
     ? await (async () => {
-        const [open, name] = await Promise.all([fetchEditableSprint(squad.boardId), getSprintNamer()]);
-        const closed = availableSprints.map((s) => ({ id: s.id, name: s.name, state: "closed" as const, startDate: s.startDate, endDate: s.endDate, releaseLabel: s.releaseShort }));
-        return open ? [{ id: open.id, name: name(open.name, open.startDate), state: open.state, startDate: open.startDate, endDate: open.endDate }, ...closed] : closed;
+        const [open, name] = await Promise.all([
+          fetchOpenSprints(squad.boardId).catch(() => ({ active: null, next: null })),
+          getSprintNamer(),
+        ]);
+        const openOptions = [open.active, open.next]
+          .filter((s): s is NonNullable<typeof s> => !!s)
+          .map((s) => ({ id: s.id, name: name(s.name, s.startDate ?? new Date().toISOString()), state: s.state, startDate: s.startDate, endDate: s.endDate }));
+        const closed = availableSprints
+          .slice(0, CAPACITY_CLOSED_SPRINTS)
+          .map((s) => ({ id: s.id, name: s.name, state: "closed" as const, startDate: s.startDate, endDate: s.endDate, releaseLabel: s.releaseShort }));
+        return [...openOptions, ...closed];
       })()
     : [];
   // Gerar meses disponíveis (tanto para kanban quanto para sprint squads sem sprints concluídas)

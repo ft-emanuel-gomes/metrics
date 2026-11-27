@@ -187,73 +187,63 @@ export interface OpenSprint {
   endDate?: string;
 }
 
+/** Ordem da próxima sprint: início mais cedo; sem datas (em planejamento), a de menor id (criada primeiro). */
+function byStartThenId(a: OpenSprint, b: OpenSprint): number {
+  const sa = a.startDate ? new Date(a.startDate).getTime() : Number.POSITIVE_INFINITY;
+  const sb = b.startDate ? new Date(b.startDate).getTime() : Number.POSITIVE_INFINITY;
+  return sa !== sb ? sa - sb : a.id - b.id;
+}
+
 /**
- * Sprint cuja Capacidade (pessoas e dias úteis) pode ser ajustada: a VIGENTE; só quando não há vigente
- * (a anterior foi encerrada), a PRÓXIMA, que costuma estar em planejamento e por isso pode não ter datas.
- * Sempre direto no Jira (sem cache). Retorna null se não houver sprint ativa nem futura, ou se o Jira falhar.
+ * Sprints abertas do board, numa única leitura do Jira (sem cache):
+ * - active: a VIGENTE (ou null);
+ * - next: a PRÓXIMA, a futura de início mais cedo (pode não ter datas). Existe com ou sem vigente.
+ * Lança erro se o Jira falhar (quem chama decide o fallback).
+ */
+export async function fetchOpenSprints(boardId: number): Promise<{ active: OpenSprint | null; next: OpenSprint | null }> {
+  const client = getJiraClient();
+  const open: OpenSprint[] = [];
+  let startAt = 0;
+  let isLast = false;
+  do {
+    const response = await client.get<JiraSprintsResponse>(
+      `/rest/agile/1.0/board/${boardId}/sprint`,
+      { state: "active,future", startAt, maxResults: 50 }
+    );
+    isLast = response.isLast;
+    for (const raw of response.values) {
+      if (raw.state !== "active" && raw.state !== "future") continue;
+      open.push({ id: raw.id, name: raw.name, state: raw.state, startDate: raw.startDate, endDate: raw.endDate });
+    }
+    startAt += 50;
+  } while (!isLast);
+  return {
+    active: open.find((s) => s.state === "active") ?? null,
+    next: open.filter((s) => s.state === "future").sort(byStartThenId)[0] ?? null,
+  };
+}
+
+/**
+ * Sprint "corrente" da Capacidade da Sprint (barra do Computador de Bordo): a VIGENTE; sem vigente
+ * (a anterior foi encerrada), a PRÓXIMA. Retorna null se não houver nenhuma ou se o Jira falhar.
+ * A edição da capacidade vale para a vigente E para a próxima (ver isEditable em capacity-resolver.ts).
  */
 export async function fetchEditableSprint(boardId: number): Promise<OpenSprint | null> {
-  const client = getJiraClient();
   try {
-    const open: OpenSprint[] = [];
-    let startAt = 0;
-    let isLast = false;
-    do {
-      const response = await client.get<JiraSprintsResponse>(
-        `/rest/agile/1.0/board/${boardId}/sprint`,
-        { state: "active,future", startAt, maxResults: 50 }
-      );
-      isLast = response.isLast;
-      for (const raw of response.values) {
-        if (raw.state !== "active" && raw.state !== "future") continue;
-        open.push({ id: raw.id, name: raw.name, state: raw.state, startDate: raw.startDate, endDate: raw.endDate });
-      }
-      startAt += 50;
-    } while (!isLast);
-
-    const active = open.find((s) => s.state === "active");
-    if (active) return active;
-    // Próxima: a de início mais cedo; sem datas, a de menor id (criada primeiro)
-    return (
-      open
-        .filter((s) => s.state === "future")
-        .sort((a, b) => {
-          const sa = a.startDate ? new Date(a.startDate).getTime() : Number.POSITIVE_INFINITY;
-          const sb = b.startDate ? new Date(b.startDate).getTime() : Number.POSITIVE_INFINITY;
-          return sa !== sb ? sa - sb : a.id - b.id;
-        })[0] ?? null
-    );
+    const { active, next } = await fetchOpenSprints(boardId);
+    return active ?? next;
   } catch {
     return null;
   }
 }
 
 /**
- * PRÓXIMA sprint do board (para o Backlog estimado): com sprint vigente, a futura de início mais cedo;
- * sem vigente, a própria futura de início mais cedo (a que vai começar). Sprint em planejamento pode não ter datas
- * (aí vale a de menor id). Sempre direto no Jira. Retorna null se não houver sprint futura ou se o Jira falhar.
+ * PRÓXIMA sprint do board (Backlog estimado e ajuste antecipado da capacidade): a futura de início mais cedo,
+ * com ou sem vigente. Retorna null se não houver sprint futura ou se o Jira falhar.
  */
 export async function fetchNextSprint(boardId: number): Promise<OpenSprint | null> {
-  const client = getJiraClient();
   try {
-    const future: OpenSprint[] = [];
-    let startAt = 0;
-    let isLast = false;
-    do {
-      const response = await client.get<JiraSprintsResponse>(`/rest/agile/1.0/board/${boardId}/sprint`, { state: "future", startAt, maxResults: 50 });
-      isLast = response.isLast;
-      for (const raw of response.values) {
-        if (raw.state === "future") future.push({ id: raw.id, name: raw.name, state: "future", startDate: raw.startDate, endDate: raw.endDate });
-      }
-      startAt += 50;
-    } while (!isLast);
-    return (
-      future.sort((a, b) => {
-        const sa = a.startDate ? new Date(a.startDate).getTime() : Number.POSITIVE_INFINITY;
-        const sb = b.startDate ? new Date(b.startDate).getTime() : Number.POSITIVE_INFINITY;
-        return sa !== sb ? sa - sb : a.id - b.id;
-      })[0] ?? null
-    );
+    return (await fetchOpenSprints(boardId)).next;
   } catch {
     return null;
   }

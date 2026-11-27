@@ -36,7 +36,7 @@ const SOURCE_LABEL: Record<ResolvedCapacity["source"], string> = {
 };
 
 /**
- * Editor da capacidade da sprint vigente (ou da próxima) por integrante: % de atuação, horas por dia e dias úteis.
+ * Editor da capacidade da sprint vigente ou da próxima por integrante: % de atuação, horas por dia e dias úteis.
  * A configuração em uso já vale sem nenhuma ação; salvar só é preciso quando algo muda.
  */
 export default function SprintCapacityEditor({ squad, sprintId, onSaved, onCancel }: Props) {
