@@ -27,14 +27,6 @@ interface Row {
 const PCT_OPTIONS = Array.from({ length: 21 }, (_, i) => i * 5);
 const fmt = (n: number) => n.toLocaleString("pt-BR", { maximumFractionDigits: 2 });
 
-const SOURCE_LABEL: Record<ResolvedCapacity["source"], string> = {
-  ajustada: "Ajustada nesta sprint",
-  herdada: "Herdada da sprint anterior",
-  padrao: "Integrantes da squad a 100%",
-  legado: "Formato anterior (pessoas × dias)",
-  "time-padrao": "Padrão da squad (sem integrantes)",
-};
-
 /**
  * Editor da capacidade da sprint vigente ou da próxima por integrante: % de atuação, horas por dia e dias úteis.
  * A configuração em uso já vale sem nenhuma ação; salvar só é preciso quando algo muda.
@@ -163,18 +155,9 @@ export default function SprintCapacityEditor({ squad, sprintId, onSaved, onCance
   }
 
   const label = "block text-[10px] uppercase font-semibold mb-1";
-  const origin =
-    capacity.source === "herdada" && capacity.inheritedFromSprintName ? `Herdada da ${capacity.inheritedFromSprintName}` : SOURCE_LABEL[capacity.source];
 
   return (
     <div>
-      <div className="mb-3 flex flex-wrap items-center gap-2">
-        <span className="ds-badge" style={{ background: "var(--ds-color-feedback-primary-surface)", color: "var(--ds-color-feedback-primary-label)" }}>
-          {origin}
-        </span>
-        <span className="text-[11px] t-muted">Já em uso nos cálculos. Ajuste só o que mudou.</span>
-      </div>
-
       {rows.length === 0 ? (
         <div className="mb-4 rounded-md p-3 text-[12px]" style={{ background: "var(--ds-color-feedback-neutral-surface)", color: "var(--ds-color-content-body)" }}>
           A squad ainda não tem integrantes vinculados, então vale o formato anterior

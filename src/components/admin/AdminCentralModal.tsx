@@ -36,7 +36,6 @@ export default function AdminCentralModal({ squads, onClose }: { squads: SquadOp
         <div className="flex items-start justify-between gap-3 px-4 pt-4 pb-3 sm:px-6 sm:pt-5" style={{ borderBottom: "1px solid var(--ds-color-container-divider-card)" }}>
           <div>
             <h2 id="admin-central-title" className="text-[17px] font-semibold" style={{ color: "var(--ds-color-content-title)" }}>Central Administrativa</h2>
-            <p className="text-xs" style={{ color: "var(--text-muted)" }}>Configurações das métricas sem alteração de código. Só administradores.</p>
           </div>
           <button
             type="button"
